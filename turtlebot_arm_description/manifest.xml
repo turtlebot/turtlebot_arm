@@ -10,6 +10,7 @@
   <url>http://ros.org/wiki/turtlebot_arm_description</url>
   <depend package="urdf"/>
   <depend package="xacro"/>
+  <depend package="turtlebot_description"/>
 
 </package>
 
