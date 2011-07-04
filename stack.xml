@@ -1,0 +1,11 @@
+<stack>
+  <description brief="turtlebot_arm">turtlebot_arm</description>
+  <author>Maintained by Melonee Wise</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/turtlebot_arm</url>
+  <depend stack="common" /> <!-- xacro -->
+  <depend stack="robot_model" /> <!-- urdf -->
+  <depend stack="ros" />
+
+</stack>

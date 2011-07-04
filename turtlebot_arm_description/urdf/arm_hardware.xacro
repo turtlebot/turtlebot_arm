@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<robot>
+  <property name="M_PI" value="3.14159"/>
+  <property name="M_SCALE" value="0.001"/>
+  <property name="F10_HEIGHT" value="0.004"/>
+  <property name="F4_HEIGHT" value="0.0525"/>
+  <property name="F3_HEIGHT" value="0.009"/>
+  <material name="green">
+    <color rgba="0.22 0.32 0.14 1.0"/>
+  </material>
+  <material name="blue">
+    <color rgba="0.0 0.0 0.8 1.0"/>
+  </material>
+
+
+ <macro name="bioloid_F10_fixed" params="parent number x_loc y_loc z_loc">
+    <joint name="bioloid_F10_${number}_joint" type="fixed">
+      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
+      <parent link="${parent}"/>
+      <child link="bioloid_F10_${number}_link" />
+    </joint>
+
+    <link name="bioloid_F10_${number}_link">
+      <inertial>
+        <mass value="0.00001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+          iyy="1.0" iyz="0.0"
+          izz="1.0" />
+      </inertial>
+
+      <visual>
+        <origin xyz=" 0 0 0 " rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
+        </geometry>
+        <material name="green"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.025 0.038 0.004"/>
+        </geometry>
+      </collision>
+    </link>
+  </macro>
+
+ <macro name="bioloid_F3_fixed" params="parent number x_loc y_loc z_loc r p y">
+    <joint name="bioloid_F3_${number}_joint" type="fixed">
+      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
+      <parent link="${parent}"/>
+      <child link="bioloid_F3_${number}_link" />
+    </joint>
+
+    <link name="bioloid_F3_${number}_link">
+      <inertial>
+        <mass value="0.00001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+          iyy="1.0" iyz="0.0"
+          izz="1.0" />
+      </inertial>
+
+      <visual>
+        <origin xyz=" 0 0 0 " rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://turtlebot_arm_description/meshes/F3.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
+        </geometry>
+        <material name="green"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0.0 0.0 -0.0045" rpy="0 0 0" />
+        <geometry>
+          <box size="0.025 0.038 0.009"/>
+        </geometry>
+      </collision>
+    </link>
+  </macro>
+
+
+
+ <macro name="bioloid_F2_revoute" params="parent number x_loc y_loc z_loc">
+    <joint name="bioloid_F2_${number}_joint" type="revolute">
+      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
+      <parent link="${parent}"/>
+       <axis xyz="0 1 0"/>
+      <limit effort="30" velocity="1.0" lower="-1.57" upper="1.57" />
+      <child link="bioloid_F2_${number}_link" />
+    </joint>
+
+    <link name="bioloid_F2_${number}_link">
+      <inertial>
+        <mass value="0.00001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+          iyy="1.0" iyz="0.0"
+          izz="1.0" />
+      </inertial>
+
+      <visual>
+        <origin xyz=" 0 0 0 " rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://turtlebot_arm_description/meshes/F2.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
+        </geometry>
+        <material name="green"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0.0 0.0 0.0775" rpy="0 0 0" />
+        <geometry>
+          <box size="0.025 0.0485 0.0375"/>
+        </geometry>
+      </collision>
+    </link>
+  </macro>
+
+ <macro name="bioloid_F4_revolute" params="parent number x_loc y_loc z_loc">
+    <joint name="bioloid_F4_${number}_joint" type="revolute">
+      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
+      <parent link="${parent}"/>
+       <axis xyz="0 1 0"/>
+      <limit effort="30" velocity="1.0" lower="-1.57" upper="1.57" />
+      <child link="bioloid_F4_${number}_link" />
+    </joint>
+
+    <link name="bioloid_F4_${number}_link">
+      <inertial>
+        <mass value="0.00001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+          iyy="1.0" iyz="0.0"
+          izz="1.0" />
+      </inertial>
+
+      <visual>
+        <origin xyz=" 0 0 0 " rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://turtlebot_arm_description/meshes/F4.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
+        </geometry>
+        <material name="green"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0.0 0.0 0.0215" rpy="0 0 0" />
+        <geometry>
+          <box size="0.028 0.0485 0.065"/>
+        </geometry>
+      </collision>
+    </link>
+  </macro>
+
+
+</robot>

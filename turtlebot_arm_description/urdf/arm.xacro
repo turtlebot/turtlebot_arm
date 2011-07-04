@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<robot>
+  <include filename="$(find turtlebot_arm_description)/urdf/arm_hardware.xacro" />
+
+    <macro name="turtlebot_arm">
+      <link name="base_link" />
+
+      <bioloid_F4_revolute parent="base_link" number="0" x_loc="0" y_loc="0" z_loc="0"/>
+      <bioloid_F10_fixed parent="bioloid_F4_0_link" number="0" x_loc="0" y_loc="0" z_loc="${F4_HEIGHT+F10_HEIGHT/2}"/>
+      <bioloid_F10_fixed parent="bioloid_F10_0_link" number="1" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT}"/>
+      <bioloid_F10_fixed parent="bioloid_F10_1_link" number="2" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT}" />
+      <bioloid_F3_fixed parent="bioloid_F10_2_link" number="0" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT/2}" r="0" p="${M_PI}" y="0" />
+  </macro>
+</robot>
