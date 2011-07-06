@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot>
-  <property name="M_PI" value="3.14159"/>
+x  <property name="M_PI" value="3.14159"/>
   <property name="M_SCALE" value="0.001"/>
   <property name="F10_HEIGHT" value="0.004"/>
   <property name="F4_HEIGHT" value="0.0525"/>
@@ -157,7 +157,7 @@
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
       <parent link="${parent}"/>
        <axis xyz="0 0 1"/>
-      <limit effort="30" velocity="1.0" lower="-1.57" upper="1.57" />
+      <limit effort="30" velocity="1.0" lower="-2.61" upper="2.61" />
       <child link="bioloid_F3_${number}_link" />
     </joint>
 
@@ -227,7 +227,7 @@
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
       <parent link="${parent}"/>
        <axis xyz="0 1 0"/>
-      <limit effort="30" velocity="1.0" lower="-1.57" upper="1.57" />
+      <limit effort="30" velocity="1.0" lower="-2.61" upper="2.61" />
       <child link="bioloid_F4_${number}_link" />
     </joint>
 

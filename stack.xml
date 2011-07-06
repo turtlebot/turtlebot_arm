@@ -7,6 +7,7 @@
   <depend stack="common" /> <!-- xacro -->
   <depend stack="robot_model" /> <!-- urdf -->
   <depend stack="ros" />
+  <depend stack="arbotix" />
   <depend stack="turtlebot" /> <!-- turtlebot_description -->
 
 </stack>
