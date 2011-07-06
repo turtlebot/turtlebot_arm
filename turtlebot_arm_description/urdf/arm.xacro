@@ -6,29 +6,29 @@
     <macro name="turtlebot_arm">
       <!-- shoulder pan joint -->
       <dynamixel_AX12_fixed parent="plate_3_link" number="0" x_loc="0.1143" y_loc="0" z_loc="${0.0508-AX12_WIDTH/2}" r="${M_PI/2}" p="0" y="${M_PI/2}"/>
-      <bioloid_F3_revolute parent="dynamixel_AX12_0_link" number="0" joint_number="0" x_loc="0" y_loc="${AX12_WIDTH/2}" z_loc="0.0" r="${M_PI}" p="${M_PI/2}" y="${M_PI/2}" />
+      <bioloid_F3_revolute parent="dynamixel_AX12_0_link" number="0" joint_name="shoulder_pan" x_loc="0" y_loc="${AX12_WIDTH/2}" z_loc="0.0" r="${M_PI}" p="${M_PI/2}" y="${M_PI/2}" />
       <dynamixel_AX12_fixed parent="bioloid_F3_0_link" number="1" x_loc="0" y_loc="0" z_loc="${-AX12_HEIGHT-F10_HEIGHT+0.001}" r="0" p="${M_PI}" y="0"/>
       <!--shoulder lift joint -->
-      <bioloid_F4_revolute parent="dynamixel_AX12_1_link" number="0" joint_number="1" x_loc="0" y_loc="0" z_loc="0"/>
+      <bioloid_F4_revolute parent="dynamixel_AX12_1_link" number="0" joint_name="shoulder_lift" x_loc="0" y_loc="0" z_loc="0"/>
       <bioloid_F10_fixed parent="bioloid_F4_0_link" number="0" x_loc="0" y_loc="0" z_loc="${F4_HEIGHT+F10_HEIGHT/2}"/>
       <bioloid_F10_fixed parent="bioloid_F10_0_link" number="1" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT}"/>
       <bioloid_F10_fixed parent="bioloid_F10_1_link" number="2" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT}" />
       <bioloid_F3_fixed parent="bioloid_F10_2_link" number="1" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT/2}" r="0" p="${M_PI}" y="0" />
       <!--elbow joint -->
       <dynamixel_AX12_fixed parent="bioloid_F3_1_link" number="2" x_loc="0" y_loc="0" z_loc="${-AX12_HEIGHT-F10_HEIGHT+0.001}" r="0" p="${M_PI}" y="0"/>
-      <bioloid_F4_revolute parent="dynamixel_AX12_2_link" number="1" joint_number="2" x_loc="0" y_loc="0" z_loc="0"/>
+      <bioloid_F4_revolute parent="dynamixel_AX12_2_link" number="1" joint_name="elbow_flex" x_loc="0" y_loc="0" z_loc="0"/>
       <bioloid_F10_fixed parent="bioloid_F4_1_link" number="3" x_loc="0" y_loc="0" z_loc="${F4_HEIGHT+F10_HEIGHT/2}"/>
       <bioloid_F10_fixed parent="bioloid_F10_3_link" number="4" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT}"/>
       <bioloid_F10_fixed parent="bioloid_F10_4_link" number="5" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT}" />
       <bioloid_F3_fixed parent="bioloid_F10_5_link" number="2" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT/2}" r="0" p="${M_PI}" y="0" />
       <!--wrist joint-->
       <dynamixel_AX12_fixed parent="bioloid_F3_2_link" number="3" x_loc="0" y_loc="0" z_loc="${-AX12_HEIGHT-F10_HEIGHT+0.001}" r="0" p="${M_PI}" y="0"/>
-      <bioloid_F2_revolute parent="dynamixel_AX12_3_link" number="0" joint_number="3" x_loc="0" y_loc="0" z_loc="0" ulimit="2.61" llimit="-2.61"/>
+      <bioloid_F2_revolute parent="dynamixel_AX12_3_link" number="0" joint_name="wrist_flex" x_loc="0" y_loc="0" z_loc="0" ulimit="2.0" llimit="-2.0"/>
       <bioloid_F3_fixed parent="bioloid_F2_0_link" number="3" x_loc="0" y_loc="-0.008" z_loc="${F2_HEIGHT}" r="0" p="${M_PI}" y="${M_PI/2}" />
       <!--gripper joint -->
       <dynamixel_AX12_fixed parent="bioloid_F3_3_link" number="4" x_loc="-0.02275" y_loc="0" z_loc="${-AX12_WIDTH/2}" r="${M_PI}" p="${M_PI/2}" y="0"/>
       <!--finger 1-->
-      <bioloid_F2_revolute parent="dynamixel_AX12_4_link" number="1" joint_number="4" x_loc="0" y_loc="0" z_loc="0" ulimit="0.50" llimit="-0.60"/>
+      <bioloid_F2_revolute parent="dynamixel_AX12_4_link" number="1" joint_name="gripper" x_loc="0" y_loc="0" z_loc="0" ulimit="0.50" llimit="-0.60"/>
       <finger_fixed parent="bioloid_F2_1_link" number="0" x_loc="0" y_loc="0" z_loc="${F2_HEIGHT}" r="0" p="0" y="0"/>
       <!--finger 2-->
       <bioloid_F3_fixed parent="dynamixel_AX12_4_link" number="4" x_loc="0" y_loc="0" z_loc="${-AX12_HEIGHT-F10_HEIGHT+0.001}" r="0" p="${M_PI}" y="0" />

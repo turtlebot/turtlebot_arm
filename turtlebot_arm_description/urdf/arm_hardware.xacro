@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot>
-x  <property name="M_PI" value="3.14159"/>
+  <property name="M_PI" value="3.14159"/>
   <property name="M_SCALE" value="0.001"/>
   <property name="F10_HEIGHT" value="0.004"/>
   <property name="F4_HEIGHT" value="0.0525"/>
@@ -152,12 +152,12 @@ x  <property name="M_PI" value="3.14159"/>
   </macro>
 
 
- <macro name="bioloid_F3_revolute" params="parent number joint_number x_loc y_loc z_loc r p y">
-    <joint name="joint_${joint_number}" type="revolute">
+ <macro name="bioloid_F3_revolute" params="parent number joint_name x_loc y_loc z_loc r p y">
+    <joint name="${joint_name}_joint" type="revolute">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
       <parent link="${parent}"/>
        <axis xyz="0 0 1"/>
-      <limit effort="30" velocity="1.0" lower="-2.61" upper="2.61" />
+      <limit effort="30" velocity="1.0" lower="-2.0" upper="2.0" />
       <child link="bioloid_F3_${number}_link" />
     </joint>
 
@@ -187,8 +187,8 @@ x  <property name="M_PI" value="3.14159"/>
     </link>
   </macro>
 
- <macro name="bioloid_F2_revolute" params="parent number joint_number x_loc y_loc z_loc ulimit llimit">
-    <joint name="joint_${joint_number}" type="revolute">
+ <macro name="bioloid_F2_revolute" params="parent number joint_name x_loc y_loc z_loc ulimit llimit">
+    <joint name="${joint_name}_joint" type="revolute">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
       <parent link="${parent}"/>
        <axis xyz="0 1 0"/>
@@ -222,12 +222,12 @@ x  <property name="M_PI" value="3.14159"/>
     </link>
   </macro>
 
- <macro name="bioloid_F4_revolute" params="parent number joint_number x_loc y_loc z_loc">
-    <joint name="joint_${joint_number}" type="revolute">
+ <macro name="bioloid_F4_revolute" params="parent number joint_name x_loc y_loc z_loc">
+    <joint name="${joint_name}_joint" type="revolute">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
       <parent link="${parent}"/>
        <axis xyz="0 1 0"/>
-      <limit effort="30" velocity="1.0" lower="-2.61" upper="2.61" />
+      <limit effort="30" velocity="1.0" lower="-2.0" upper="2.0" />
       <child link="bioloid_F4_${number}_link" />
     </joint>
 
