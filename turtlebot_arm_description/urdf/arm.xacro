@@ -4,19 +4,29 @@
   <include filename="$(find turtlebot_arm_description)/urdf/arm_hardware.xacro" />
 
     <macro name="turtlebot_arm">
-      <!--link name="base_link" /-->
-      <dynamixel_AX12_fixed parent="base_link" number="0" x_loc="0" y_loc="0" z_loc="0.5" r="0" p="0" y="0"/>
-      <bioloid_F4_revolute parent="dynamixel_AX12_0_link" number="0" x_loc="0" y_loc="0" z_loc="0"/>
+
+      <dynamixel_AX12_fixed parent="base_link" number="0" x_loc="0" y_loc="0" z_loc="0.5" r="${M_PI/2}" p="0" y="${M_PI/2}"/>
+      <bioloid_F3_revolute parent="dynamixel_AX12_0_link" number="0" joint_number="0" x_loc="0" y_loc="${AX12_WIDTH/2}" z_loc="0.0" r="${M_PI}" p="${M_PI/2}" y="${M_PI/2}" />
+      <dynamixel_AX12_fixed parent="bioloid_F3_0_link" number="1" x_loc="0" y_loc="0" z_loc="${-AX12_HEIGHT-F10_HEIGHT}" r="0" p="${M_PI}" y="0"/>
+
+      <bioloid_F4_revolute parent="dynamixel_AX12_1_link" number="0" joint_number="1" x_loc="0" y_loc="0" z_loc="0"/>
       <bioloid_F10_fixed parent="bioloid_F4_0_link" number="0" x_loc="0" y_loc="0" z_loc="${F4_HEIGHT+F10_HEIGHT/2}"/>
       <bioloid_F10_fixed parent="bioloid_F10_0_link" number="1" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT}"/>
       <bioloid_F10_fixed parent="bioloid_F10_1_link" number="2" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT}" />
-      <bioloid_F3_fixed parent="bioloid_F10_2_link" number="0" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT/2}" r="0" p="${M_PI}" y="0" />
+      <bioloid_F3_fixed parent="bioloid_F10_2_link" number="1" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT/2}" r="0" p="${M_PI}" y="0" />
 
-      <dynamixel_AX12_fixed parent="bioloid_F3_0_link" number="1" x_loc="0" y_loc="0" z_loc="${-AX12_HEIGHT-F10_HEIGHT}" r="0" p="${M_PI}" y="0"/>
-      <bioloid_F4_revolute parent="dynamixel_AX12_1_link" number="1" x_loc="0" y_loc="0" z_loc="0"/>
+      <dynamixel_AX12_fixed parent="bioloid_F3_1_link" number="2" x_loc="0" y_loc="0" z_loc="${-AX12_HEIGHT-F10_HEIGHT}" r="0" p="${M_PI}" y="0"/>
+      <bioloid_F4_revolute parent="dynamixel_AX12_2_link" number="1" joint_number="2" x_loc="0" y_loc="0" z_loc="0"/>
       <bioloid_F10_fixed parent="bioloid_F4_1_link" number="3" x_loc="0" y_loc="0" z_loc="${F4_HEIGHT+F10_HEIGHT/2}"/>
       <bioloid_F10_fixed parent="bioloid_F10_3_link" number="4" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT}"/>
       <bioloid_F10_fixed parent="bioloid_F10_4_link" number="5" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT}" />
-      <bioloid_F3_fixed parent="bioloid_F10_5_link" number="1" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT/2}" r="0" p="${M_PI}" y="0" />
+      <bioloid_F3_fixed parent="bioloid_F10_5_link" number="2" x_loc="0" y_loc="0" z_loc="${F10_HEIGHT/2}" r="0" p="${M_PI}" y="0" />
+
+      <dynamixel_AX12_fixed parent="bioloid_F3_2_link" number="3" x_loc="0" y_loc="0" z_loc="${-AX12_HEIGHT-F10_HEIGHT}" r="0" p="${M_PI}" y="0"/>
+      <bioloid_F2_revolute parent="dynamixel_AX12_3_link" number="0" joint_number="3" x_loc="0" y_loc="0" z_loc="0"/>
+      <bioloid_F3_fixed parent="bioloid_F2_0_link" number="3" x_loc="0" y_loc="-0.008" z_loc="${F2_HEIGHT}" r="0" p="${M_PI}" y="${M_PI/2}" />
+
+      <dynamixel_AX12_fixed parent="bioloid_F3_3_link" number="4" x_loc="-0.02275" y_loc="0" z_loc="${-AX12_WIDTH/2}" r="${M_PI}" p="${M_PI/2}" y="0"/>
+      <bioloid_F2_revolute parent="dynamixel_AX12_4_link" number="1" joint_number="4" x_loc="0" y_loc="0" z_loc="0"/>
   </macro>
 </robot>
