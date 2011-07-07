@@ -1,0 +1,17 @@
+<launch>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/arm.urdf.xacro'" />
+  <node name="arbotix" pkg="arbotix_python" type="driver.py" output="screen">
+    <rosparam file="$(find turtlebot_arm_bringup)/config/arm.yaml" command="load" />
+  </node>
+
+  <node name="arm_controller" pkg="arbotix_controllers" type="traj_controller.py">
+      <rosparam param="joints">[joint_0, joint_1, joint_2, joint_3]</rosparam>
+  </node>
+
+  <node name="gripper_controller" pkg="arbotix_controllers" type="one_side_gripper_controller.py">
+      <param name="invert" value="true"/>
+      <param name="pad_width" value="0.0254"/>
+  </node>
+
+
+</launch>
