@@ -1,5 +1,5 @@
 <launch>
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/arm.urdf.xacro'" />
+
   <node name="arbotix" pkg="arbotix_python" type="driver.py" output="screen">
     <rosparam file="$(find turtlebot_arm_bringup)/config/arm.yaml" command="load" />
   </node>
