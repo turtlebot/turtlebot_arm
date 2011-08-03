@@ -1,0 +1,17 @@
+<package>
+  <description brief="turtlebot_arm_bringup">
+
+     turtlebot_arm_bringup
+
+  </description>
+  <author>Melonee Wise, Helen Oleynikova</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/turtlebot_arm_bringup</url>
+  
+  <depend package="arbotix_python" />
+  <depend package="arbotix_controllers" />
+
+</package>
+
+
