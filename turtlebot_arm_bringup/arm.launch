@@ -5,7 +5,7 @@
   </node>
 
   <node name="arm_controller" pkg="arbotix_controllers" type="traj_controller.py">
-      <rosparam param="joints">[joint_0, joint_1, joint_2, joint_3]</rosparam>
+      <rosparam param="joints">[shoulder_pan_joint, shoulder_lift_joint, elbow_flex_joint, wrist_flex_joint]</rosparam>
   </node>
 
   <node name="gripper_controller" pkg="arbotix_controllers" type="one_side_gripper_controller.py">
