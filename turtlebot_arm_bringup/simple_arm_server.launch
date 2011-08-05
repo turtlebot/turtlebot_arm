@@ -1,0 +1,9 @@
+<launch>
+  <include file="$(find simple_arm_server)/launch/arm_server.launch">
+    <arg name="arm_dof" value="4" />
+    <arg name="root_name" value="dynamixel_AX12_0_link" />
+     <arg name="tip_name" value="dynamixel_AX12_4_link" />
+  </include>
+</launch>
+
+
