@@ -9,5 +9,5 @@ dynamixels: {
     gripper_joint: {id: 5, max_speed: 90},
 }
 controllers: {
-    arm_controller: {type: follow_controller, joints: [shoulder_pan_joint, shoudler_left_joint, elbow_flex_joint, wrist_flex_joint] }
+    arm_controller: {type: follow_controller, joints: [shoulder_pan_joint, shoulder_left_joint, elbow_flex_joint, wrist_flex_joint] }
 }
