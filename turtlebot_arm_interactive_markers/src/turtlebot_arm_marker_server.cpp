@@ -89,6 +89,7 @@ void TurtlebotArmMarkerServer::processFeedback(
   // Eh, could do this in one go but whatever. This seems good.
   action.goal.orientation = feedback->pose.orientation;
   action.goal.position = feedback->pose.position;
+  action.move_time = ros::Duration(1.0);
   
   srv.request.goals.push_back(action); 
   
@@ -103,7 +104,7 @@ void TurtlebotArmMarkerServer::processFeedback(
     cout << "Failure? " << success << endl;
   }
   
-  //resetMarker();
+  resetMarker();
 }
 
 void TurtlebotArmMarkerServer::resetMarker()
