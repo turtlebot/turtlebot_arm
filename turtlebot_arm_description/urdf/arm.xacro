@@ -13,6 +13,14 @@
         <child link="arm_base_link" />
       </joint>
       
+      <!-- fake gripper_link joint -->
+      <link name="gripper_ink" />
+        
+      <joint name="gripper_link_joint" type="fixed">
+        <origin xyz="0 0 0 " rpy="0 0 0" />
+        <parent link="bioloid_F2_0_link"/>
+        <child link="gripper_link" />
+      </joint>
         
       <!-- shoulder pan joint -->
       <dynamixel_AX12_fixed parent="plate_3_link" number="0" x_loc="0.1143" y_loc="0" z_loc="${0.0508-AX12_WIDTH/2}" r="${M_PI/2}" p="0" y="${M_PI/2}"/>
