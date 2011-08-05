@@ -7,5 +7,7 @@ dynamixels: {
     elbow_flex_joint: {id: 3, max_angle: 150, min_angle: -150, max_speed: 90},
     wrist_flex_joint: {id: 4, max_angle: 150, min_angle: -150, max_speed: 90},
     gripper_joint: {id: 5, max_speed: 90},
-
+}
+controllers: {
+    arm_controller: {type: follow_controller, joints: [shoulder_pan_joint, shoudler_left_joint, elbow_flex_joint, wrist_flex_joint] }
 }
