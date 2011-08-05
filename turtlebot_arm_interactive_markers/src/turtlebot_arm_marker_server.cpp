@@ -78,6 +78,8 @@ class TurtlebotArmMarkerServer
 void TurtlebotArmMarkerServer::processFeedback(
     const InteractiveMarkerFeedbackConstPtr &feedback )
 {
+  if (feedback->event_type != visualization_msgs::InteractiveMarkerFeedback::MOUSE_UP)
+    return;
   // Alright let's move the arm or something
   simple_arm_server::MoveArm srv;
   simple_arm_server::ArmAction action;
@@ -94,11 +96,11 @@ void TurtlebotArmMarkerServer::processFeedback(
   if (client.call(srv))
   {
     success = srv.response.success;
-    cout << "Success! Probably. " << success << endl;
+    cout << "Success? " << success << endl;
   }
   else
   {
-    cout << "Failure! Probably. " << success << endl;
+    cout << "Failure? " << success << endl;
   }
   
   //resetMarker();

@@ -29,9 +29,11 @@
 
 import roslib; roslib.load_manifest('turtlebot_arm_interactive_markers')
 import rospy
+import actionlib
 import sys
 
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from control_msgs.msg import *
 
 servos = ['wrist_flex_joint', 'shoulder_lift_joint', 'shoulder_pan_joint', 'elbow_flex_joint']
 tucked = [1.5084144414208807, -0.71585770101329926, 1.4726215563702156, 1.9634954084936207]
@@ -39,7 +41,8 @@ utcked = [1.5135277107138327, 0.015339807878856412, 1.5288675185926892, 1.554433
 
 if __name__ == '__main__':
     rospy.init_node('tuck_arm')
-    pub = rospy.Publisher('arm_controller/command', JointTrajectory, latch=True)
+    client = actionlib.SimpleActionClient('follow_joint_trajectory', FollowJointTrajectoryAction)
+    client.wait_for_server()
     
     # prepare a joint trajectory
     msg = JointTrajectory()
@@ -65,10 +68,15 @@ if __name__ == '__main__':
         point.time_from_start = rospy.Duration(3.0)
         msg.points.append(point)
     
+    msg.header.stamp = rospy.Time.now() + rospy.Duration(0.1)
+    
+    goal = FollowJointTrajectoryGoal()
+    goal.trajectory = msg
+
+    client.send_goal(goal)
+    client.wait_for_result(point.time_from_start*1.2)
 
     # publish and sleep three secs (while latched)
-    msg.header.stamp = rospy.Time.now() + rospy.Duration(0.1)
-    pub.publish(msg)
     rospy.sleep(3)
 
 
