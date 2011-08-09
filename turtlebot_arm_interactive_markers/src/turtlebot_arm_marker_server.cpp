@@ -31,159 +31,407 @@
 #include <simple_arm_server/MoveArm.h>
 #include <simple_arm_server/ArmAction.h>
 
+#include <arbotix_msgs/Relax.h>
+
 #include <interactive_markers/interactive_marker_server.h>
+#include <interactive_markers/menu_handler.h>
 
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Pose.h>
 
 
 #include <tf/tf.h>
+#include <tf/transform_listener.h>
 
 #include <string.h>
 
+#include <boost/foreach.hpp>
+
 using namespace visualization_msgs;
+using namespace interactive_markers;
 using namespace std;
+
+const string tip_link = "/gripper_link";
+const string root_link = "/arm_base_link";
+
+const string gripper_joint = "gripper_joint"; 
 
 class TurtlebotArmMarkerServer
 {
-  public:
-    TurtlebotArmMarkerServer()
-      : nh("~"), server("turtlebot_arm_marker_server")
-    {
-      std::string arm_server_topic;
-      
-      nh.param<std::string>("arm_server_topic", arm_server_topic, "/simple_arm_server/move");
-      //nh.param<double>("linear_scale", linear_scale, 1.0);
-      //nh.param<double>("angular_scale", angular_scale, 2.2);
-      
-      //vel_pub = nh.advertise<geometry_msgs::Twist>(cmd_vel_topic, 1);
-      client = nh.serviceClient<simple_arm_server::MoveArm>(arm_server_topic);
-      createInteractiveMarkers();
-    }
-    
-    void processFeedback( const InteractiveMarkerFeedbackConstPtr &feedback );
-    void resetMarker();
-  
   private:
-    void createInteractiveMarkers();
-  
     ros::NodeHandle nh;
     ros::ServiceClient client;
     interactive_markers::InteractiveMarkerServer server;
+    tf::TransformListener tf_listener;
     
-    double linear_scale;
-    double angular_scale;
+    MenuHandler menu_handler;
+    //MenuHandler::EntryHandle h_send_command_immediately;
+    
+    bool immediate_commands;
+    bool in_move;
+    
+    ros::Timer arm_timer;
+    
+    vector<string> joints;
+    
+public:
+  TurtlebotArmMarkerServer()
+    : nh("~"), server("turtlebot_arm_marker_server"), tf_listener(nh), immediate_commands(true), in_move(false)
+  {
+    std::string arm_server_topic;
+    
+    nh.param<std::string>("arm_server_topic", arm_server_topic, "/simple_arm_server/move");
+    
+    joints.push_back("shoulder_pan_joint");
+    joints.push_back("shoulder_lift_joint");
+    joints.push_back("elbow_flex_joint");
+    joints.push_back("wrist_flex_joint");
+    
+    client = nh.serviceClient<simple_arm_server::MoveArm>(arm_server_topic);
+    createArmMarker();
+    createGripperMarker();
+    
+    resetMarker();
+    
+    createMenu();
+    
+    ROS_INFO("[turtlebot arm marker server] Initialized.");
+    
+    arm_timer = nh.createTimer(ros::Duration(0.1), &TurtlebotArmMarkerServer::resetMarkerCb, this);
+  }
+
+  void processArmFeedback(const InteractiveMarkerFeedbackConstPtr &feedback)
+  {
+    if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MOUSE_DOWN && feedback->marker_name == "arm_marker")
+    {
+      arm_timer.stop();
+    }
+    if (feedback->event_type != visualization_msgs::InteractiveMarkerFeedback::MOUSE_UP || feedback->marker_name != "arm_marker")
+      return;
+      
+    if (immediate_commands)
+    {
+      processCommand(feedback);
+    }
+  }
+  
+  void changeMarkerColor(double r, double g, double b, bool set_pose=false, geometry_msgs::Pose pose = geometry_msgs::Pose())
+  {
+    InteractiveMarker int_marker;
+    server.get("arm_marker", int_marker);
+    
+    Marker *box_marker = &int_marker.controls[0].markers[0];
+    
+    box_marker->color.r = r;
+    box_marker->color.g = g;
+    box_marker->color.b = b;
+    
+    if (set_pose)
+      int_marker.pose = pose;
+    
+    server.insert(int_marker);
+    server.applyChanges();
+  }
+  
+  void processCommand(const InteractiveMarkerFeedbackConstPtr &feedback)
+  {
+    //changeMarkerColor(0, 0, 1);
+    if (sendTrajectoryCommand(feedback))
+    {
+      changeMarkerColor(0, 1, 0, true, feedback->pose);
+      ros::Duration(1.0).sleep();
+      resetMarker();
+      arm_timer.start();
+    }
+    else
+    {
+      changeMarkerColor(1, 0, 0, true, feedback->pose);
+    }
+  }
+  
+  bool sendTrajectoryCommand(const InteractiveMarkerFeedbackConstPtr &feedback)
+  {
+    simple_arm_server::MoveArm srv;
+    simple_arm_server::ArmAction action;
+    
+    srv.request.header.frame_id = root_link;
+    
+    geometry_msgs::Pose pose;
+    getTransformedPose(feedback->header.frame_id, feedback->pose, root_link, pose, feedback->header.stamp);
+    
+    // Eh, could do this in one go but whatever. This seems good.
+    action.goal.orientation = pose.orientation;
+    action.goal.position = pose.position;
+    action.move_time = ros::Duration(1.0);
+    
+    srv.request.goals.push_back(action); 
+    
+    if (client.call(srv))
+    {
+      if (srv.response.success)
+      {
+        cout << "Sent successful trajectory." << endl;
+        return true;
+      }
+      else
+        cout << "Could not solve for trajectory." << endl;
+    }
+    else
+      cout << "Could not contact simple_arm_server." << endl;
+    
+    return false;
+  }
+  
+  bool sendGripperCommand(const InteractiveMarkerFeedbackConstPtr &feedback)
+  {
+    simple_arm_server::MoveArm srv;
+    simple_arm_server::ArmAction action;
+    
+    srv.request.header.frame_id = tip_link;
+    action.type = simple_arm_server::ArmAction::MOVE_GRIPPER;
+    
+    // TODO: make this an actual sensical number
+    action.command = feedback->pose.orientation.y;
+    
+    srv.request.goals.push_back(action); 
+    
+    if (client.call(srv))
+    {
+      if (srv.response.success)
+      {
+        cout << "Sent successful trajectory." << endl;
+        return true;
+      }
+      else
+        cout << "Could not solve for trajectory." << endl;
+    }
+    else
+      cout << "Could not contact simple_arm_server." << endl;
+    
+    return false;
+  }
+
+  void getTransformedPose(const string& source_frame, const geometry_msgs::Pose& source_pose,
+                          const string& target_frame, geometry_msgs::Pose& target_pose,
+                          const ros::Time& time)
+  {
+    tf::Pose bt_source_pose;
+    
+    tf::poseMsgToTF(source_pose, bt_source_pose);
+    
+    tf::Stamped<tf::Pose> posein(bt_source_pose, time, source_frame);
+    tf::Stamped<tf::Pose> poseout;
+    
+    try {
+        ros::Duration timeout(10.0);
+        
+        // Get base_link transform
+        tf_listener.waitForTransform(target_frame, source_frame,
+                                      time, timeout);
+        tf_listener.transformPose(target_frame, posein, poseout);
+        
+        
+      }
+      catch (tf::TransformException& ex) {
+        ROS_WARN("[arm interactive markers] TF exception:\n%s", ex.what());
+        return;
+      }
+      
+    tf::poseTFToMsg(poseout, target_pose);
+  }
+
+  void resetMarker()
+  {
+    geometry_msgs::Pose arm_pose;
+    geometry_msgs::Pose blank_pose;
+    blank_pose.orientation.w = 1;
+    
+    getTransformedPose(tip_link, blank_pose, root_link, arm_pose, ros::Time(0));
+    
+    server.setPose("arm_marker", arm_pose);
+    server.applyChanges();
+  }
+
+  void resetMarkerCb(const ros::TimerEvent& e)
+  {
+    //resetMarker();
+  }
+
+  void createArmMarker()
+  { 
+    // create an interactive marker for our server
+    InteractiveMarker int_marker;
+    int_marker.header.frame_id = root_link;
+    int_marker.name = "arm_marker";
+    int_marker.scale = 0.1;
+
+    Marker marker;
+
+    marker.type = Marker::CUBE;
+    marker.scale.x = 0.03;
+    marker.scale.y = 0.03;
+    marker.scale.z = 0.03;
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+    marker.color.a = .7;
+
+    InteractiveMarkerControl box_control;
+    box_control.always_visible = true;
+    box_control.interaction_mode = InteractiveMarkerControl::BUTTON;
+    box_control.markers.push_back( marker );
+    int_marker.controls.push_back( box_control );
+
+    InteractiveMarkerControl control;
+
+    control.orientation.w = 1;
+    control.orientation.x = 1;
+    control.orientation.y = 0;
+    control.orientation.z = 0;
+    control.name = "rotate_x";
+    control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
+    int_marker.controls.push_back(control);
+    control.name = "move_x";
+    control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+    int_marker.controls.push_back(control);
+
+    control.orientation.w = 1;
+    control.orientation.x = 0;
+    control.orientation.y = 1;
+    control.orientation.z = 0;
+    control.name = "rotate_z";
+    control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
+    int_marker.controls.push_back(control);
+    control.name = "move_z";
+    control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+    int_marker.controls.push_back(control);
+
+    control.orientation.w = 1;
+    control.orientation.x = 0;
+    control.orientation.y = 0;
+    control.orientation.z = 1;
+    control.name = "rotate_y";
+    control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
+    int_marker.controls.push_back(control);
+    control.name = "move_y";
+    control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+    int_marker.controls.push_back(control);
+
+    
+    server.insert(int_marker, boost::bind( &TurtlebotArmMarkerServer::processArmFeedback, this, _1 ));
+    
+    server.applyChanges();
+  }
+  
+  void createGripperMarker()
+  {
+      // create an interactive marker for our server
+    InteractiveMarker int_marker;
+    int_marker.header.frame_id = tip_link;
+    int_marker.name = "gripper_marker";
+    int_marker.scale = 0.05;
+
+    int_marker.pose.position.x = 0.04;
+    int_marker.pose.position.y = 0.025;
+
+    Marker marker;
+
+    marker.type = Marker::CUBE;
+    marker.scale.x = 0.05;
+    marker.scale.y = 0.005;
+    marker.scale.z = 0.05;
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+    marker.color.a = .7;
+
+    InteractiveMarkerControl box_control;
+    box_control.always_visible = true;
+    box_control.interaction_mode = InteractiveMarkerControl::BUTTON;
+    box_control.markers.push_back( marker );
+    int_marker.controls.push_back( box_control );
+
+    InteractiveMarkerControl control;
+
+    control.orientation.w = 1;
+    control.orientation.x = 0;
+    control.orientation.y = 0;
+    control.orientation.z = 1;
+    control.name = "move_z";
+    control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+    int_marker.controls.push_back(control);
+
+    server.insert(int_marker, boost::bind( &TurtlebotArmMarkerServer::sendGripperCommand, this, _1 ));
+    
+    server.applyChanges();
+  }
+  
+  void createMenu()
+  {
+    menu_handler.insert("Send command", boost::bind(&TurtlebotArmMarkerServer::sendCommandCb, this, _1));
+    menu_handler.setCheckState(
+        menu_handler.insert("Send command immediately", boost::bind(&TurtlebotArmMarkerServer::immediateCb, this, _1)), MenuHandler::CHECKED );
+    menu_handler.insert("Reset marker", boost::bind(&TurtlebotArmMarkerServer::resetPoseCb, this, _1));
+    
+    MenuHandler::EntryHandle entry = menu_handler.insert("Relax joints");
+    menu_handler.insert( entry, "All", boost::bind(&TurtlebotArmMarkerServer::relaxAllCb, this, _1));
+    BOOST_FOREACH(string joint_name, joints)
+    {
+      menu_handler.insert( entry, joint_name, boost::bind(&TurtlebotArmMarkerServer::relaxCb, this, joint_name, _1) );
+    }
+    
+    menu_handler.apply( server, "arm_marker" );
+    server.applyChanges();
+  }
+
+  void sendCommandCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
+  {
+    processCommand(feedback);
+  }
+  
+  void relaxAllCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
+  {
+    BOOST_FOREACH( std::string joint_name, joints )
+    {
+      relaxCb(joint_name, feedback);
+    }
+  }
+  
+  void relaxCb(const std::string joint, const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
+  {
+    ros::Publisher relax_pub = nh.advertise<std_msgs::Empty>(joint + "/relax", 1, false);
+    relax_pub.publish(std_msgs::Empty());
+  }
+  
+  void immediateCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
+  {
+    MenuHandler::EntryHandle handle = feedback->menu_entry_id;
+    MenuHandler::CheckState state;
+    menu_handler.getCheckState( handle, state );
+
+    if ( state == MenuHandler::CHECKED )
+    {
+      menu_handler.setCheckState( handle, MenuHandler::UNCHECKED );
+      ROS_INFO("Switching to cached commands");
+      immediate_commands = false;
+    }
+    else
+    {
+      menu_handler.setCheckState( handle, MenuHandler::CHECKED );
+      ROS_INFO("Switching to immediate comands");
+      immediate_commands = true;
+    }
+    menu_handler.reApply(server);
+    
+    server.applyChanges();
+  }
+  
+  void resetPoseCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
+  {
+    resetMarker();
+    arm_timer.start();
+  }
 };
-
-void TurtlebotArmMarkerServer::processFeedback(
-    const InteractiveMarkerFeedbackConstPtr &feedback )
-{
-  if (feedback->event_type != visualization_msgs::InteractiveMarkerFeedback::MOUSE_UP)
-    return;
-  // Alright let's move the arm or something
-  simple_arm_server::MoveArm srv;
-  simple_arm_server::ArmAction action;
-  
-  srv.request.header.frame_id="/dynamixel_AX12_4_link";
-  
-  // Eh, could do this in one go but whatever. This seems good.
-  action.goal.orientation = feedback->pose.orientation;
-  action.goal.position = feedback->pose.position;
-  action.move_time = ros::Duration(1.0);
-  
-  srv.request.goals.push_back(action); 
-  
-  double success = false;
-  if (client.call(srv))
-  {
-    success = srv.response.success;
-    cout << "Success? " << success << endl;
-  }
-  else
-  {
-    cout << "Failure? " << success << endl;
-  }
-  
-  resetMarker();
-}
-
-void TurtlebotArmMarkerServer::resetMarker()
-{
-  // Yeeees, except we actually have to do this properly or something.
-  // Like... use tf to figure out the pose of the arm.
-  // Yeeeah.
-  // Maybe not if we just use the frame of the last joint!
-  server.setPose("arm_marker", geometry_msgs::Pose());
-  
-  server.applyChanges();
-}
-
-void TurtlebotArmMarkerServer::createInteractiveMarkers()
-{ 
-  // create an interactive marker for our server
-  InteractiveMarker int_marker;
-  int_marker.header.frame_id = "/dynamixel_AX12_4_link";
-  int_marker.name = "arm_marker";
-  int_marker.scale = 0.2;
-
-  
-  Marker marker;
-
-  marker.type = Marker::CUBE;
-  marker.scale.x = 0.05;
-  marker.scale.y = 0.05;
-  marker.scale.z = 0.05;
-  marker.color.r = 0.5;
-  marker.color.g = 0.5;
-  marker.color.b = 0.5;
-  marker.color.a = 1.0;
-
-  InteractiveMarkerControl box_control;
-  box_control.always_visible = true;
-  box_control.markers.push_back( marker );
-  int_marker.controls.push_back( box_control );
-
-  InteractiveMarkerControl control;
-
-  control.orientation.w = 1;
-  control.orientation.x = 1;
-  control.orientation.y = 0;
-  control.orientation.z = 0;
-  control.name = "rotate_x";
-  control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
-  int_marker.controls.push_back(control);
-  control.name = "move_x";
-  control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
-  int_marker.controls.push_back(control);
-
-  control.orientation.w = 1;
-  control.orientation.x = 0;
-  control.orientation.y = 1;
-  control.orientation.z = 0;
-  control.name = "rotate_z";
-  control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
-  int_marker.controls.push_back(control);
-  control.name = "move_z";
-  control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
-  int_marker.controls.push_back(control);
-
-  control.orientation.w = 1;
-  control.orientation.x = 0;
-  control.orientation.y = 0;
-  control.orientation.z = 1;
-  control.name = "rotate_y";
-  control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
-  int_marker.controls.push_back(control);
-  control.name = "move_y";
-  control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
-  int_marker.controls.push_back(control);
-
-  
-  server.insert(int_marker, boost::bind( &TurtlebotArmMarkerServer::processFeedback, this, _1 ));
-  
-  server.applyChanges();
-}
-
 
 int main(int argc, char** argv)
 {
