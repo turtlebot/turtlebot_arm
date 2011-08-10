@@ -54,6 +54,8 @@ using namespace std;
 const string tip_link = "/gripper_link";
 const string root_link = "/arm_base_link";
 
+const double gripper_offset = 0.025;
+
 class TurtlebotArmMarkerServer
 {
   private:
@@ -219,8 +221,7 @@ public:
     srv.request.header.frame_id = tip_link;
     action.type = simple_arm_server::ArmAction::MOVE_GRIPPER;
     
-    // TODO: make this an actual sensical number
-    action.command = feedback->pose.orientation.y;
+    action.command = feedback->pose.position.y;
     
     srv.request.goals.push_back(action); 
     
