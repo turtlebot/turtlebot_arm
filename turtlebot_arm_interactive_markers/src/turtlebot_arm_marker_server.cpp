@@ -62,7 +62,8 @@ class TurtlebotArmMarkerServer
     interactive_markers::InteractiveMarkerServer server;
     tf::TransformListener tf_listener;
     
-    MenuHandler menu_handler;
+    MenuHandler arm_menu_handler;
+    map<std::string, MenuHandler> joint_menu_handlers;
     
     bool immediate_commands;
     bool in_move;
@@ -71,6 +72,9 @@ class TurtlebotArmMarkerServer
     
     vector<string> joints;
     vector<string> links;
+    
+    map<std::string, ros::Publisher> joint_command_publishers;
+    map<std::string, ros::Publisher> joint_relax_publishers;
     
 public:
   TurtlebotArmMarkerServer()
@@ -98,15 +102,25 @@ public:
     client = nh.serviceClient<simple_arm_server::MoveArm>(arm_server_topic);
     createArmMarker();
     createGripperMarker();
-    createJointMarkers();
+    createArmMenu();
+    
+    createJointPublishers();
     
     resetMarker();
-    
-    createArmMenu();
     
     ROS_INFO("[turtlebot arm marker server] Initialized.");
     
     //arm_timer = nh.createTimer(ros::Duration(0.1), &TurtlebotArmMarkerServer::resetMarkerCb, this);
+  }
+
+  void createJointPublishers()
+  {
+    BOOST_FOREACH( std::string joint_name, joints )
+    {
+      joint_command_publishers[joint_name] = (nh.advertise<std_msgs::Float64>("/" + joint_name + "/command", 1, false));
+      joint_relax_publishers[joint_name] = (nh.advertise<std_msgs::Empty>("/" + joint_name + "/relax", 1, false));
+    }
+  
   }
 
   void processArmFeedback(const InteractiveMarkerFeedbackConstPtr &feedback)
@@ -126,10 +140,9 @@ public:
   
   void processJointFeedback(const InteractiveMarkerFeedbackConstPtr &feedback)
   {
-    ros::Publisher command_pub = nh.advertise<std_msgs::Float64>(feedback->marker_name + "/command", 1, false);
     std_msgs::Float64 command;
-    command.data = feedback->pose.orientation.z;
-    command_pub.publish(command);
+    command.data = feedback->pose.orientation.y;
+    joint_command_publishers[feedback->marker_name].publish(command);
   }
   
   void changeMarkerColor(double r, double g, double b, bool set_pose=false, geometry_msgs::Pose pose = geometry_msgs::Pose())
@@ -407,28 +420,29 @@ public:
     control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
     int_marker.controls.push_back(control);
 
-    server.insert(int_marker, boost::bind( &TurtlebotArmMarkerServer::processArmFeedback, this, _1 ));
+    server.insert(int_marker, boost::bind( &TurtlebotArmMarkerServer::processJointFeedback, this, _1 ));
     
     server.applyChanges();
   }
   
   void createArmMenu()
   {
-    menu_handler.insert("Send command", boost::bind(&TurtlebotArmMarkerServer::sendCommandCb, this, _1));
-    menu_handler.setCheckState(
-        menu_handler.insert("Send command immediately", boost::bind(&TurtlebotArmMarkerServer::immediateCb, this, _1)), MenuHandler::CHECKED );
-    menu_handler.insert("Reset marker", boost::bind(&TurtlebotArmMarkerServer::resetPoseCb, this, _1));
+    arm_menu_handler = MenuHandler();
+    arm_menu_handler.insert("Send command", boost::bind(&TurtlebotArmMarkerServer::sendCommandCb, this, _1));
+    arm_menu_handler.setCheckState(
+        arm_menu_handler.insert("Send command immediately", boost::bind(&TurtlebotArmMarkerServer::immediateCb, this, _1)), MenuHandler::CHECKED );
+    arm_menu_handler.insert("Reset marker", boost::bind(&TurtlebotArmMarkerServer::resetPoseCb, this, _1));
     
-    MenuHandler::EntryHandle entry = menu_handler.insert("Relax joints");
-    menu_handler.insert( entry, "All", boost::bind(&TurtlebotArmMarkerServer::relaxAllCb, this, _1));
+    MenuHandler::EntryHandle entry = arm_menu_handler.insert("Relax joints");
+    arm_menu_handler.insert( entry, "All", boost::bind(&TurtlebotArmMarkerServer::relaxAllCb, this, _1));
     BOOST_FOREACH(string joint_name, joints)
     {
-      menu_handler.insert( entry, joint_name, boost::bind(&TurtlebotArmMarkerServer::relaxCb, this, joint_name, _1) );
+      arm_menu_handler.insert( entry, joint_name, boost::bind(&TurtlebotArmMarkerServer::relaxCb, this, joint_name, _1) );
     }
     
-    menu_handler.insert("Switch to Joint Control", boost::bind(&TurtlebotArmMarkerServer::switchToJointControlCb, this, _1));
+    arm_menu_handler.insert("Switch to Joint Control", boost::bind(&TurtlebotArmMarkerServer::switchToJointControlCb, this, _1));
     
-    menu_handler.apply( server, "arm_marker" );
+    arm_menu_handler.apply( server, "arm_marker" );
     server.applyChanges();
   }
   
@@ -442,11 +456,14 @@ public:
   
   void createJointMenu(const string joint_name)
   {
-    menu_handler.insert("Relax all", boost::bind(&TurtlebotArmMarkerServer::relaxAllCb, this, _1));
-    menu_handler.insert("Relax this joint", boost::bind(&TurtlebotArmMarkerServer::relaxCb, this, joint_name, _1));
-    menu_handler.insert("Switch to Trajectory Control", boost::bind(&TurtlebotArmMarkerServer::switchToArmControlCb, this, _1));
+    MenuHandler joint_handler;
+    joint_handler.insert("Relax all", boost::bind(&TurtlebotArmMarkerServer::relaxAllCb, this, _1));
+    joint_handler.insert("Relax this joint", boost::bind(&TurtlebotArmMarkerServer::relaxCb, this, joint_name, _1));
+    joint_handler.insert("Switch to Trajectory Control", boost::bind(&TurtlebotArmMarkerServer::switchToArmControlCb, this, _1));
     
-    menu_handler.apply( server, joint_name );
+    joint_menu_handlers[joint_name] = joint_handler;
+    
+    joint_menu_handlers[joint_name].apply( server, joint_name );
     server.applyChanges();
   }
 
@@ -463,31 +480,30 @@ public:
     }
   }
   
-  void relaxCb(const std::string joint, const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
+  void relaxCb(const std::string joint_name, const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
   {
-    ros::Publisher relax_pub = nh.advertise<std_msgs::Empty>(joint + "/relax", 1, false);
-    relax_pub.publish(std_msgs::Empty());
+    joint_relax_publishers[joint_name].publish(std_msgs::Empty());
   }
   
   void immediateCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
   {
     MenuHandler::EntryHandle handle = feedback->menu_entry_id;
     MenuHandler::CheckState state;
-    menu_handler.getCheckState( handle, state );
+    arm_menu_handler.getCheckState( handle, state );
 
     if ( state == MenuHandler::CHECKED )
     {
-      menu_handler.setCheckState( handle, MenuHandler::UNCHECKED );
+      arm_menu_handler.setCheckState( handle, MenuHandler::UNCHECKED );
       ROS_INFO("Switching to cached commands");
       immediate_commands = false;
     }
     else
     {
-      menu_handler.setCheckState( handle, MenuHandler::CHECKED );
+      arm_menu_handler.setCheckState( handle, MenuHandler::CHECKED );
       ROS_INFO("Switching to immediate comands");
       immediate_commands = true;
     }
-    menu_handler.reApply(server);
+    arm_menu_handler.reApply(server);
     
     server.applyChanges();
   }
@@ -505,6 +521,7 @@ public:
     
     createJointMarkers();
     createJointMenus();
+
   }
   
   void switchToArmControlCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
@@ -514,7 +531,11 @@ public:
     
     createArmMarker();
     createGripperMarker();
-    createArmMenu();
+    //createArmMenu();
+    
+    arm_menu_handler.reApply(server);
+    
+    resetMarker();
   }
 };
 
