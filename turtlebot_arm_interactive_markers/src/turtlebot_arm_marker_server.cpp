@@ -74,7 +74,7 @@ class TurtlebotArmMarkerServer
     vector<string> links;
     
     map<std::string, ros::Publisher> joint_command_publishers;
-    map<std::string, ros::Publisher> joint_relax_publishers;
+    map<std::string, ros::ServiceClient> joint_relax_clients;
     
 public:
   TurtlebotArmMarkerServer()
@@ -118,7 +118,7 @@ public:
     BOOST_FOREACH( std::string joint_name, joints )
     {
       joint_command_publishers[joint_name] = (nh.advertise<std_msgs::Float64>("/" + joint_name + "/command", 1, false));
-      joint_relax_publishers[joint_name] = (nh.advertise<std_msgs::Empty>("/" + joint_name + "/relax", 1, false));
+      joint_relax_clients[joint_name] = (nh.serviceClient<arbotix_msgs::Relax>("/" + joint_name + "/relax"));
     }
   
   }
@@ -482,7 +482,8 @@ public:
   
   void relaxCb(const std::string joint_name, const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
   {
-    joint_relax_publishers[joint_name].publish(std_msgs::Empty());
+    arbotix_msgs::Relax srv;
+    joint_relax_clients[joint_name].call(srv);
   }
   
   void immediateCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
