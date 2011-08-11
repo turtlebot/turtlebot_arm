@@ -1,0 +1,25 @@
+<package>
+  <description brief="turtlebot_kinect_arm_calibration">
+
+     turtlebot_kinect_arm_calibration
+
+  </description>
+  <author>Elena Oleynikova</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/turtlebot_kinect_arm_calibration</url>
+
+  <depend package="roscpp"/>
+  <depend package="visualization_msgs"/>
+  <depend package="tf"/>
+  <depend package="eigen"/>
+  <depend package="opencv2"/>
+  <depend package="image_geometry"/>
+  <depend package="pcl"/>
+  <depend package="pcl_ros"/>
+  <depend package="image_transport"/>
+  <depend package="cv_bridge"/>
+
+</package>
+
+
