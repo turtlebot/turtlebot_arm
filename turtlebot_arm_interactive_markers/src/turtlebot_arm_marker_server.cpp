@@ -359,9 +359,9 @@ public:
     InteractiveMarker int_marker;
     int_marker.header.frame_id = tip_link;
     int_marker.name = "gripper_marker";
-    int_marker.scale = 0.05;
+    int_marker.scale = 0.075;
 
-    int_marker.pose.position.x = 0.04;
+    int_marker.pose.position.x = 0.02;
     int_marker.pose.position.y = 0.025;
 
     Marker marker;
@@ -374,6 +374,9 @@ public:
     marker.color.g = 1.0;
     marker.color.b = 0.0;
     marker.color.a = .7;
+    
+    marker.pose.position.x = -0.017;
+    marker.pose.position.y = -0.008;
 
     InteractiveMarkerControl box_control;
     box_control.always_visible = true;
@@ -417,7 +420,7 @@ public:
     control.orientation.x = 0;
     control.orientation.y = 0;
     control.orientation.z = 1;
-    control.name = "rotate_y";
+    control.name = "rotate_z";
     control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
     int_marker.controls.push_back(control);
 
