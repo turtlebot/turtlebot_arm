@@ -9,17 +9,19 @@
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
-
+#include <pcl/registration/registration.h>
 
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
+#include <geometry_msgs/PointStamped.h>
 
 #include <turtlebot_kinect_arm_calibration/detect_calibration_pattern.h>
 
 using namespace std;
 using namespace Eigen;
 
-//const std::string world_frame = "/ground_frame";
+const std::string fixed_frame = "/odom_combined";
+const std::string camera_frame = "/camera_link";
 //const std::string base_frame = "/target_frame";
 //const std::string camera_frame = "/kinect_rgb_optical_frame";
 const std::string target_frame = "/calibration_pattern";
@@ -37,6 +39,37 @@ const std::string info_topic = camera_topic + "camera_info";
 const int checkerboard_width = 6;
 const int checkerboard_height = 7;
 const double checkerboard_grid = 0.027;
+
+
+// TODO: replace
+tf::Transform tfFromEigen(Eigen::Matrix4f trans)
+{
+    btMatrix3x3 btm;
+    btm.setValue(trans(0,0),trans(0,1),trans(0,2),
+               trans(1,0),trans(1,1),trans(1,2),
+               trans(2,0),trans(2,1),trans(2,2));
+    btTransform ret;
+    ret.setOrigin(btVector3(trans(0,3),trans(1,3),trans(2,3)));
+    ret.setBasis(btm);
+    return ret;
+}
+
+Eigen::Matrix4f EigenFromTF(tf::Transform trans)
+{
+  Eigen::Matrix4f out;
+  btQuaternion quat = trans.getRotation();
+  btVector3 origin = trans.getOrigin();
+  
+  Eigen::Quaternionf quat_out(quat.w(), quat.x(), quat.y(), quat.z());
+  Eigen::Vector3f origin_out(origin.x(), origin.y(), origin.z());
+  
+  out.topLeftCorner<3,3>() = quat_out.toRotationMatrix();
+  out.topRightCorner<3,1>() = origin_out;
+  out(3,3) = 1;
+  
+  return out;
+}
+
 
 class CalibrateKinectCheckerboard
 {
@@ -73,9 +106,12 @@ class CalibrateKinectCheckerboard
     pcl::PointCloud<pcl::PointXYZ> detector_points_;
     pcl::PointCloud<pcl::PointXYZ> ideal_points_;
     pcl::PointCloud<pcl::PointXYZ> image_points_;
+    pcl::PointCloud<pcl::PointXYZ> physical_points_;
     
     // Have we calibrated the camera yet?
     bool calibrated;
+    
+    ros::Timer timer_;
 
 public:
   CalibrateKinectCheckerboard()
@@ -99,13 +135,20 @@ public:
     detector_pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("detector_cloud", 1);
     
     // Publish first gripper_touch transform
-    tf_broadcaster_.sendTransform(tf::StampedTransform(touch_transform, ros::Time(0), tip_frame, touch_frame));
+    tf_broadcaster_.sendTransform(tf::StampedTransform(touch_transform, ros::Time::now(), tip_frame, touch_frame));
+    timer_ = nh_.createTimer(ros::Duration(0.1), &CalibrateKinectCheckerboard::publishTFCallback, this, false);
+    
     
     // Create ideal points
     ideal_points_.push_back( pcl::PointXYZ(0, 0, 0) );
     ideal_points_.push_back( pcl::PointXYZ((checkerboard_width-1)*checkerboard_grid, 0, 0) );
     ideal_points_.push_back( pcl::PointXYZ(0, (checkerboard_height-1)*checkerboard_grid, 0) );
     ideal_points_.push_back( pcl::PointXYZ((checkerboard_width-1)*checkerboard_grid, (checkerboard_height-1)*checkerboard_grid, 0) );
+  }
+
+  void publishTFCallback(const ros::TimerEvent&)
+  {
+    tf_broadcaster_.sendTransform(tf::StampedTransform(touch_transform, ros::Time::now(), tip_frame, touch_frame));
   }
 
   void infoCallback(const sensor_msgs::CameraInfoConstPtr& info_msg)
@@ -121,9 +164,6 @@ public:
     cout << "Got image info!" << endl;
   }
   
-
-
-  
   void pointcloudCallback(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& msg)
   {
     sensor_msgs::ImagePtr image_msg(new sensor_msgs::Image);
@@ -134,9 +174,6 @@ public:
   
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg)
   {
-    // Send out gripper touch transform
-    tf_broadcaster_.sendTransform(tf::StampedTransform(touch_transform, ros::Time(0), tip_frame, touch_frame));
-  
     try
     {
       bridge_ = cv_bridge::toCvCopy(image_msg, "mono8");
@@ -194,7 +231,14 @@ public:
                   base_transform.getRotation().x(), base_transform.getRotation().y(), 
                   base_transform.getRotation().z()); */
   
-  
+    pcl_ros::transformPointCloud(ideal_points_, image_points_, target_transform);
+    
+    
+    cout << "Got an image callback!" << endl;
+    
+    calibrate(image_msg->header.frame_id);
+    
+    ros::shutdown();
   }
   
 
@@ -203,25 +247,98 @@ public:
     // Display to rviz
     pcl::PointCloud<pcl::PointXYZ> transformed_detector_points;
     
-    
     pcl_ros::transformPointCloud(detector_points, transformed_detector_points, transform);
     
     transformed_detector_points.header.frame_id = frame_id;
     detector_pub_.publish(transformed_detector_points);
   }  
   
-  void calibrate()
+  bool calibrate(const std::string frame_id)
   {
+    physical_points_.empty();
     cout << "Is the checkerboard correct? " << endl;
     cout << "Move edge of gripper to point 1 in image and press Enter. " << endl;
+    cin.ignore();
+    addPhysicalPoint();
     cout << "Move edge of gripper to point 2 in image and press Enter. " << endl;
+    cin.ignore();
+    addPhysicalPoint();
     cout << "Move edge of gripper to point 3 in image and press Enter. " << endl;
+    cin.ignore();
+    addPhysicalPoint();
     cout << "Move edge of gripper to point 4 in image and press Enter. " << endl;
-    cout << "Does this transform seem right? " << endl;
-    cout << "Run this in the command line: " << endl;
+    cin.ignore();
+    addPhysicalPoint();
     
+    Eigen::Matrix4f t;
     
+    pcl::estimateRigidTransformationSVD( physical_points_, image_points_, t );
+    //cout << "Does this transform seem right? " << endl;
+    //cout << "Run this in the command line: " << endl;
+
+    // TEMP: output
+
+    // output cloud & board frame       
+    tf::Transform transform = tfFromEigen(t), trans_full, camera_transform_unstamped;
+    tf::StampedTransform camera_transform;
   
+    cout << "Resulting transform (/odom_combined -> /rgb_optical_frame): " << endl << t << endl << endl;
+    cout << "Quick test: this should be the same as above. " << endl << EigenFromTF(transform) << endl << endl;
+    printStaticTransform(t, frame_id, fixed_frame);
+    
+    
+    try
+    {
+      tf_listener_.lookupTransform(frame_id, camera_frame, ros::Time(0), camera_transform);
+    }
+    catch (tf::TransformException& ex)
+    {
+      ROS_WARN("[calibrate] TF exception:\n%s", ex.what());
+      return false;
+    }
+
+    camera_transform_unstamped = camera_transform;
+    trans_full = camera_transform_unstamped.inverse()*transform;
+    
+    Eigen::Matrix4f t_full = EigenFromTF(trans_full);
+    
+    cout << "Resulting transform (/odom_combined -> /camera_link): " << endl << t_full << endl << endl;
+    printStaticTransform(t_full, camera_frame, fixed_frame);
+
+    return true;
+  }
+  
+  void printStaticTransform(Eigen::Matrix4f& transform, const std::string frame1, const std::string frame2)
+  {
+    Eigen::Quaternionf quat(transform.topLeftCorner<3,3>() );
+    Eigen::Vector3f translation(transform.topRightCorner<3,1>() );
+    
+    cout << "rosrun tf static_transform_publisher x y z qx qy qz qw frame_id child_frame_id period_in_ms" << endl;
+    cout << "rosrun tf static_transform_publisher " << translation.x() << " "
+         << translation.y() << " " << translation.z() << " " 
+         << quat.x() << " " << quat.y() << " " << quat.z() << " " << quat.w() << " "
+         << frame1 << " " << frame2 << " 100" << endl;
+  }
+  
+  void addPhysicalPoint()
+  {
+    geometry_msgs::PointStamped pt, pt_out; // Initialized to (0,0,0)
+    
+    pt.point.x = 0;
+    pt.point.y = -0.016;
+    pt.point.z = -0.019;
+    pt.header.frame_id = tip_frame;
+    try
+    {
+      tf_listener_.transformPoint(fixed_frame, pt, pt_out);
+    }
+    catch (tf::TransformException& ex)
+    {
+      ROS_WARN("[calibrate] TF exception:\n%s", ex.what());
+      return;
+    }
+    
+    physical_points_.push_back(pcl::PointXYZ(pt_out.point.x, pt_out.point.y, pt_out.point.z));
   }
 
   void convertIdealPointstoPointcloud()
