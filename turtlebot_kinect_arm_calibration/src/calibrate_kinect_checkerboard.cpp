@@ -135,8 +135,8 @@ public:
     detector_pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("detector_cloud", 1);
     
     // Publish first gripper_touch transform
-    tf_broadcaster_.sendTransform(tf::StampedTransform(touch_transform, ros::Time::now(), tip_frame, touch_frame));
-    timer_ = nh_.createTimer(ros::Duration(0.1), &CalibrateKinectCheckerboard::publishTFCallback, this, false);
+    //tf_broadcaster_.sendTransform(tf::StampedTransform(touch_transform, ros::Time::now(), tip_frame, touch_frame));
+    //timer_ = nh_.createTimer(ros::Duration(0.1), &CalibrateKinectCheckerboard::publishTFCallback, this, false);
     
     
     // Create ideal points
@@ -301,9 +301,10 @@ public:
     trans_full = camera_transform_unstamped.inverse()*transform;
     
     Eigen::Matrix4f t_full = EigenFromTF(trans_full);
+    Eigen::Matrix4f t_full_inv = (Eigen::Transform<float,3,Affine>(t_full).inverse()).matrix();
     
     cout << "Resulting transform (/odom_combined -> /camera_link): " << endl << t_full << endl << endl;
-    printStaticTransform(t_full, camera_frame, fixed_frame);
+    printStaticTransform(t_full_inv, fixed_frame, camera_frame);
 
     return true;
   }
