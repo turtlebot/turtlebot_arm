@@ -1,0 +1,9 @@
+#goal definition
+string frame
+float32 table_height
+float32 block_size
+---
+#result definition
+geometry_msgs/PoseArray blocks
+---
+#feedback
