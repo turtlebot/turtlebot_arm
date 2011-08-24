@@ -84,6 +84,7 @@ public:
 
   void goalCB()
   {
+    ROS_INFO("[pick and place] Received goal!");
     goal_ = as_.acceptNewGoal();
     arm_link = goal_->frame;
     gripper_open = goal_->gripper_open;
@@ -99,7 +100,8 @@ public:
 
   void sendGoalFromTopic(const geometry_msgs::PoseArrayConstPtr& msg)
   {
-    pickAndPlace(goal_->pickup_pose, goal_->place_pose);
+    ROS_INFO("[pick and place] Got goal from topic! %s", goal_->topic.c_str());
+    pickAndPlace(msg->poses[0], msg->poses[1]);
     pick_and_place_sub_.shutdown();
   }
 
@@ -112,6 +114,8 @@ public:
   
   void pickAndPlace(const geometry_msgs::Pose& start_pose, const geometry_msgs::Pose& end_pose)
   {
+    ROS_INFO("[pick and place] Picking. Also placing.");
+  
     simple_arm_server::MoveArm srv;
     simple_arm_server::ArmAction action;
     simple_arm_server::ArmAction grip;
@@ -171,12 +175,17 @@ public:
 
     /* go up */
     action.goal.position.z = z_up;
-    srv.request.goals.push_back(action);
     action.move_time.sec = 0.25;
+    srv.request.goals.push_back(action);
   
     srv.request.header.frame_id = arm_link;
     if (client_.call(srv))
-      as_.setSucceeded(result_);
+    {
+      if (srv.response.success)
+        as_.setSucceeded(result_);
+      else
+        as_.setAborted(result_);
+    }
     else
       as_.setAborted(result_);
   }

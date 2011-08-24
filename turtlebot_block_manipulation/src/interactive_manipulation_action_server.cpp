@@ -71,15 +71,23 @@ public:
   InteractiveManipulationServer(const std::string name) : 
      nh_(), server_("block_controls"), as_(nh_, name, false), action_name_(name)
   {
-    block_sub_ = nh_.subscribe(block_topic, 1, 
-    &InteractiveManipulationServer::addBlocks, this);
+    //register the goal and feeback callbacks
+    as_.registerGoalCallback(boost::bind(&InteractiveManipulationServer::goalCB, this));
+    as_.registerPreemptCallback(boost::bind(&InteractiveManipulationServer::preemptCB, this));
+    
+    as_.start();
+  
+    block_sub_ = nh_.subscribe(block_topic, 1, &InteractiveManipulationServer::addBlocks, this);
     pick_and_place_pub_ = nh_.advertise< geometry_msgs::PoseArray >(pick_and_place_topic, 1, true);
   }
   
   void goalCB()
   {
+
     // accept the new goal
     goal_ = as_.acceptNewGoal();
+    
+    ROS_INFO("[interactive manipulation] Received goal! %f, %s", goal_->block_size, goal_->frame.c_str());
     
     block_size = goal_->block_size;
     arm_link = goal_->frame;
@@ -115,6 +123,11 @@ public:
   // Move the real block!
   void feedbackCb( const InteractiveMarkerFeedbackConstPtr &feedback )
   {
+    if (!as_.isActive())
+    {
+      ROS_INFO("Got feedback but not active!");
+      return;
+    }
     switch ( feedback->event_type )
     {
       case visualization_msgs::InteractiveMarkerFeedback::MOUSE_DOWN:

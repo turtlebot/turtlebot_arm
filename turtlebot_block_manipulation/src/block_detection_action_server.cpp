@@ -99,6 +99,7 @@ public:
 
   void goalCB()
   {
+    ROS_INFO("[block detection] Received goal!");
     // accept the new goal
     result_.blocks.poses.clear();
     
