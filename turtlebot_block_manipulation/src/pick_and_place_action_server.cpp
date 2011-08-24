@@ -36,6 +36,8 @@
 #include <simple_arm_server/MoveArm.h>
 #include <simple_arm_server/ArmAction.h>
 
+#include <geometry_msgs/PoseArray.h>
+
 /*const std::string arm_link = "/arm_base_link";
 const double gripper_open = 0.04;
 const double gripper_closed = 0.024;
@@ -52,13 +54,13 @@ private:
   actionlib::SimpleActionServer<turtlebot_block_manipulation::PickAndPlaceAction> as_;
   std::string action_name_;
   
-  turtlebot_block_manipulation::PickAndPlaceFeedback feedback_;
-  turtlebot_block_manipulation::PickAndPlaceResult result_;
+  turtlebot_block_manipulation::PickAndPlaceFeedback     feedback_;
+  turtlebot_block_manipulation::PickAndPlaceResult       result_;
   turtlebot_block_manipulation::PickAndPlaceGoalConstPtr goal_;
   
   ros::ServiceClient client_;
-  ros::Subscriber sub_;
-  ros::Publisher pub_;
+  
+  ros::Subscriber pick_and_place_sub_;
   
   // Parameters
   std::string arm_link;
@@ -89,7 +91,16 @@ public:
     z_up = goal_->z_up;
     z_down = goal_->z_down;
     
+    if (goal_->topic.length() < 1)
+      pickAndPlace(goal_->pickup_pose, goal_->place_pose);
+    else
+      pick_and_place_sub_ = nh_.subscribe(goal_->topic, 1, &PickAndPlaceServer::sendGoalFromTopic, this);
+  }
+
+  void sendGoalFromTopic(const geometry_msgs::PoseArrayConstPtr& msg)
+  {
     pickAndPlace(goal_->pickup_pose, goal_->place_pose);
+    pick_and_place_sub_.shutdown();
   }
 
   void preemptCB()

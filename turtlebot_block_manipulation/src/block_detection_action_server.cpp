@@ -56,6 +56,8 @@ const double z_down = -0.04;
 
 const double block_size = 0.0127; */
 
+const std::string block_topic = "/turtlebot_blocks";
+
 class BlockDetectionServer
 {
 private:
@@ -76,6 +78,8 @@ private:
   double block_size;
   double table_height;
   
+  ros::Publisher block_pub_;
+  
 public:
   BlockDetectionServer(const std::string name) : 
     nh_(), as_(nh_, name, false), action_name_(name)
@@ -89,6 +93,8 @@ public:
     // subscribe to point cloud
     sub_ = nh_.subscribe("/camera/depth_registered/points", 1, &BlockDetectionServer::cloudCb, this);
     pub_ = nh_.advertise< pcl::PointCloud<pcl::PointXYZRGB> >("block_output", 1);
+    
+    block_pub_ = nh_.advertise< geometry_msgs::PoseArray >(block_topic, 1, true);
   }
 
   void goalCB()
@@ -177,7 +183,10 @@ public:
     }
     
     if (result_.blocks.poses.size() > 0)
+    {
       as_.setSucceeded(result_);
+      block_pub_.publish(result_.blocks);
+    }
     //else
     //  as_.setAborted(result_);
   }

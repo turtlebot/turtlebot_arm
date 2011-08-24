@@ -41,11 +41,11 @@
 using namespace visualization_msgs;
 
 const std::string arm_link = "/arm_base_link";
-const double gripper_open = 0.04;
+const double gripper_open = 0.042;
 const double gripper_closed = 0.024;
 
 const double z_up = 0.08;
-const double z_down = -0.04;
+const double z_down = -0.05;
 
 const double block_size = 0.0127;
 
@@ -115,6 +115,8 @@ public:
       addBlock(block.position.x, block.position.y, block.position.z, i);
       ROS_INFO("Added %d blocks", i);
     }
+    
+    server_.applyChanges(); 
   }
   
 
@@ -187,8 +189,7 @@ public:
     conv << n;
     conv.str();
      
-    marker.name = "block" + conv.str();       
-    marker.description = "Another block";
+    marker.name = "block" + conv.str();
 
     InteractiveMarkerControl control;
     control.orientation.w = 1;
