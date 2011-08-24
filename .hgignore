@@ -8,6 +8,8 @@ build
 turtle_drive/src/turtle_drive/msg
 turtlebot_node/src/turtlebot_node/msg
 turtlebot_node/src/turtlebot_node/srv
+turtlebot_block_manipulation/src/turtlebot_block_manipulation/msg
+
 
 # An attempt at ignoring action generated messages
 /msg/.*Action\.msg$
