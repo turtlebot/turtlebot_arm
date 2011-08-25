@@ -62,6 +62,8 @@ private:
   
   geometry_msgs::Pose old_pose_;
   
+  geometry_msgs::PoseArrayConstPtr msg_;
+  
   // Parameters
   std::string arm_link;
   double      block_size;
@@ -91,6 +93,8 @@ public:
     
     block_size = goal_->block_size;
     arm_link = goal_->frame;
+    
+    addBlocks(msg_);
   }
 
   void preemptCB()
@@ -117,6 +121,8 @@ public:
     }
     
     server_.applyChanges();
+    
+    msg_ = msg;
   }
   
 
