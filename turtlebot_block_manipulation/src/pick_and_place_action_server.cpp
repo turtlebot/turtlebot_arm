@@ -30,11 +30,12 @@
 
 #include <ros/ros.h>
 #include <tf/tf.h>
+
 #include <actionlib/server/simple_action_server.h>
 #include <turtlebot_block_manipulation/PickAndPlaceAction.h>
 
-#include <simple_arm_server/MoveArm.h>
-#include <simple_arm_server/ArmAction.h>
+#include <actionlib/client/simple_action_client.h>
+#include <simple_arm_server/MoveArmAction.h>
 
 #include <geometry_msgs/PoseArray.h>
 
@@ -58,7 +59,7 @@ private:
   turtlebot_block_manipulation::PickAndPlaceResult       result_;
   turtlebot_block_manipulation::PickAndPlaceGoalConstPtr goal_;
   
-  ros::ServiceClient client_;
+  actionlib::SimpleActionClient<simple_arm_server::MoveArmAction> client_;
   
   ros::Subscriber pick_and_place_sub_;
   
@@ -71,7 +72,7 @@ private:
   
 public:
   PickAndPlaceServer(const std::string name) : 
-    nh_(), as_(nh_, name, false), action_name_(name)
+    nh_(), as_(nh_, name, false), action_name_(name), client_("move_arm", true)
   {
     //register the goal and feeback callbacks
     as_.registerGoalCallback(boost::bind(&PickAndPlaceServer::goalCB, this));
@@ -79,7 +80,7 @@ public:
     
     as_.start();
     
-    client_ = nh_.serviceClient<simple_arm_server::MoveArm>("simple_arm_server/move");
+    //client_ = nh_.serviceClient<simple_arm_server::MoveArm>("simple_arm_server/move");
   }
 
   void goalCB()
@@ -116,7 +117,7 @@ public:
   {
     ROS_INFO("[pick and place] Picking. Also placing.");
   
-    simple_arm_server::MoveArm srv;
+    simple_arm_server::MoveArmGoal goal;
     simple_arm_server::ArmAction action;
     simple_arm_server::ArmAction grip;
     
@@ -124,7 +125,7 @@ public:
     grip.type = simple_arm_server::ArmAction::MOVE_GRIPPER;
     grip.move_time.sec = 1.0;
     grip.command = gripper_open;
-    srv.request.goals.push_back(grip);
+    goal.motions.push_back(grip);
     
     /* arm straight up */
     btQuaternion temp;
@@ -138,54 +139,51 @@ public:
     action.goal.position.x = start_pose.position.x;
     action.goal.position.y = start_pose.position.y;
     action.goal.position.z = z_up;
-    srv.request.goals.push_back(action);
+    goal.motions.push_back(action);
     action.move_time.sec = 1.5;
 
     /* go down */
     action.goal.position.z = z_down;
-    srv.request.goals.push_back(action);
+    goal.motions.push_back(action);
     action.move_time.sec = 1.5;
 
     /* close gripper */
     grip.type = simple_arm_server::ArmAction::MOVE_GRIPPER;
     grip.command = gripper_closed;
     grip.move_time.sec = 1.0;
-    srv.request.goals.push_back(grip);
+    goal.motions.push_back(grip);
 
     /* go up */
     action.goal.position.z = z_up;
-    srv.request.goals.push_back(action);
+    goal.motions.push_back(action);
     action.move_time.sec = 0.25;
 
     /* hover over */
     action.goal.position.x = end_pose.position.x;
     action.goal.position.y = end_pose.position.y;
     action.goal.position.z = z_up;
-    srv.request.goals.push_back(action);
+    goal.motions.push_back(action);
     action.move_time.sec = 1.5;
 
     /* go down */
     action.goal.position.z = z_down;
-    srv.request.goals.push_back(action);
+    goal.motions.push_back(action);
     action.move_time.sec = 1.5;
 
     /* open gripper */
     grip.command = gripper_open;
-    srv.request.goals.push_back(grip);
+    goal.motions.push_back(grip);
 
     /* go up */
     action.goal.position.z = z_up;
     action.move_time.sec = 0.25;
-    srv.request.goals.push_back(action);
+    goal.motions.push_back(action);
   
-    srv.request.header.frame_id = arm_link;
-    if (client_.call(srv))
-    {
-      if (srv.response.success)
-        as_.setSucceeded(result_);
-      else
-        as_.setAborted(result_);
-    }
+    goal.header.frame_id = arm_link;
+    client_.sendGoal(goal);
+    client_.waitForResult(/*ros::Duration(30.0)*/);
+    if (client_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+      as_.setSucceeded(result_);
     else
       as_.setAborted(result_);
   }

@@ -31,8 +31,9 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <simple_arm_server/MoveArm.h>
-#include <simple_arm_server/ArmAction.h>
+
+#include <actionlib/client/simple_action_client.h>
+#include <simple_arm_server/MoveArmAction.h>
 
 #include <pcl/ros/conversions.h>
 #include <pcl/point_cloud.h>
@@ -85,7 +86,7 @@ class BlockManipulation
 {
 private:
   interactive_markers::InteractiveMarkerServer server;
-  ros::ServiceClient client;
+  actionlib::SimpleActionClient<simple_arm_server::MoveArmAction> client_;
   ros::Publisher pub_;
   ros::Subscriber sub_;
   tf::TransformListener tf_listener_;
@@ -100,7 +101,7 @@ private:
 
 public:
 
-  BlockManipulation() : server("block_controls")
+  BlockManipulation() : server("block_controls"), client_("move_arm", true)
   {
     // create marker server
     markers_ = 0;
@@ -111,14 +112,14 @@ public:
     skip_ = 0;
 
     // open gripper
-    client = nh.serviceClient<simple_arm_server::MoveArm>("simple_arm_server/move");
-    simple_arm_server::MoveArm srv;
+    simple_arm_server::MoveArmGoal goal;
     simple_arm_server::ArmAction grip;
     grip.type = simple_arm_server::ArmAction::MOVE_GRIPPER;
     grip.command = gripper_open;
-    srv.request.goals.push_back(grip);
-    srv.request.header.frame_id = arm_link;
-    client.call(srv);
+    goal.motions.push_back(grip);
+    goal.header.frame_id = arm_link;
+    client_.sendGoal(goal);
+    client_.waitForResult(/*ros::Duration(30.0)*/);
 
     // subscribe to point cloud
     sub_ = nh.subscribe("/camera/depth_registered/points", 1, &BlockManipulation::cloudCb, this);
@@ -145,7 +146,7 @@ public:
         moving_ = true;
         ROS_INFO_STREAM("Now moving " << feedback->marker_name); 
 
-        simple_arm_server::MoveArm srv;
+        simple_arm_server::MoveArmGoal goal;
         simple_arm_server::ArmAction action;
         
         /* arm straight up */
@@ -160,12 +161,12 @@ public:
         action.goal.position.x = x_;
         action.goal.position.y = y_;
         action.goal.position.z = z_up;
-        srv.request.goals.push_back(action);
+        goal.motions.push_back(action);
         action.move_time.sec = 1.5;
 
         /* go down */
         action.goal.position.z = z_down;
-        srv.request.goals.push_back(action);
+        goal.motions.push_back(action);
         action.move_time.sec = 1.5;
 
         /* close gripper */
@@ -173,36 +174,37 @@ public:
         grip.type = simple_arm_server::ArmAction::MOVE_GRIPPER;
         grip.command = gripper_closed;
         grip.move_time.sec = 1.0;
-        srv.request.goals.push_back(grip);
+        goal.motions.push_back(grip);
 
         /* go up */
         action.goal.position.z = z_up;
-        srv.request.goals.push_back(action);
+        goal.motions.push_back(action);
         action.move_time.sec = 0.25;
 
         /* hover over */
         action.goal.position.x = feedback->pose.position.x;
         action.goal.position.y = feedback->pose.position.y;
         action.goal.position.z = z_up;
-        srv.request.goals.push_back(action);
+        goal.motions.push_back(action);
         action.move_time.sec = 1.5;
 
         /* go down */
         action.goal.position.z = z_down;
-        srv.request.goals.push_back(action);
+        goal.motions.push_back(action);
         action.move_time.sec = 1.5;
 
         /* open gripper */
         grip.command = gripper_open;
-        srv.request.goals.push_back(grip);
+        goal.motions.push_back(grip);
 
         /* go up */
         action.goal.position.z = z_up;
-        srv.request.goals.push_back(action);
+        goal.motions.push_back(action);
         action.move_time.sec = 0.25;
       
-        srv.request.header.frame_id = arm_link;
-        client.call(srv);
+        goal.header.frame_id = arm_link;
+        client_.sendGoal(goal);
+        client_.waitForResult(/*ros::Duration(30.0)*/);
         /* update location */ 
         for( std::vector<Block>::iterator it=marker_names_.begin(); it < marker_names_.end(); it++)
         {

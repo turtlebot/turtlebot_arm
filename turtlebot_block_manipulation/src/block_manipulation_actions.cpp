@@ -28,6 +28,9 @@
  * Author: Michael Ferguson, Helen Oleynikova
  */
 
+/* 
+ * This demo will 
+ */
 
 #include <ros/ros.h>
 

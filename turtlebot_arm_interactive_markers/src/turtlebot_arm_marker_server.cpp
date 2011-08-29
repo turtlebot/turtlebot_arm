@@ -28,9 +28,9 @@
  */
 
 #include <ros/ros.h>
-#include <simple_arm_server/MoveArm.h>
-#include <simple_arm_server/ArmAction.h>
 
+#include <actionlib/client/simple_action_client.h>
+#include <simple_arm_server/MoveArmAction.h>
 #include <arbotix_msgs/Relax.h>
 
 #include <interactive_markers/interactive_marker_server.h>
@@ -60,7 +60,7 @@ class TurtlebotArmMarkerServer
 {
   private:
     ros::NodeHandle nh;
-    ros::ServiceClient client;
+    actionlib::SimpleActionClient<simple_arm_server::MoveArmAction> client;
     interactive_markers::InteractiveMarkerServer server;
     tf::TransformListener tf_listener;
     
@@ -80,7 +80,7 @@ class TurtlebotArmMarkerServer
     
 public:
   TurtlebotArmMarkerServer()
-    : nh("~"), server("turtlebot_arm_marker_server"), tf_listener(nh), immediate_commands(true), in_move(false)
+    : nh("~"), client("move_arm", true), server("turtlebot_arm_marker_server"), tf_listener(nh), immediate_commands(true), in_move(false)
   {
     std::string arm_server_topic;
     
@@ -101,7 +101,9 @@ public:
     joints.push_back("gripper_joint");
     links.push_back("dynamixel_AX12_4_link");
     
-    client = nh.serviceClient<simple_arm_server::MoveArm>(arm_server_topic);
+    //client = nh.serviceClient<simple_arm_server::MoveArm>(arm_server_topic);
+    client.waitForServer();
+
     createArmMarker();
     createGripperMarker();
     createArmMenu();
@@ -183,10 +185,10 @@ public:
   
   bool sendTrajectoryCommand(const InteractiveMarkerFeedbackConstPtr &feedback)
   {
-    simple_arm_server::MoveArm srv;
+    simple_arm_server::MoveArmGoal goal;
     simple_arm_server::ArmAction action;
     
-    srv.request.header.frame_id = root_link;
+    goal.header.frame_id = root_link;
     
     geometry_msgs::Pose pose;
     getTransformedPose(feedback->header.frame_id, feedback->pose, root_link, pose, feedback->header.stamp);
@@ -195,49 +197,29 @@ public:
     action.goal.orientation = pose.orientation;
     action.goal.position = pose.position;
     action.move_time = ros::Duration(1.0);
-    srv.request.goals.push_back(action); 
+    goal.motions.push_back(action); 
     
-    if (client.call(srv))
-    {
-      if (srv.response.success)
-      {
-        cout << "Sent successful trajectory." << endl;
-        return true;
-      }
-      else
-        cout << "Could not solve for trajectory." << endl;
-    }
-    else
-      cout << "Could not contact simple_arm_server." << endl;
-    
+    client.sendGoal(goal);
+    client.waitForResult(ros::Duration(30.0));
+    if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+      return true;
     return false;
   }
   
   bool sendGripperCommand(const InteractiveMarkerFeedbackConstPtr &feedback)
   {
-    simple_arm_server::MoveArm srv;
+    simple_arm_server::MoveArmGoal goal;
     simple_arm_server::ArmAction action;
     
-    srv.request.header.frame_id = tip_link;
+    goal.header.frame_id = tip_link;
     action.type = simple_arm_server::ArmAction::MOVE_GRIPPER;
-    
     action.command = feedback->pose.position.y;
+    goal.motions.push_back(action); 
     
-    srv.request.goals.push_back(action); 
-    
-    if (client.call(srv))
-    {
-      if (srv.response.success)
-      {
-        cout << "Sent successful trajectory." << endl;
-        return true;
-      }
-      else
-        cout << "Could not solve for trajectory." << endl;
-    }
-    else
-      cout << "Could not contact simple_arm_server." << endl;
-    
+    client.sendGoal(goal);
+    client.waitForResult(ros::Duration(30.0));
+    if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+      return true;
     return false;
   }
 
