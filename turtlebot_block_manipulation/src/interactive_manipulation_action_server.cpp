@@ -116,7 +116,7 @@ public:
     for (unsigned int i=0; i < msg->poses.size(); i++)
     {
       block = msg->poses[i];
-      addBlock(block.position.x, block.position.y, block.position.z, i, active);
+      addBlock(block.position.x, block.position.y, block.position.z, i, active, msg->header.frame_id);
       ROS_INFO("Added %d blocks", i);
     }
     
@@ -156,6 +156,8 @@ public:
     result_.place_pose = end_pose;
     
     geometry_msgs::PoseArray msg;
+    msg.header.frame_id = arm_link;
+    msg.header.stamp = ros::Time::now();
     msg.poses.push_back(start_pose);
     msg.poses.push_back(end_pose);
     
@@ -182,10 +184,10 @@ public:
   }
    
   // Add a new block
-  void addBlock( float x, float y, float z, int n, bool active)
+  void addBlock( float x, float y, float z, int n, bool active, std::string link)
   {
     InteractiveMarker marker;
-    marker.header.frame_id = arm_link;
+    marker.header.frame_id = link;
     marker.pose.position.x = x;
     marker.pose.position.y = y;
     marker.pose.position.z = z;

@@ -109,6 +109,9 @@ public:
     table_height = goal_->table_height;
     arm_link = goal_->frame;
     
+    result_.blocks.header.frame_id = arm_link;
+    
+    
   }
 
   void preemptCB()
@@ -121,6 +124,8 @@ public:
   void cloudCb ( const sensor_msgs::PointCloud2ConstPtr& msg )
   {
     if (!as_.isActive()) return;
+    
+    result_.blocks.header.stamp = msg->header.stamp;
     
     // convert to PCL
     pcl::PointCloud<pcl::PointXYZRGB> cloud;
@@ -141,7 +146,7 @@ public:
     pcl::PassThrough<pcl::PointXYZRGB> pass;
     pass.setInputCloud(cloud_transformed); 
     pass.setFilterFieldName("z");
-    pass.setFilterLimits(table_height - 0.01, table_height + block_size*2);
+    pass.setFilterLimits(table_height - 0.02, table_height + block_size*2 + 0.02);
     pass.filter(*cloud_filtered);
     if( cloud_filtered->points.size() == 0 ){
       ROS_ERROR("0 points left");
