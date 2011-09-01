@@ -162,7 +162,7 @@ public:
     action.goal.position.x = end_pose.position.x;
     action.goal.position.y = end_pose.position.y;
     action.goal.position.z = z_up;
-    action.move_time.sec = 0.25;
+    action.move_time.sec = 1.0;
     goal.motions.push_back(action);
 
     /* go down */
@@ -176,13 +176,13 @@ public:
 
     /* go up */
     action.goal.position.z = z_up;
-    action.move_time.sec = 0.25;
+    action.move_time.sec = 1.0;
     goal.motions.push_back(action);
   
     goal.header.frame_id = arm_link;
     client_.sendGoal(goal);
     ROS_INFO("[pick and place] Sent goal. Waiting.");
-    client_.waitForResult(/*ros::Duration(30.0)*/);
+    client_.waitForResult(ros::Duration(30.0));
     ROS_INFO("[pick and place] Received result.");
     if (client_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
       as_.setSucceeded(result_);

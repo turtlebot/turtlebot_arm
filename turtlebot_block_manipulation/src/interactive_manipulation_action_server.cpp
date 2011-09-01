@@ -63,6 +63,7 @@ private:
   geometry_msgs::Pose old_pose_;
   
   geometry_msgs::PoseArrayConstPtr msg_;
+  bool initialized_;
   
   // Parameters
   std::string arm_link;
@@ -71,7 +72,7 @@ private:
 public:
 
   InteractiveManipulationServer(const std::string name) : 
-     nh_(), server_("block_controls"), as_(nh_, name, false), action_name_(name)
+     nh_(), server_("block_controls"), as_(nh_, name, false), action_name_(name), initialized_(false)
   {
     //register the goal and feeback callbacks
     as_.registerGoalCallback(boost::bind(&InteractiveManipulationServer::goalCB, this));
@@ -94,7 +95,8 @@ public:
     block_size = goal_->block_size;
     arm_link = goal_->frame;
     
-    addBlocks(msg_);
+    if (initialized_)
+      addBlocks(msg_);
   }
 
   void preemptCB()
@@ -116,13 +118,14 @@ public:
     for (unsigned int i=0; i < msg->poses.size(); i++)
     {
       block = msg->poses[i];
-      addBlock(block.position.x, block.position.y, block.position.z, i, active, msg->header.frame_id);
+      addBlock(block, i, active, msg->header.frame_id);
       ROS_INFO("Added %d blocks", i);
     }
     
     server_.applyChanges();
     
     msg_ = msg;
+    initialized_ = true;
   }
   
 
@@ -164,6 +167,9 @@ public:
     pick_and_place_pub_.publish(msg);
     
     as_.setSucceeded(result_);
+    
+    server_.clear();
+    server_.applyChanges();
   }
 
   // Make a box
@@ -184,13 +190,11 @@ public:
   }
    
   // Add a new block
-  void addBlock( float x, float y, float z, int n, bool active, std::string link)
+  void addBlock( const geometry_msgs::Pose pose, int n, bool active, std::string link)
   {
     InteractiveMarker marker;
     marker.header.frame_id = link;
-    marker.pose.position.x = x;
-    marker.pose.position.y = y;
-    marker.pose.position.z = z;
+    marker.pose = pose;
     marker.scale = 0.03;
     
     std::stringstream conv;
