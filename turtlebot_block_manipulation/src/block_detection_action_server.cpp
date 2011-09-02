@@ -1,7 +1,7 @@
-/* 
- * Copyright (c) 2011, Willow Garage
- * All Rights Reserved
- * 
+/*
+ * Copyright (c) 2011, Willow Garage, Inc.
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
@@ -10,20 +10,21 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of Vanadium Labs LLC nor the names of its 
- *       contributors may be used to endorse or promote products derived 
- *       from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL VANADIUM LABS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *     * Neither the name of the Willow Garage, Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived from
+ *       this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  * 
  * Author: Michael Ferguson, Helen Oleynikova
  */
@@ -63,7 +64,10 @@ const double z_down = -0.04;
 
 const double block_size = 0.0127; */
 
-const std::string block_topic = "/turtlebot_blocks";
+//const std::string block_topic = "/turtlebot_blocks";
+
+namespace turtlebot_block_manipulation
+{
 
 class BlockDetectionServer
 {
@@ -80,25 +84,33 @@ private:
   
   tf::TransformListener tf_listener_;
   
-  // Parameters
+  // Parameters from goal
   std::string arm_link;
   double block_size;
   double table_height;
   
   ros::Publisher block_pub_;
   
+  // Parameters from node
+  std::string block_topic;
+  std::string pointcloud_topic;
+  
 public:
   BlockDetectionServer(const std::string name) : 
-    nh_(), as_(nh_, name, false), action_name_(name)
+    nh_("~"), as_(nh_, name, false), action_name_(name)
   {
-    //register the goal and feeback callbacks
+    // Load parameters from the server.
+    nh_.param<std::string>("block_topic", block_topic, "/turtlebot_blocks");
+    nh_.param<std::string>("pointcloud_topic", pointcloud_topic, "/camera/depth_registered/points");
+  
+    // Register the goal and feeback callbacks.
     as_.registerGoalCallback(boost::bind(&BlockDetectionServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&BlockDetectionServer::preemptCB, this));
     
     as_.start();
     
-    // subscribe to point cloud
-    sub_ = nh_.subscribe("/camera/depth_registered/points", 1, &BlockDetectionServer::cloudCb, this);
+    // Subscribe to point cloud
+    sub_ = nh_.subscribe(pointcloud_topic, 1, &BlockDetectionServer::cloudCb, this);
     pub_ = nh_.advertise< pcl::PointCloud<pcl::PointXYZRGB> >("block_output", 1);
     
     block_pub_ = nh_.advertise< geometry_msgs::PoseArray >(block_topic, 1, true);
@@ -244,7 +256,7 @@ public:
       float yside = ymax-ymin;
       float zside = zmax-zmin;
       
-      const float tol = 0.01; // 5mm tolerance for error
+      const float tol = 0.01; // 1 cm error tolerance
       // In order to be part of the block, xside and yside must be between
       // blocksize and blocksize*sqrt(2)
       // z must be equal to or smaller than blocksize
@@ -293,11 +305,13 @@ public:
 
 };
 
+};
+
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "block_detection_action_server");
 
-  BlockDetectionServer server("block_detection");
+  turtlebot_block_manipulation::BlockDetectionServer server("block_detection");
   ros::spin();
 
   return 0;

@@ -47,6 +47,9 @@ const double z_up = 0.08;
 const double z_down = -0.04;
 */
 
+namespace turtlebot_block_manipulation
+{
+
 class PickAndPlaceServer
 {
 private:
@@ -63,7 +66,7 @@ private:
   
   ros::Subscriber pick_and_place_sub_;
   
-  // Parameters
+  // Parameters from goal
   std::string arm_link;
   double gripper_open;
   double gripper_closed;
@@ -72,15 +75,14 @@ private:
   
 public:
   PickAndPlaceServer(const std::string name) : 
-    nh_(), as_(nh_, name, false), action_name_(name), client_("move_arm", true)
+    nh_("~"), as_(nh_, name, false), action_name_(name), client_("move_arm", false)
   {
+  
     //register the goal and feeback callbacks
     as_.registerGoalCallback(boost::bind(&PickAndPlaceServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&PickAndPlaceServer::preemptCB, this));
     
     as_.start();
-    
-    //client_ = nh_.serviceClient<simple_arm_server::MoveArm>("simple_arm_server/move");
   }
 
   void goalCB()
@@ -191,11 +193,14 @@ public:
   }
 };
 
+};
+
+
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "pick_and_place_action_server");
 
-  PickAndPlaceServer server("pick_and_place");
+  turtlebot_block_manipulation::PickAndPlaceServer server("pick_and_place");
   ros::spin();
 
   return 0;

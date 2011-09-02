@@ -49,7 +49,7 @@
 using namespace std;
 using namespace Eigen;
 
-const std::string fixed_frame = "/base_link";
+/*const std::string fixed_frame = "/base_link";
 const std::string camera_frame = "/camera_link";
 //const std::string base_frame = "/target_frame";
 //const std::string camera_frame = "/kinect_rgb_optical_frame";
@@ -67,7 +67,7 @@ const std::string info_topic = camera_topic + "camera_info";
 
 const int checkerboard_width = 6;
 const int checkerboard_height = 7;
-const double checkerboard_grid = 0.027;
+const double checkerboard_grid = 0.027; */
 
 
 // TODO: replace
@@ -141,18 +141,49 @@ class CalibrateKinectCheckerboard
     bool calibrated;
     
     ros::Timer timer_;
+    
+    // Parameters
+    std::string fixed_frame;
+    std::string camera_frame;
+    std::string target_frame;
+    std::string tip_frame;
+    std::string touch_frame;
+    
+    std::string camera_topic;
+    std::string image_topic;
+    std::string cloud_topic;
+    std::string info_topic;
+    
+    int checkerboard_width;
+    int checkerboard_height;
+    double checkerboard_grid;
 
 public:
   CalibrateKinectCheckerboard()
-    : nh_(), it_(nh_), calibrated(false)
+    : nh_("~"), it_(nh_), calibrated(false)
   {
+    // Load parameters from the server.
+    nh_.param<std::string>("fixed_frame", fixed_frame, "/base_link");
+    nh_.param<std::string>("camera_frame", camera_frame, "/camera_link");
+    nh_.param<std::string>("target_frame", target_frame, "/calibration_pattern");
+    nh_.param<std::string>("tip_frame", tip_frame, "/gripper_link");
+    nh_.param<std::string>("touch_frame", touch_frame, "/gripper_touch");
+    nh_.param<std::string>("camera_topic", camera_topic, "/camera/rgb/");
+    
+    nh_.param<int>("checkerboard_width", checkerboard_width, 6);
+    nh_.param<int>("checkerboard_height", checkerboard_height, 7);
+    nh_.param<double>("checkerboard_grid", checkerboard_grid, 0.027);
+    
+    image_topic = camera_topic + "image_mono";
+    cloud_topic = camera_topic + "points";
+    info_topic = camera_topic + "camera_info";
+
+    // Set pattern detector sizes
     pattern_detector_.setPattern(cv::Size(checkerboard_width, checkerboard_height), checkerboard_grid, CHESSBOARD);
-    //convertIdealPointsToPointVector();
     
     transform_.translation().setZero();
     transform_.matrix().topLeftCorner<3, 3>() = Quaternionf().setIdentity().toRotationMatrix();
     
-    // DEBUG
     pub_ = it_.advertise("calibration_pattern_out", 1);
     
     // Create subscriptions
@@ -162,11 +193,6 @@ public:
     
     // Also publishers
     detector_pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("detector_cloud", 1);
-    
-    // Publish first gripper_touch transform
-    //tf_broadcaster_.sendTransform(tf::StampedTransform(touch_transform, ros::Time::now(), tip_frame, touch_frame));
-    //timer_ = nh_.createTimer(ros::Duration(0.1), &CalibrateKinectCheckerboard::publishTFCallback, this, false);
-    
     
     // Create ideal points
     ideal_points_.push_back( pcl::PointXYZ(0, 0, 0) );
