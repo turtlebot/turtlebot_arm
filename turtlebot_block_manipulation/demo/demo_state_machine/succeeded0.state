@@ -1,0 +1,16 @@
+(ircommander.outcome_tool
+EmptyState
+p1
+(dp2
+S'self'
+p3
+(lp4
+I01
+asS'parent_state'
+p5
+(lp6
+S'succeeded0'
+p7
+a(dp8
+aI00
+asb.
