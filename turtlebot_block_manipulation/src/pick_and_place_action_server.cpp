@@ -75,7 +75,7 @@ private:
   
 public:
   PickAndPlaceServer(const std::string name) : 
-    nh_("~"), as_(name, false), action_name_(name), client_("move_arm", false)
+    nh_("~"), as_(name, false), action_name_(name), client_("/move_arm", true)
   {
   
     //register the goal and feeback callbacks
@@ -189,7 +189,10 @@ public:
     if (client_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
       as_.setSucceeded(result_);
     else
+    {
+      ROS_INFO("Actual state: %s", client_.getState().toString().c_str());
       as_.setAborted(result_);
+    }
   }
 };
 
