@@ -243,7 +243,10 @@ public:
     Eigen::Quaternionf orientation;
     
     if (!pattern_detector_.detectPattern(bridge_->image, translation, orientation))
+    {
+      ROS_INFO("[calibrate] Couldn't detect checkerboard, make sure it's visible in the image.");
       return;
+    }
       
     // DEBUG
     pub_.publish(bridge_->toImageMsg());

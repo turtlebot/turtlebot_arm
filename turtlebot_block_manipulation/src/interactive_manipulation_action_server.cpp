@@ -75,7 +75,7 @@ private:
 public:
 
   InteractiveManipulationServer(const std::string name) : 
-     nh_("~"), server_("block_controls"), as_(nh_, name, false), action_name_(name), initialized_(false)
+     nh_("~"), server_("block_controls"), as_(name, false), action_name_(name), initialized_(false)
   {
     // Load parameters from the server.
     nh_.param<std::string>("block_topic", block_topic, "/turtlebot_blocks");
@@ -202,7 +202,7 @@ public:
     InteractiveMarker marker;
     marker.header.frame_id = link;
     marker.pose = pose;
-    marker.scale = 0.03;
+    marker.scale = block_size;
     
     std::stringstream conv;
     conv << n;

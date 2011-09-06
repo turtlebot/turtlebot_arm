@@ -4,6 +4,6 @@
   <!-- reset arm action servers too -->
   <include file="$(find openni_camera)/launch/openni_node.launch" />
   
-  <node name="turtlebot_rcommander" pkg="turtlebot_rcommander_apps" type="rcommander_turtlebot.py" output="screen" />
+  <node name="block_manipulation_action_demo" pkg="turtlebot_block_manipulation" type="block_manipulation_action_demo" output="screen" />
   
 </launch>

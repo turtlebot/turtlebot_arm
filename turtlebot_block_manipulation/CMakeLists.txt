@@ -30,6 +30,7 @@ rosbuild_add_executable(block_detection_action_server src/block_detection_action
 rosbuild_add_executable(interactive_manipulation_action_server src/interactive_manipulation_action_server.cpp)
 rosbuild_add_executable(pick_and_place_action_server src/pick_and_place_action_server.cpp)
 rosbuild_add_executable(block_manipulation_actions test/block_manipulation_actions.cpp)
+rosbuild_add_executable(block_manipulation_action_demo demo/block_manipulation_action_demo.cpp)
 
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)

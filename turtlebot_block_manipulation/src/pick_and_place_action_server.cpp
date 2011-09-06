@@ -75,7 +75,7 @@ private:
   
 public:
   PickAndPlaceServer(const std::string name) : 
-    nh_("~"), as_(nh_, name, false), action_name_(name), client_("move_arm", false)
+    nh_("~"), as_(name, false), action_name_(name), client_("move_arm", false)
   {
   
     //register the goal and feeback callbacks
