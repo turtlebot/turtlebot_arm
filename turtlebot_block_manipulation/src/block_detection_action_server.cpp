@@ -195,6 +195,8 @@ public:
         std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
         return;
       }
+      
+      std::cout << "Inliers: " << (inliers->indices.size ()) << std::endl;
 
       // Extract the planar inliers from the input cloud
       pcl::ExtractIndices<pcl::PointXYZRGB> extract;
@@ -285,8 +287,10 @@ public:
     {
       as_.setSucceeded(result_);
       block_pub_.publish(result_.blocks);
+      ROS_INFO("[block detection] Set as succeeded!");
     }
-    //else
+    else
+      ROS_INFO("[block detection] Couldn't find any blocks this iteration!");
     //  as_.setAborted(result_);
   }
     

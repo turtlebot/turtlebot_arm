@@ -75,7 +75,7 @@ private:
 public:
 
   InteractiveManipulationServer(const std::string name) : 
-     nh_("~"), server_("block_controls"), as_(name, false), action_name_(name), initialized_(false)
+     nh_("~"), server_("block_controls"), as_(name, false), action_name_(name), initialized_(false), block_size(0)
   {
     // Load parameters from the server.
     nh_.param<std::string>("block_topic", block_topic, "/turtlebot_blocks");
@@ -162,13 +162,16 @@ public:
   
   void moveBlock(const geometry_msgs::Pose& start_pose, const geometry_msgs::Pose& end_pose)
   {
-    result_.pickup_pose = start_pose;
+    geometry_msgs::Pose start_pose_bumped;
+    start_pose_bumped = start_pose;
+    start_pose_bumped.position.y -= 0.005;
+    result_.pickup_pose = start_pose_bumped;
     result_.place_pose = end_pose;
     
     geometry_msgs::PoseArray msg;
     msg.header.frame_id = arm_link;
     msg.header.stamp = ros::Time::now();
-    msg.poses.push_back(start_pose);
+    msg.poses.push_back(start_pose_bumped);
     msg.poses.push_back(end_pose);
     
     pick_and_place_pub_.publish(msg);

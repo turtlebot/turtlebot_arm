@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find openni_camera)/launch/openni_node.launch" />
+  
+  <include file="$(find turtlebot_kinect_arm_calibration)/launch/calibrate_old_kinect.launch" />
+</launch>
