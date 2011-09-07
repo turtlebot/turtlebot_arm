@@ -266,15 +266,15 @@ public:
       // z must be equal to or smaller than blocksize
       if (xside > block_size-tol && xside < block_size*sqrt(2)+tol &&
           yside > block_size-tol && yside < block_size*sqrt(2)+tol &&
-          zside < block_size+tol)
+          zside > tol && zside < block_size+tol)
       {
         // If so, then figure out the position and the orientation of the block
-        float angle = asin(block_size/(yside));
+        float angle = atan(block_size/((xside+yside)/2));
         
         if (yside < block_size)
           angle = 0.0;
         
-        ROS_INFO_STREAM("xside: " << xside << " yside: " << yside << " angle: " << angle);
+        ROS_INFO_STREAM("xside: " << xside << " yside: " << yside << " zside " << zside << " angle: " << angle);
         // Then add it to our set
         ROS_INFO("Adding a new block!");
         addBlock( xmin+(xside)/2.0, ymin+(yside)/2.0, zmax - block_size/2.0, angle);

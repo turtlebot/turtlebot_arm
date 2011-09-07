@@ -115,13 +115,27 @@ public:
     ROS_INFO("Got block detection callback. Adding blocks.");
     geometry_msgs::Pose block;
     
+    if (state == actionlib::SimpleClientGoalState::SUCCEEDED)
+      ROS_INFO("Succeeded!");
+    else
+    {
+      ROS_INFO("Did not succeed! %s",  state.toString().c_str());
+      ros::shutdown();
+    }
     interactive_manipulation_action_.sendGoal(interactive_manipulation_goal_, boost::bind( &BlockManipulationAction::pickAndPlace, this, _1, _2));
   }
   
   void pickAndPlace(const actionlib::SimpleClientGoalState& state, const InteractiveBlockManipulationResultConstPtr& result)
   {
     ROS_INFO("Got interactive marker callback. Picking and placing.");
-  
+    
+    if (state == actionlib::SimpleClientGoalState::SUCCEEDED)
+      ROS_INFO("Succeeded!");
+    else
+    {
+      ROS_INFO("Did not succeed! %s",  state.toString().c_str());
+      ros::shutdown();
+    }
     pick_and_place_action_.sendGoal(pick_and_place_goal_, boost::bind( &BlockManipulationAction::finish, this, _1, _2));
   }
   

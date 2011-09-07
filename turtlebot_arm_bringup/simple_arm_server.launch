@@ -4,6 +4,15 @@
     <arg name="root_name" value="arm_base_link" />
      <arg name="tip_name" value="gripper_link" />
   </include>
+  
+  <node name="reset_arm_server" pkg="simple_arm_actions" type="reset_arm_server.py" output="screen">
+      <remap from="/simple_arms/joints" to="/arbotix/controllers/arm_controller/joints" />
+  </node>
+  
+  <node name="relax_arm_server" pkg="simple_arm_actions" type="relax_arm_server.py" output="screen">
+    <remap from="/simple_arms/joints" to="/arbotix/controllers/arm_controller/joints" />
+  </node>
+  
 </launch>
 
 
