@@ -33,6 +33,7 @@
 #include <turtlebot_block_manipulation/BlockDetectionAction.h>
 #include <turtlebot_block_manipulation/PickAndPlaceAction.h>
 #include <turtlebot_block_manipulation/InteractiveBlockManipulationAction.h>
+#include <simple_arm_actions/ResetArmAction.h>
 
 #include <string>
 #include <sstream>
@@ -61,6 +62,7 @@ private:
   actionlib::SimpleActionClient<BlockDetectionAction> block_detection_action_;
   actionlib::SimpleActionClient<InteractiveBlockManipulationAction> interactive_manipulation_action_;
   actionlib::SimpleActionClient<PickAndPlaceAction> pick_and_place_action_;
+  actionlib::SimpleActionClient<simple_arm_actions::ResetArmAction> reset_arm_action_;
   
   BlockDetectionGoal block_detection_goal_;
   InteractiveBlockManipulationGoal interactive_manipulation_goal_;
@@ -72,7 +74,8 @@ public:
   BlockManipulationAction() : 
     block_detection_action_("block_detection", true),
     interactive_manipulation_action_("interactive_manipulation", true),
-    pick_and_place_action_("pick_and_place", true)
+    pick_and_place_action_("pick_and_place", true),
+    reset_arm_action_("reset_arm", true)
   {
     // Initialize goals
     block_detection_goal_.frame = arm_link;
@@ -101,6 +104,8 @@ public:
     ROS_INFO("Found pick and place server.");
     
     ROS_INFO("Found servers.");
+    
+    reset_arm_action_.sendGoal(simple_arm_actions::ResetArmGoal());
     
     detectBlocks();
   }
@@ -146,6 +151,8 @@ public:
       ROS_INFO("Succeeded!");
     else
       ROS_INFO("Did not succeed! %s",  state.toString().c_str());
+      
+    reset_arm_action_.sendGoal(simple_arm_actions::ResetArmGoal());
     ros::shutdown();
   }
 };

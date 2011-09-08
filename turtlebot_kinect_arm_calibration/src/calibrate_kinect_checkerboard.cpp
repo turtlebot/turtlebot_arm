@@ -107,6 +107,7 @@ class CalibrateKinectCheckerboard
     image_transport::ImageTransport it_;
     image_transport::Publisher pub_;
     ros::Publisher detector_pub_;
+    ros::Publisher physical_pub_;
   
     // Image and camera info subscribers;
     ros::Subscriber image_sub_; 
@@ -193,6 +194,7 @@ public:
     
     // Also publishers
     detector_pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("detector_cloud", 1);
+    physical_pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("physical_points_cloud", 1);
     
     // Create ideal points
     ideal_points_.push_back( pcl::PointXYZ(0, 0, 0) );
@@ -229,6 +231,14 @@ public:
   
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg)
   {
+    // DEBUG
+      
+      
+     /* physical_points_.header.frame_id = fixed_frame;
+      physical_points_.resize(0);
+      addPhysicalPoint();
+      physical_pub_.publish(physical_points_); */
+  
     try
     {
       bridge_ = cv_bridge::toCvCopy(image_msg, "mono8");
@@ -309,11 +319,12 @@ public:
     
     transformed_detector_points.header.frame_id = frame_id;
     detector_pub_.publish(transformed_detector_points);
-  }  
+  }
   
   bool calibrate(const std::string frame_id)
   {
     physical_points_.empty();
+    physical_points_.header.frame_id = fixed_frame;
     cout << "Is the checkerboard correct? " << endl;
     cout << "Move edge of gripper to point 1 in image and press Enter. " << endl;
     cin.ignore();
@@ -330,6 +341,8 @@ public:
     
     Eigen::Matrix4f t;
     
+    physical_pub_.publish(physical_points_);
+    
     pcl::estimateRigidTransformationSVD( physical_points_, image_points_, t );
     //cout << "Does this transform seem right? " << endl;
     //cout << "Run this in the command line: " << endl;
@@ -340,9 +353,9 @@ public:
     tf::Transform transform = tfFromEigen(t), trans_full, camera_transform_unstamped;
     tf::StampedTransform camera_transform;
   
-    cout << "Resulting transform (/odom_combined -> /rgb_optical_frame): " << endl << t << endl << endl;
-    cout << "Quick test: this should be the same as above. " << endl << EigenFromTF(transform) << endl << endl;
-    printStaticTransform(t, frame_id, fixed_frame);
+    cout << "Resulting transform (camera frame -> fixed frame): " << endl << t << endl << endl;
+    //cout << "Quick test: this should be the same as above. " << endl << EigenFromTF(transform) << endl << endl;
+    //printStaticTransform(t, frame_id, fixed_frame);
     
     
     try
@@ -361,7 +374,7 @@ public:
     Eigen::Matrix4f t_full = EigenFromTF(trans_full);
     Eigen::Matrix4f t_full_inv = (Eigen::Transform<float,3,Affine>(t_full).inverse()).matrix();
     
-    cout << "Resulting transform (/odom_combined -> /camera_link): " << endl << t_full << endl << endl;
+    cout << "Resulting transform (fixed frame -> camera frame): " << endl << t_full << endl << endl;
     printStaticTransform(t_full_inv, fixed_frame, camera_frame);
 
     return true;
@@ -383,9 +396,9 @@ public:
   {
     geometry_msgs::PointStamped pt, pt_out; // Initialized to (0,0,0)
     
-    pt.point.x = 0;
-    pt.point.y = -0.016;
-    pt.point.z = -0.019;
+    pt.point.x = -0.002;
+    pt.point.y = -0.020; // probably subtract another 4 mm for width of gripper
+    pt.point.z = -0.0185; // Is this even remotely right?
     pt.header.frame_id = tip_frame;
     try
     {
