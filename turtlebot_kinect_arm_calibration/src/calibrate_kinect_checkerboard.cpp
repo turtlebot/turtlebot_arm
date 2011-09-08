@@ -75,8 +75,8 @@ tf::Transform tfFromEigen(Eigen::Matrix4f trans)
 {
     btMatrix3x3 btm;
     btm.setValue(trans(0,0),trans(0,1),trans(0,2),
-               trans(1,0),trans(1,1),trans(1,2),
-               trans(2,0),trans(2,1),trans(2,2));
+                 trans(1,0),trans(1,1),trans(1,2),
+                 trans(2,0),trans(2,1),trans(2,2));
     btTransform ret;
     ret.setOrigin(btVector3(trans(0,3),trans(1,3),trans(2,3)));
     ret.setBasis(btm);
