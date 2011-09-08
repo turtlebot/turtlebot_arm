@@ -162,17 +162,21 @@ public:
   
   void moveBlock(const geometry_msgs::Pose& start_pose, const geometry_msgs::Pose& end_pose)
   {
-    geometry_msgs::Pose start_pose_bumped;
+    geometry_msgs::Pose start_pose_bumped, end_pose_bumped;
     start_pose_bumped = start_pose;
     start_pose_bumped.position.y -= 0.005;
+    start_pose_bumped.position.z -= block_size/2.0 - 0.005;
     result_.pickup_pose = start_pose_bumped;
-    result_.place_pose = end_pose;
+    
+    end_pose_bumped = start_pose;
+    end_pose_bumped.position.z -= block_size/2.0 - 0.005;
+    result_.place_pose = end_pose_bumped;
     
     geometry_msgs::PoseArray msg;
     msg.header.frame_id = arm_link;
     msg.header.stamp = ros::Time::now();
     msg.poses.push_back(start_pose_bumped);
-    msg.poses.push_back(end_pose);
+    msg.poses.push_back(end_pose_bumped);
     
     pick_and_place_pub_.publish(msg);
     

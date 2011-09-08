@@ -145,7 +145,7 @@ public:
     goal.motions.push_back(action);
 
     /* go down */
-    action.goal.position.z = z_down;
+    action.goal.position.z = start_pose.position.z;
     action.move_time.sec = 1.5;
     goal.motions.push_back(action);
 
@@ -168,7 +168,7 @@ public:
     goal.motions.push_back(action);
 
     /* go down */
-    action.goal.position.z = z_down;
+    action.goal.position.z = end_pose.position.z;
     action.move_time.sec = 1.5;
     goal.motions.push_back(action);
 

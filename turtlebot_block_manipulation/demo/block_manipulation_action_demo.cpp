@@ -43,8 +43,8 @@ const std::string arm_link = "/arm_base_link";
 const double gripper_open = 0.042;
 const double gripper_closed = 0.024;
 
-const double z_up = 0.08;
-double z_down = -0.05;
+const double z_up = 0.12;
+double z_down = 0.01;
 
 const double block_size = 0.03;
 
