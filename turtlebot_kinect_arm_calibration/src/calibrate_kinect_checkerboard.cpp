@@ -390,6 +390,22 @@ public:
          << translation.y() << " " << translation.z() << " " 
          << quat.x() << " " << quat.y() << " " << quat.z() << " " << quat.w() << " "
          << frame1 << " " << frame2 << " 100" << endl;
+         
+    tf::Transform temp_tf_trans = tfFromEigen(transform);
+    
+    double yaw, pitch, roll;
+    
+    temp_tf_trans.getBasis().getEulerYPR(yaw, pitch, roll);
+    
+    cout << "<?xml version=\"1.0\"?>\n<robot>\n" << 
+          "\t<property name=\"turtlebot_calib_cam_x\" value=\"" << translation.x() << "\" />\n" <<
+          "\t<property name=\"turtlebot_calib_cam_y\" value=\"" << translation.y() << "\" />\n" <<
+          "\t<property name=\"turtlebot_calib_cam_z\" value=\"" << translation.z() << "\" />\n" <<
+          "\t<property name=\"turtlebot_calib_cam_rr\" value=\"" << roll << "\" />\n" <<
+          "\t<property name=\"turtlebot_calib_cam_rp\" value=\"" << pitch << "\" />\n" <<
+          "\t<property name=\"turtlebot_calib_cam_ry\" value=\"" << yaw << "\" />\n" <<
+          "\t<property name=\"turtlebot_kinect_frame_name\" value=\"" << fixed_frame << "\" />\n" <<
+          "</robot>" << endl;
   }
   
   void addPhysicalPoint()
