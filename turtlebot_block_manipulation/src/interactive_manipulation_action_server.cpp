@@ -168,7 +168,7 @@ public:
     start_pose_bumped.position.z -= block_size/2.0 - 0.005;
     result_.pickup_pose = start_pose_bumped;
     
-    end_pose_bumped = start_pose;
+    end_pose_bumped = end_pose;
     end_pose_bumped.position.z -= block_size/2.0 - 0.005;
     result_.place_pose = end_pose_bumped;
     
