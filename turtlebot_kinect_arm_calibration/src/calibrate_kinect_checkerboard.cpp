@@ -49,28 +49,6 @@
 using namespace std;
 using namespace Eigen;
 
-/*const std::string fixed_frame = "/base_link";
-const std::string camera_frame = "/camera_link";
-//const std::string base_frame = "/target_frame";
-//const std::string camera_frame = "/kinect_rgb_optical_frame";
-const std::string target_frame = "/calibration_pattern";
-const std::string tip_frame = "/gripper_link";
-const std::string touch_frame = "/gripper_touch";
-
-const std::string camera_topic = "/camera/rgb/";
-const std::string image_topic = camera_topic + "image_mono";
-const std::string cloud_topic = camera_topic + "points";
-const std::string info_topic = camera_topic + "camera_info";
-
-//const std::string image_topic = "/image_throttled";
-//const std::string cloud_topic = "/cloud_throttled";
-
-const int checkerboard_width = 6;
-const int checkerboard_height = 7;
-const double checkerboard_grid = 0.027; */
-
-
-// TODO: replace
 tf::Transform tfFromEigen(Eigen::Matrix4f trans)
 {
     btMatrix3x3 btm;
@@ -114,7 +92,8 @@ class CalibrateKinectCheckerboard
     ros::Subscriber info_sub_;
 
     // Structures for interacting with ROS messages
-    cv_bridge::CvImagePtr bridge_;
+    cv_bridge::CvImagePtr input_bridge_;
+    cv_bridge::CvImagePtr output_bridge_;
     tf::TransformListener tf_listener_;
     tf::TransformBroadcaster tf_broadcaster_;
     image_geometry::PinholeCameraModel cam_model_;
@@ -201,6 +180,8 @@ public:
     ideal_points_.push_back( pcl::PointXYZ((checkerboard_width-1)*checkerboard_grid, 0, 0) );
     ideal_points_.push_back( pcl::PointXYZ(0, (checkerboard_height-1)*checkerboard_grid, 0) );
     ideal_points_.push_back( pcl::PointXYZ((checkerboard_width-1)*checkerboard_grid, (checkerboard_height-1)*checkerboard_grid, 0) );
+    
+    ROS_INFO("[calibrate] Initialized.");
   }
 
   void publishTFCallback(const ros::TimerEvent&)
@@ -218,7 +199,7 @@ public:
     calibrated = true;
     image_sub_ = nh_.subscribe(image_topic, 1, &CalibrateKinectCheckerboard::imageCallback, this);
     
-    cout << "Got image info!" << endl;
+    ROS_INFO("[calibrate] Got image info!");
   }
   
   void pointcloudCallback(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& msg)
@@ -241,7 +222,8 @@ public:
   
     try
     {
-      bridge_ = cv_bridge::toCvCopy(image_msg, "mono8");
+      input_bridge_ = cv_bridge::toCvCopy(image_msg, "mono8");
+      output_bridge_ = cv_bridge::toCvCopy(image_msg, "bgr8");
     }
     catch (cv_bridge::Exception& ex)
     {
@@ -252,14 +234,16 @@ public:
     Eigen::Vector3f translation;
     Eigen::Quaternionf orientation;
     
-    if (!pattern_detector_.detectPattern(bridge_->image, translation, orientation))
+    if (!pattern_detector_.detectPattern(input_bridge_->image, translation, orientation, output_bridge_->image))
     {
       ROS_INFO("[calibrate] Couldn't detect checkerboard, make sure it's visible in the image.");
       return;
     }
-      
-    // DEBUG
-    pub_.publish(bridge_->toImageMsg());
+    
+
+    
+    
+
     
     tf::Transform target_transform;
     tf::StampedTransform base_transform;
@@ -288,6 +272,11 @@ public:
     //publishCloud(detector_points_, target_transform, image_msg->header.frame_id);
     
     publishCloud(ideal_points_, target_transform, image_msg->header.frame_id);
+    
+    overlayPoints(ideal_points_, target_transform, output_bridge_);
+    
+    // Publish calibration image
+    pub_.publish(output_bridge_->toImageMsg());
     
     // Alright, now we have a btTransform...
     // Convert it to something we can use.
@@ -319,6 +308,39 @@ public:
     
     transformed_detector_points.header.frame_id = frame_id;
     detector_pub_.publish(transformed_detector_points);
+  }
+  
+  void overlayPoints(pcl::PointCloud<pcl::PointXYZ> detector_points, tf::Transform &transform, cv_bridge::CvImagePtr& image)
+  {  
+    // Overlay calibration points on the image
+    pcl::PointCloud<pcl::PointXYZ> transformed_detector_points;
+    
+    pcl_ros::transformPointCloud(detector_points, transformed_detector_points, transform);
+    
+    int font_face = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
+    double font_scale = 1;
+    int thickness = 2;
+    int radius = 5;
+   
+    for (unsigned int i=0; i < transformed_detector_points.size(); i++)
+    {
+      pcl::PointXYZ pt = transformed_detector_points[i];
+      cv::Point3d pt_cv(pt.x, pt.y, pt.z);
+      cv::Point2d uv;
+      uv = cam_model_.project3dToPixel(pt_cv);
+
+      cv::circle(image->image, uv, radius, CV_RGB(255,0,0), -1);
+      cv::Size text_size;
+      int baseline = 0;
+      std::stringstream out;
+      out << i+1;
+      
+      text_size = cv::getTextSize(out.str(), font_face, font_scale, thickness, &baseline);
+                            
+      cv::Point origin = cvPoint(uv.x - text_size.width / 2,
+                               uv.y - radius - baseline/* - thickness*/);
+      cv::putText(image->image, out.str(), origin, font_face, font_scale, CV_RGB(255,0,0), thickness);
+    }
   }
   
   bool calibrate(const std::string frame_id)
@@ -357,7 +379,6 @@ public:
     //cout << "Quick test: this should be the same as above. " << endl << EigenFromTF(transform) << endl << endl;
     //printStaticTransform(t, frame_id, fixed_frame);
     
-    
     try
     {
       tf_listener_.lookupTransform(frame_id, camera_frame, ros::Time(0), camera_transform);
@@ -385,17 +406,21 @@ public:
     Eigen::Quaternionf quat(transform.topLeftCorner<3,3>() );
     Eigen::Vector3f translation(transform.topRightCorner<3,1>() );
     
+    cout << "Static transform publisher (use for external kinect): " << endl;
+    
     cout << "rosrun tf static_transform_publisher x y z qx qy qz qw frame_id child_frame_id period_in_ms" << endl;
     cout << "rosrun tf static_transform_publisher " << translation.x() << " "
          << translation.y() << " " << translation.z() << " " 
          << quat.x() << " " << quat.y() << " " << quat.z() << " " << quat.w() << " "
-         << frame1 << " " << frame2 << " 100" << endl;
+         << frame1 << " " << frame2 << " 100" << endl << endl;
          
     tf::Transform temp_tf_trans = tfFromEigen(transform);
     
     double yaw, pitch, roll;
     
     temp_tf_trans.getBasis().getEulerYPR(yaw, pitch, roll);
+    
+    cout << "URDF output (use for kinect on robot): " << endl;
     
     cout << "<?xml version=\"1.0\"?>\n<robot>\n" << 
           "\t<property name=\"turtlebot_calib_cam_x\" value=\"" << translation.x() << "\" />\n" <<
@@ -412,6 +437,7 @@ public:
   {
     geometry_msgs::PointStamped pt, pt_out; // Initialized to (0,0,0)
     
+    // TODO: Make these parameters!
     pt.point.x = -0.002;
     pt.point.y = -0.020; // probably subtract another 4 mm for width of gripper
     pt.point.z = -0.0185; // Is this even remotely right?
@@ -444,7 +470,7 @@ public:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "calibrate_kinect_base");
+  ros::init(argc, argv, "calibrate_kinect_arm");
   
   CalibrateKinectCheckerboard cal;
   ros::spin();
