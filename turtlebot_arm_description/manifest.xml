@@ -1,7 +1,7 @@
 <package>
   <description brief="turtlebot_arm_description">
 
-     turtlebot_arm_description
+     turtlebot_arm_description contains URDF files and meshes for the TurtleBot arm.
 
   </description>
   <author>Melonee Wise</author>

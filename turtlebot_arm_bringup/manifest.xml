@@ -1,8 +1,6 @@
 <package>
   <description brief="turtlebot_arm_bringup">
-
-     turtlebot_arm_bringup
-
+     turtlebot_arm_bringup provides launch files for starting the drivers for the TurtleBot arm.
   </description>
   <author>Melonee Wise, Helen Oleynikova</author>
   <license>BSD</license>

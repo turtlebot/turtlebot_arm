@@ -1,5 +1,5 @@
 <stack>
-  <description brief="turtlebot_arm">turtlebot_arm</description>
+  <description brief="turtlebot_arm">The turtlebot_arm package provides bringup, description, and utilities for using the TurtleBot arm.</description>
   <author>Maintained by Melonee Wise</author>
   <license>BSD</license>  
   <review status="unreviewed" notes=""/>

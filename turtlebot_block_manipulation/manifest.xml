@@ -1,10 +1,10 @@
 <package>
   <description brief="turtlebot_block_manipulation">
 
-     turtlebot_block_manipulation
+     turtlebot_block_manipulation contains a demo allowing the TurtleBot arm to manipulate small blocks on a level surface using interactive markers.
 
   </description>
-  <author>Elena Oleynikova</author>
+  <author>Helen Oleynikova</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/turtlebot_block_manipulation</url>
