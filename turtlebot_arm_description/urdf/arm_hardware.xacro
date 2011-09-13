@@ -8,14 +8,14 @@
   <property name="AX12_HEIGHT" value="0.0385"/>
   <property name="AX12_WIDTH" value="0.038"/>
   <property name="F2_HEIGHT" value="0.0265"/>
-  <material name="green">
-    <color rgba="0.22 0.32 0.14 1.0"/>
+  <material name="white">
+    <color rgba="0.87 0.90 0.87 1.0"/>
   </material>
   <material name="black">
     <color rgba="0.0 0.0 0.0 1.0"/>
   </material>
-  <material name="orange">
-    <color rgba="1.0 0.54 0.0 1.0"/>
+  <material name="green">
+    <color rgba="0.22 0.32 0.14 1.0"/>
   </material>
 
 
@@ -40,7 +40,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="green"/>
+        <material name="white"/>
       </visual>
 
       <collision>
@@ -73,7 +73,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/finger.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="orange"/>
+        <material name="green"/>
       </visual>
 
       <collision>
@@ -106,7 +106,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/F3.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="green"/>
+        <material name="white"/>
       </visual>
 
       <collision>
@@ -175,7 +175,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/F3.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="green"/>
+        <material name="white"/>
       </visual>
 
       <collision>
@@ -210,7 +210,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/F2.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="green"/>
+        <material name="white"/>
       </visual>
 
       <collision>
@@ -245,7 +245,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/F4.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="green"/>
+        <material name="white"/>
       </visual>
 
       <collision>
