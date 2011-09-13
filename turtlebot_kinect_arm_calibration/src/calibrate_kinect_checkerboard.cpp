@@ -249,11 +249,6 @@ public:
       return;
     }
     
-
-    
-    
-
-    
     tf::Transform target_transform;
     tf::StampedTransform base_transform;
     try
@@ -427,6 +422,13 @@ public:
     
     double yaw, pitch, roll;
     
+    std::string fixed_frame_urdf(fixed_frame);
+    
+    // If there's a leading '/' character, remove it, as xacro can't deal with 
+    // extra characters in the link name.
+    if (fixed_frame_urdf.size() > 0 && fixed_frame_urdf[0] == '/')
+      fixed_frame_urdf.erase(0, 1);
+    
     temp_tf_trans.getBasis().getEulerYPR(yaw, pitch, roll);
     
     cout << "URDF output (use for kinect on robot): " << endl;
@@ -438,8 +440,8 @@ public:
           "\t<property name=\"turtlebot_calib_cam_rr\" value=\"" << roll << "\" />\n" <<
           "\t<property name=\"turtlebot_calib_cam_rp\" value=\"" << pitch << "\" />\n" <<
           "\t<property name=\"turtlebot_calib_cam_ry\" value=\"" << yaw << "\" />\n" <<
-          "\t<property name=\"turtlebot_kinect_frame_name\" value=\"" << fixed_frame << "\" />\n" <<
-          "</robot>" << endl;
+          "\t<property name=\"turtlebot_kinect_frame_name\" value=\"" << fixed_frame_urdf << "\" />\n" <<
+          "</robot>" << endl << endl;
   }
   
   void addPhysicalPoint()
