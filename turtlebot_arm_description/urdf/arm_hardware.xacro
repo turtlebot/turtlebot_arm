@@ -8,18 +8,8 @@
   <property name="AX12_HEIGHT" value="0.0385"/>
   <property name="AX12_WIDTH" value="0.038"/>
   <property name="F2_HEIGHT" value="0.0265"/>
-  <material name="white">
-    <color rgba="0.87 0.90 0.87 1.0"/>
-  </material>
-  <material name="black">
-    <color rgba="0.0 0.0 0.0 1.0"/>
-  </material>
-  <material name="green">
-    <color rgba="0.22 0.32 0.14 1.0"/>
-  </material>
 
-
- <macro name="bioloid_F10_fixed" params="parent number x_loc y_loc z_loc">
+  <macro name="bioloid_F10_fixed" params="parent number x_loc y_loc z_loc color">
     <joint name="bioloid_F10_${number}_joint" type="fixed">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
       <parent link="${parent}"/>
@@ -40,7 +30,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="white"/>
+        <material name="${color}"/>
       </visual>
 
       <collision>
@@ -52,7 +42,7 @@
     </link>
   </macro>
 
- <macro name="finger_fixed" params="parent number x_loc y_loc z_loc r p y">
+  <macro name="finger_fixed" params="parent number x_loc y_loc z_loc r p y color">
     <joint name="finger_${number}_joint" type="fixed">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
       <parent link="${parent}"/>
@@ -73,7 +63,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/finger.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="green"/>
+        <material name="${color}"/>
       </visual>
 
       <collision>
@@ -85,7 +75,7 @@
     </link>
   </macro>
 
- <macro name="bioloid_F3_fixed" params="parent number x_loc y_loc z_loc r p y">
+  <macro name="bioloid_F3_fixed" params="parent number x_loc y_loc z_loc r p y color">
     <joint name="bioloid_F3_${number}_joint" type="fixed">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
       <parent link="${parent}"/>
@@ -106,7 +96,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/F3.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="white"/>
+        <material name="${color}"/>
       </visual>
 
       <collision>
@@ -118,7 +108,7 @@
     </link>
   </macro>
 
- <macro name="dynamixel_AX12_fixed" params="parent number x_loc y_loc z_loc r p y">
+  <macro name="dynamixel_AX12_fixed" params="parent number x_loc y_loc z_loc r p y">
     <joint name="dynamixel_AX12_${number}_joint" type="fixed">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
       <parent link="${parent}"/>
@@ -151,8 +141,7 @@
     </link>
   </macro>
 
-
- <macro name="bioloid_F3_revolute" params="parent number joint_name x_loc y_loc z_loc r p y">
+  <macro name="bioloid_F3_revolute" params="parent number joint_name x_loc y_loc z_loc r p y color">
     <joint name="${joint_name}_joint" type="revolute">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
       <parent link="${parent}"/>
@@ -175,7 +164,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/F3.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="white"/>
+        <material name="${color}"/>
       </visual>
 
       <collision>
@@ -187,7 +176,7 @@
     </link>
   </macro>
 
- <macro name="bioloid_F2_revolute" params="parent number joint_name x_loc y_loc z_loc ulimit llimit">
+  <macro name="bioloid_F2_revolute" params="parent number joint_name x_loc y_loc z_loc ulimit llimit color">
     <joint name="${joint_name}_joint" type="revolute">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
       <parent link="${parent}"/>
@@ -210,7 +199,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/F2.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="white"/>
+        <material name="${color}"/>
       </visual>
 
       <collision>
@@ -222,7 +211,7 @@
     </link>
   </macro>
 
- <macro name="bioloid_F4_revolute" params="parent number joint_name x_loc y_loc z_loc">
+  <macro name="bioloid_F4_revolute" params="parent number joint_name x_loc y_loc z_loc color">
     <joint name="${joint_name}_joint" type="revolute">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
       <parent link="${parent}"/>
@@ -245,7 +234,7 @@
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/F4.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
         </geometry>
-        <material name="white"/>
+        <material name="${color}"/>
       </visual>
 
       <collision>
@@ -256,6 +245,5 @@
       </collision>
     </link>
   </macro>
-
 
 </robot>

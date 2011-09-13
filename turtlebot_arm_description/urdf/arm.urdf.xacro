@@ -10,5 +10,5 @@
     <include filename="$(find turtlebot_arm_description)/urdf/arm.xacro" />
 
     <turtlebot />
-    <turtlebot_arm />
+    <turtlebot_arm color="white" gripper_color="green"/>
 </robot>
