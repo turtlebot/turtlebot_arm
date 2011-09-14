@@ -107,10 +107,6 @@ class CalibrateKinectCheckerboard
     // Gripper transform
     tf::Transform touch_transform;
     
-    // Parameters for image callback
-    // (Look into encapsulating these...)
-    //PointVector true_points_;
-    
     // Visualization for markers
     pcl::PointCloud<pcl::PointXYZ> detector_points_;
     pcl::PointCloud<pcl::PointXYZ> ideal_points_;
@@ -221,14 +217,6 @@ public:
   
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg)
   {
-    // DEBUG
-      
-      
-     /* physical_points_.header.frame_id = fixed_frame;
-      physical_points_.resize(0);
-      addPhysicalPoint();
-      physical_pub_.publish(physical_points_); */
-  
     try
     {
       input_bridge_ = cv_bridge::toCvCopy(image_msg, "mono8");
@@ -255,12 +243,6 @@ public:
     {
       ros::Time acquisition_time = image_msg->header.stamp;
       ros::Duration timeout(1.0 / 30.0);
-      
-      // Get base_link transform
-      /*tf_listener_.waitForTransform(world_frame, base_frame,
-                                    acquisition_time, timeout);
-      tf_listener_.lookupTransform(world_frame, base_frame,
-                                   acquisition_time, base_transform); */
                                    
       target_transform.setOrigin( tf::Vector3(translation.x(), translation.y(), translation.z()) );
       target_transform.setRotation( tf::Quaternion(orientation.x(), orientation.y(), orientation.z(), orientation.w()) );
@@ -271,10 +253,6 @@ public:
       ROS_WARN("[calibrate] TF exception:\n%s", ex.what());
       return;
     }
-    
-    //convertIdealPointstoPointcloud();
-    //publishCloud(detector_points_, target_transform, image_msg->header.frame_id);
-    
     publishCloud(ideal_points_, target_transform, image_msg->header.frame_id);
     
     overlayPoints(ideal_points_, target_transform, output_bridge_);
@@ -282,18 +260,7 @@ public:
     // Publish calibration image
     pub_.publish(output_bridge_->toImageMsg());
     
-    // Alright, now we have a btTransform...
-    // Convert it to something we can use.
-    // ObjectPose? Eigen::Transform?
-    /*
-    Eigen::Vector3f base_translation(base_transform.getOrigin().x(), 
-                  base_transform.getOrigin().y(), base_transform.getOrigin().z());
-    Eigen::Quaternionf base_orientation(base_transform.getRotation().w(), 
-                  base_transform.getRotation().x(), base_transform.getRotation().y(), 
-                  base_transform.getRotation().z()); */
-  
     pcl_ros::transformPointCloud(ideal_points_, image_points_, target_transform);
-    
     
     cout << "Got an image callback!" << endl;
     
@@ -370,18 +337,12 @@ public:
     physical_pub_.publish(physical_points_);
     
     pcl::estimateRigidTransformationSVD( physical_points_, image_points_, t );
-    //cout << "Does this transform seem right? " << endl;
-    //cout << "Run this in the command line: " << endl;
 
-    // TEMP: output
-
-    // output cloud & board frame       
+    // Output       
     tf::Transform transform = tfFromEigen(t), trans_full, camera_transform_unstamped;
     tf::StampedTransform camera_transform;
   
     cout << "Resulting transform (camera frame -> fixed frame): " << endl << t << endl << endl;
-    //cout << "Quick test: this should be the same as above. " << endl << EigenFromTF(transform) << endl << endl;
-    //printStaticTransform(t, frame_id, fixed_frame);
     
     try
     {
