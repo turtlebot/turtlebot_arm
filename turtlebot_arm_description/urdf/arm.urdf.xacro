@@ -10,5 +10,8 @@
     <include filename="$(find turtlebot_arm_description)/urdf/arm.xacro" />
 
     <turtlebot />
-    <turtlebot_arm color="white" gripper_color="green"/>
+    <turtlebot_arm parent="plate_3_link" color="white" gripper_color="green">
+      <origin xyz="0.1143 0 0.0508"/>
+    </turtlebot_arm>
+
 </robot>
