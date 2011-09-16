@@ -51,11 +51,6 @@ using namespace visualization_msgs;
 using namespace interactive_markers;
 using namespace std;
 
-const string tip_link = "/gripper_link";
-const string root_link = "/arm_base_link";
-
-const double gripper_offset = 0.025;
-
 class TurtlebotArmMarkerServer
 {
   private:
@@ -72,9 +67,23 @@ class TurtlebotArmMarkerServer
     
     ros::Timer arm_timer;
     
+    // Joint and link parameters
     vector<string> joints;
     vector<string> links;
+    string tip_link;
+    string root_link;
     
+    // Gripper parameters
+    double gripper_marker_offset_x;
+    double gripper_marker_offset_y;
+    double gripper_marker_offset_z;
+    
+    double gripper_box_offset_x;
+    double gripper_box_offset_y;
+    double gripper_box_offset_z;
+    
+    
+    // Joint command and relax publishers
     map<std::string, ros::Publisher> joint_command_publishers;
     map<std::string, ros::ServiceClient> joint_relax_clients;
     
@@ -82,10 +91,51 @@ public:
   TurtlebotArmMarkerServer()
     : nh("~"), client("move_arm", true), server("turtlebot_arm_marker_server"), tf_listener(nh), immediate_commands(true), in_move(false)
   {
+  
+    ROS_INFO("[turtlebot arm marker server] Started initializing.");
+    
     std::string arm_server_topic;
     
+    // Get general arm parameters
     nh.param<std::string>("arm_server_topic", arm_server_topic, "/simple_arm_server/move");
+    nh.param<std::string>("root_link", root_link, "/arm_base_link");
+    nh.param<std::string>("tip_link", tip_link, "/gripper_link");
     
+    // Get the joint list
+    XmlRpc::XmlRpcValue joint_list;
+    nh.getParam("joints", joint_list);
+    ROS_ASSERT(joint_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
+
+    for (int32_t i = 0; i < joint_list.size(); ++i) 
+    {
+      ROS_ASSERT(joint_list[i].getType() == XmlRpc::XmlRpcValue::TypeString);
+      joints.push_back(joint_list[i]);
+    }
+    
+    // Get the corresponding link list
+    XmlRpc::XmlRpcValue link_list;
+    nh.getParam("links", link_list);
+    ROS_ASSERT(link_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
+
+    for (int32_t i = 0; i < joint_list.size(); ++i) 
+    {
+      ROS_ASSERT(link_list[i].getType() == XmlRpc::XmlRpcValue::TypeString);
+      links.push_back(link_list[i]);
+    }
+    
+    // Get gripper offsets
+    nh.param<double>("gripper/marker_offset/x", gripper_marker_offset_x, 0.02);
+    nh.param<double>("gripper/marker_offset/y", gripper_marker_offset_y, 0.025);
+    nh.param<double>("gripper/marker_offset/z", gripper_marker_offset_z, 0.0);
+    
+    nh.param<double>("gripper/box_offset/x", gripper_box_offset_x, -0.017);
+    nh.param<double>("gripper/box_offset/y", gripper_box_offset_y, -0.008);
+    nh.param<double>("gripper/box_offset/z", gripper_box_offset_z, 0.0);
+    
+    
+    ROS_INFO("[turtlebot arm marker server] Got parameters.");
+    
+    /*
     joints.push_back("shoulder_pan_joint");
     links.push_back("dynamixel_AX12_0_link");
     
@@ -99,10 +149,10 @@ public:
     links.push_back("dynamixel_AX12_3_link");
     
     joints.push_back("gripper_joint");
-    links.push_back("dynamixel_AX12_4_link");
+    links.push_back("dynamixel_AX12_4_link"); */
     
     //client = nh.serviceClient<simple_arm_server::MoveArm>(arm_server_topic);
-    client.waitForServer();
+    //client.waitForServer();
 
     createArmMarker();
     createGripperMarker();
@@ -175,7 +225,7 @@ public:
       changeMarkerColor(0, 1, 0, true, feedback->pose);
       ros::Duration(1.0).sleep();
       resetMarker();
-      arm_timer.start();
+      //arm_timer.start();
     }
     else
     {
@@ -193,7 +243,6 @@ public:
     geometry_msgs::Pose pose;
     getTransformedPose(feedback->header.frame_id, feedback->pose, root_link, pose, feedback->header.stamp);
     
-    // Eh, could do this in one go but whatever. This seems good.
     action.goal.orientation = pose.orientation;
     action.goal.position = pose.position;
     action.move_time = ros::Duration(1.0);
@@ -271,7 +320,7 @@ public:
 
   void createArmMarker()
   { 
-    // create an interactive marker for our server
+    // Create a marker representing the tip of the arm.
     InteractiveMarker int_marker;
     int_marker.header.frame_id = root_link;
     int_marker.name = "arm_marker";
@@ -337,14 +386,15 @@ public:
    
   void createGripperMarker()
   {
-      // create an interactive marker for our server
+    // Create a marker for the gripper
     InteractiveMarker int_marker;
     int_marker.header.frame_id = tip_link;
     int_marker.name = "gripper_marker";
     int_marker.scale = 0.075;
 
-    int_marker.pose.position.x = 0.02;
-    int_marker.pose.position.y = 0.025;
+    int_marker.pose.position.x = gripper_marker_offset_x;
+    int_marker.pose.position.y = gripper_marker_offset_y;
+    int_marker.pose.position.z = gripper_marker_offset_z;
 
     Marker marker;
 
@@ -357,8 +407,9 @@ public:
     marker.color.b = 0.0;
     marker.color.a = .7;
     
-    marker.pose.position.x = -0.017;
-    marker.pose.position.y = -0.008;
+    marker.pose.position.x = gripper_box_offset_x;
+    marker.pose.position.y = gripper_box_offset_y;
+    marker.pose.position.z = gripper_box_offset_z;
 
     InteractiveMarkerControl box_control;
     box_control.always_visible = true;
@@ -508,7 +559,6 @@ public:
     
     createJointMarkers();
     createJointMenus();
-
   }
   
   void switchToArmControlCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)

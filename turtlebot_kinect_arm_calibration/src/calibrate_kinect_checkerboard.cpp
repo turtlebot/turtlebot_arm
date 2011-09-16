@@ -104,9 +104,6 @@ class CalibrateKinectCheckerboard
     // The optimized transform
     Eigen::Transform<float, 3, Eigen::Affine> transform_;
     
-    // Gripper transform
-    tf::Transform touch_transform;
-    
     // Visualization for markers
     pcl::PointCloud<pcl::PointXYZ> detector_points_;
     pcl::PointCloud<pcl::PointXYZ> ideal_points_;
@@ -146,7 +143,6 @@ public:
     nh_.param<std::string>("camera_frame", camera_frame, "/camera_link");
     nh_.param<std::string>("target_frame", target_frame, "/calibration_pattern");
     nh_.param<std::string>("tip_frame", tip_frame, "/gripper_link");
-    nh_.param<std::string>("touch_frame", touch_frame, "/gripper_touch");
     nh_.param<std::string>("camera_topic", camera_topic, "/camera/rgb/");
     
     nh_.param<int>("checkerboard_width", checkerboard_width, 6);
@@ -163,14 +159,11 @@ public:
     transform_.translation().setZero();
     transform_.matrix().topLeftCorner<3, 3>() = Quaternionf().setIdentity().toRotationMatrix();
     
-    pub_ = it_.advertise("calibration_pattern_out", 1);
-    
     // Create subscriptions
     info_sub_ = nh_.subscribe(info_topic, 1, &CalibrateKinectCheckerboard::infoCallback, this);
-    touch_transform.setOrigin( tf::Vector3(0, -0.016, -0.019) );
-    touch_transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
     
     // Also publishers
+    pub_ = it_.advertise("calibration_pattern_out", 1);
     detector_pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("detector_cloud", 1);
     physical_pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("physical_points_cloud", 1);
     
@@ -187,11 +180,6 @@ public:
     gripper_tip.header.frame_id = tip_frame;
     
     ROS_INFO("[calibrate] Initialized.");
-  }
-
-  void publishTFCallback(const ros::TimerEvent&)
-  {
-    tf_broadcaster_.sendTransform(tf::StampedTransform(touch_transform, ros::Time::now(), tip_frame, touch_frame));
   }
 
   void infoCallback(const sensor_msgs::CameraInfoConstPtr& info_msg)
