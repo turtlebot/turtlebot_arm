@@ -122,11 +122,6 @@ class CalibrateKinectCheckerboard
     std::string tip_frame;
     std::string touch_frame;
     
-    std::string camera_topic;
-    std::string image_topic;
-    std::string cloud_topic;
-    std::string info_topic;
-    
     int checkerboard_width;
     int checkerboard_height;
     double checkerboard_grid;
@@ -143,16 +138,11 @@ public:
     nh_.param<std::string>("camera_frame", camera_frame, "/camera_link");
     nh_.param<std::string>("target_frame", target_frame, "/calibration_pattern");
     nh_.param<std::string>("tip_frame", tip_frame, "/gripper_link");
-    nh_.param<std::string>("camera_topic", camera_topic, "/camera/rgb/");
     
     nh_.param<int>("checkerboard_width", checkerboard_width, 6);
     nh_.param<int>("checkerboard_height", checkerboard_height, 7);
     nh_.param<double>("checkerboard_grid", checkerboard_grid, 0.027);
     
-    image_topic = camera_topic + "image_mono";
-    cloud_topic = camera_topic + "points";
-    info_topic = camera_topic + "camera_info";
-
     // Set pattern detector sizes
     pattern_detector_.setPattern(cv::Size(checkerboard_width, checkerboard_height), checkerboard_grid, CHESSBOARD);
     
@@ -160,7 +150,7 @@ public:
     transform_.matrix().topLeftCorner<3, 3>() = Quaternionf().setIdentity().toRotationMatrix();
     
     // Create subscriptions
-    info_sub_ = nh_.subscribe(info_topic, 1, &CalibrateKinectCheckerboard::infoCallback, this);
+    info_sub_ = nh_.subscribe("/camera/rgb/camera_info", 1, &CalibrateKinectCheckerboard::infoCallback, this);
     
     // Also publishers
     pub_ = it_.advertise("calibration_pattern_out", 1);
@@ -190,7 +180,7 @@ public:
     pattern_detector_.setCameraMatrices(cam_model_.intrinsicMatrix(), cam_model_.distortionCoeffs());
     
     calibrated = true;
-    image_sub_ = nh_.subscribe(image_topic, 1, &CalibrateKinectCheckerboard::imageCallback, this);
+    image_sub_ = nh_.subscribe("/camera/rgb/image_mono", 1, &CalibrateKinectCheckerboard::imageCallback, this);
     
     ROS_INFO("[calibrate] Got image info!");
   }

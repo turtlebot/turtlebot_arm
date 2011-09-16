@@ -1,7 +1,6 @@
 <launch>
 
   <node name="calibrate_kinect_checkerboard" pkg="turtlebot_kinect_arm_calibration" type="calibrate_kinect_checkerboard" output="screen">
-    <param name="camera_topic" value="/camera/rgb/" />
     <param name="camera_frame" value="/kinect_link" />
     <param name="fixed_frame" value="/base_link" />
   </node>
