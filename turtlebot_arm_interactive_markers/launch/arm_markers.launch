@@ -1,0 +1,10 @@
+<launch>
+  <node name="turtlebot_arm_marker_server" type="turtlebot_arm_marker_server" pkg="turtlebot_arm_interactive_markers" output="screen">
+    <param name="root_link" value="/arm_base_link" />
+    <param name="tip_link" value="/gripper_link" />
+    <rosparam>
+      joints: [shoulder_pan_joint, shoulder_lift_joint, elbow_flex_joint, wrist_flex_joint, gripper_joint]
+      links: [dynamixel_AX12_0_link, dynamixel_AX12_1_link, dynamixel_AX12_2_link, dynamixel_AX12_3_link, dynamixel_AX12_4_link]
+    </rosparam>
+  </node>
+</launch>
