@@ -82,6 +82,8 @@ class TurtlebotArmMarkerServer
     double gripper_box_offset_y;
     double gripper_box_offset_z;
     
+    // Other parameters
+    double move_time;
     
     // Joint command and relax publishers
     map<std::string, ros::Publisher> joint_command_publishers;
@@ -100,6 +102,7 @@ public:
     nh.param<std::string>("arm_server_topic", arm_server_topic, "/simple_arm_server/move");
     nh.param<std::string>("root_link", root_link, "/arm_base_link");
     nh.param<std::string>("tip_link", tip_link, "/gripper_link");
+    nh.param<double>("move_time", move_time, 2.0);
     
     // Get the joint list
     XmlRpc::XmlRpcValue joint_list;
@@ -188,7 +191,7 @@ public:
       
     if (immediate_commands)
     {
-      processCommand(feedback);
+      sendTrajectoryCommand(feedback);
     }
   }
   
@@ -217,13 +220,17 @@ public:
     server.applyChanges();
   }
   
-  void processCommand(const InteractiveMarkerFeedbackConstPtr &feedback)
+  void processCommand(const actionlib::SimpleClientGoalState& state,
+               const simple_arm_server::MoveArmResultConstPtr& result, 
+               const InteractiveMarkerFeedbackConstPtr &feedback)
   {
+    ROS_INFO("Finished in state [%s]", state.toString().c_str());
+  
     //changeMarkerColor(0, 0, 1);
-    if (sendTrajectoryCommand(feedback))
+    if (state == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
       changeMarkerColor(0, 1, 0, true, feedback->pose);
-      ros::Duration(1.0).sleep();
+      ros::Duration(0.25).sleep();
       resetMarker();
       //arm_timer.start();
     }
@@ -245,14 +252,18 @@ public:
     
     action.goal.orientation = pose.orientation;
     action.goal.position = pose.position;
-    action.move_time = ros::Duration(1.0);
+    action.move_time = ros::Duration(move_time);
     goal.motions.push_back(action); 
     
-    client.sendGoal(goal);
-    client.waitForResult(ros::Duration(30.0));
-    if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-      return true;
-    return false;
+    client.sendGoal(goal, boost::bind(&TurtlebotArmMarkerServer::processCommand, this, _1, _2, feedback));
+    changeMarkerColor(0, 0, 1, true, feedback->pose);
+    
+    //client.waitForResult(ros::Duration(30.0));
+    //if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+    //  return true;
+    //return false;
+    
+    return true;
   }
   
   bool sendGripperCommand(const InteractiveMarkerFeedbackConstPtr &feedback)
@@ -266,10 +277,13 @@ public:
     goal.motions.push_back(action); 
     
     client.sendGoal(goal);
-    client.waitForResult(ros::Duration(30.0));
-    if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-      return true;
-    return false;
+    //client.waitForResult(ros::Duration(30.0));
+    //if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+    //  return true;
+    //return false;
+    
+    // Don't block. Just return.
+    return true;
   }
 
   void getTransformedPose(const string& source_frame, const geometry_msgs::Pose& source_pose,
@@ -283,20 +297,21 @@ public:
     tf::Stamped<tf::Pose> posein(bt_source_pose, time, source_frame);
     tf::Stamped<tf::Pose> poseout;
     
-    try {
-        ros::Duration timeout(10.0);
-        
-        // Get base_link transform
-        tf_listener.waitForTransform(target_frame, source_frame,
-                                      time, timeout);
-        tf_listener.transformPose(target_frame, posein, poseout);
-        
-        
-      }
-      catch (tf::TransformException& ex) {
-        ROS_WARN("[arm interactive markers] TF exception:\n%s", ex.what());
-        return;
-      }
+    try 
+    {
+      ros::Duration timeout(10.0);
+      
+      // Get base_link transform
+      tf_listener.waitForTransform(target_frame, source_frame,
+                                    time, timeout);
+      tf_listener.transformPose(target_frame, posein, poseout);
+      
+      
+    }
+    catch (tf::TransformException& ex) {
+      ROS_WARN("[arm interactive markers] TF exception:\n%s", ex.what());
+      return;
+    }
       
     tf::poseTFToMsg(poseout, target_pose);
   }
@@ -506,7 +521,7 @@ public:
 
   void sendCommandCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
   {
-    processCommand(feedback);
+    sendTrajectoryCommand(feedback);
   }
   
   void relaxAllCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
