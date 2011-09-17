@@ -93,13 +93,7 @@ public:
   TurtlebotArmMarkerServer()
     : nh("~"), client("move_arm", true), server("turtlebot_arm_marker_server"), tf_listener(nh), immediate_commands(true), in_move(false)
   {
-  
-    ROS_INFO("[turtlebot arm marker server] Started initializing.");
-    
-    std::string arm_server_topic;
-    
     // Get general arm parameters
-    nh.param<std::string>("arm_server_topic", arm_server_topic, "/simple_arm_server/move");
     nh.param<std::string>("root_link", root_link, "/arm_base_link");
     nh.param<std::string>("tip_link", tip_link, "/gripper_link");
     nh.param<double>("move_time", move_time, 2.0);
@@ -135,28 +129,6 @@ public:
     nh.param<double>("gripper/box_offset/y", gripper_box_offset_y, -0.008);
     nh.param<double>("gripper/box_offset/z", gripper_box_offset_z, 0.0);
     
-    
-    ROS_INFO("[turtlebot arm marker server] Got parameters.");
-    
-    /*
-    joints.push_back("shoulder_pan_joint");
-    links.push_back("dynamixel_AX12_0_link");
-    
-    joints.push_back("shoulder_lift_joint");
-    links.push_back("dynamixel_AX12_1_link");
-    
-    joints.push_back("elbow_flex_joint");
-    links.push_back("dynamixel_AX12_2_link");
-    
-    joints.push_back("wrist_flex_joint");
-    links.push_back("dynamixel_AX12_3_link");
-    
-    joints.push_back("gripper_joint");
-    links.push_back("dynamixel_AX12_4_link"); */
-    
-    //client = nh.serviceClient<simple_arm_server::MoveArm>(arm_server_topic);
-    //client.waitForServer();
-
     createArmMarker();
     createGripperMarker();
     createArmMenu();
@@ -166,8 +138,6 @@ public:
     resetMarker();
     
     ROS_INFO("[turtlebot arm marker server] Initialized.");
-    
-    //arm_timer = nh.createTimer(ros::Duration(0.1), &TurtlebotArmMarkerServer::resetMarkerCb, this);
   }
 
   void createJointPublishers()
@@ -258,11 +228,6 @@ public:
     client.sendGoal(goal, boost::bind(&TurtlebotArmMarkerServer::processCommand, this, _1, _2, feedback));
     changeMarkerColor(0, 0, 1, true, feedback->pose);
     
-    //client.waitForResult(ros::Duration(30.0));
-    //if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-    //  return true;
-    //return false;
-    
     return true;
   }
   
@@ -326,11 +291,6 @@ public:
     
     server.setPose("arm_marker", arm_pose);
     server.applyChanges();
-  }
-
-  void resetMarkerCb(const ros::TimerEvent& e)
-  {
-    //resetMarker();
   }
 
   void createArmMarker()
