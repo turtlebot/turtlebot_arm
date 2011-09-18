@@ -1,6 +1,5 @@
 #goal definition
 string frame
-float32 z_down
 float32 z_up
 float32 gripper_open
 float32 gripper_closed

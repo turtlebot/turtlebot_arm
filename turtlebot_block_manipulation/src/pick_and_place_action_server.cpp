@@ -39,14 +39,6 @@
 
 #include <geometry_msgs/PoseArray.h>
 
-/*const std::string arm_link = "/arm_base_link";
-const double gripper_open = 0.04;
-const double gripper_closed = 0.024;
-
-const double z_up = 0.08;
-const double z_down = -0.04;
-*/
-
 namespace turtlebot_block_manipulation
 {
 
@@ -71,8 +63,6 @@ private:
   double gripper_open;
   double gripper_closed;
   double z_up;
-  double z_down;
-  
 public:
   PickAndPlaceServer(const std::string name) : 
     nh_("~"), as_(name, false), action_name_(name), client_("/move_arm", true)
@@ -93,7 +83,6 @@ public:
     gripper_open = goal_->gripper_open;
     gripper_closed = goal_->gripper_closed;
     z_up = goal_->z_up;
-    z_down = goal_->z_down;
     
     if (goal_->topic.length() < 1)
       pickAndPlace(goal_->pickup_pose, goal_->place_pose);

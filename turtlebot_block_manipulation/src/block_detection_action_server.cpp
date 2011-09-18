@@ -55,17 +55,6 @@
 #include <cmath>
 #include <algorithm>
 
-/*const std::string arm_link = "/arm_base_link";
-const double gripper_open = 0.04;
-const double gripper_closed = 0.024;
-
-const double z_up = 0.08;
-const double z_down = -0.04;
-
-const double block_size = 0.0127; */
-
-//const std::string block_topic = "/turtlebot_blocks";
-
 namespace turtlebot_block_manipulation
 {
 
@@ -92,17 +81,15 @@ private:
   ros::Publisher block_pub_;
   
   // Parameters from node
-  std::string block_topic;
-  std::string pointcloud_topic;
   
 public:
   BlockDetectionServer(const std::string name) : 
     nh_("~"), as_(name, false), action_name_(name)
   {
     // Load parameters from the server.
-    nh_.param<std::string>("block_topic", block_topic, "/turtlebot_blocks");
-    nh_.param<std::string>("pointcloud_topic", pointcloud_topic, "/camera/depth_registered/points");
-  
+    
+    
+    
     // Register the goal and feeback callbacks.
     as_.registerGoalCallback(boost::bind(&BlockDetectionServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&BlockDetectionServer::preemptCB, this));
@@ -110,10 +97,10 @@ public:
     as_.start();
     
     // Subscribe to point cloud
-    sub_ = nh_.subscribe(pointcloud_topic, 1, &BlockDetectionServer::cloudCb, this);
+    sub_ = nh_.subscribe("/camera/depth_registered/points", 1, &BlockDetectionServer::cloudCb, this);
     pub_ = nh_.advertise< pcl::PointCloud<pcl::PointXYZRGB> >("block_output", 1);
     
-    block_pub_ = nh_.advertise< geometry_msgs::PoseArray >(block_topic, 1, true);
+    block_pub_ = nh_.advertise< geometry_msgs::PoseArray >("/turtlebot_blocks", 1, true);
   }
 
   void goalCB()
@@ -219,7 +206,7 @@ public:
 
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
-    ec.setClusterTolerance (0.005); // 2cm
+    ec.setClusterTolerance (0.005);
     ec.setMinClusterSize (100);
     ec.setMaxClusterSize (25000);
     ec.setSearchMethod (tree);

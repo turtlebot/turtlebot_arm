@@ -69,8 +69,7 @@ private:
   double      block_size;
   
   // Parameters from server
-  std::string block_topic;
-  std::string pick_and_place_topic;
+  double bump_size;
 
 public:
 
@@ -78,17 +77,16 @@ public:
      nh_("~"), server_("block_controls"), as_(name, false), action_name_(name), initialized_(false), block_size(0)
   {
     // Load parameters from the server.
-    nh_.param<std::string>("block_topic", block_topic, "/turtlebot_blocks");
-    nh_.param<std::string>("pick_and_place_topic", pick_and_place_topic, "/pick_and_place");
-  
+    nh_.param<double>("bump_size", bump_size, 0.005);
+    
     // Register the goal and feeback callbacks.
     as_.registerGoalCallback(boost::bind(&InteractiveManipulationServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&InteractiveManipulationServer::preemptCB, this));
     
     as_.start();
   
-    block_sub_ = nh_.subscribe(block_topic, 1, &InteractiveManipulationServer::addBlocks, this);
-    pick_and_place_pub_ = nh_.advertise< geometry_msgs::PoseArray >(pick_and_place_topic, 1, true);
+    block_sub_ = nh_.subscribe("/turtlebot_blocks", 1, &InteractiveManipulationServer::addBlocks, this);
+    pick_and_place_pub_ = nh_.advertise< geometry_msgs::PoseArray >("/pick_and_place", 1, true);
   }
   
   void goalCB()
@@ -164,12 +162,12 @@ public:
   {
     geometry_msgs::Pose start_pose_bumped, end_pose_bumped;
     start_pose_bumped = start_pose;
-    start_pose_bumped.position.y -= 0.005;
-    start_pose_bumped.position.z -= block_size/2.0 - 0.005;
+    start_pose_bumped.position.y -= bump_size;
+    start_pose_bumped.position.z -= block_size/2.0 - bump_size;
     result_.pickup_pose = start_pose_bumped;
     
     end_pose_bumped = end_pose;
-    end_pose_bumped.position.z -= block_size/2.0 - 0.005;
+    end_pose_bumped.position.z -= block_size/2.0 - bump_size;
     result_.place_pose = end_pose_bumped;
     
     geometry_msgs::PoseArray msg;
