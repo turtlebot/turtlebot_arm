@@ -81,7 +81,6 @@ public:
     
     pick_and_place_goal_.frame = arm_link;
     pick_and_place_goal_.z_up = z_up;
-    pick_and_place_goal_.z_down = z_down;
     pick_and_place_goal_.gripper_open = gripper_open;
     pick_and_place_goal_.gripper_closed = gripper_closed;
     
