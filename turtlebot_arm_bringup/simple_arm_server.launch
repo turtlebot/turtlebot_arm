@@ -1,9 +1,25 @@
 <launch>
-  <include file="$(find simple_arm_server)/launch/arm_server.launch">
-    <arg name="arm_dof" value="4" />
-    <arg name="root_name" value="arm_base_link" />
-     <arg name="tip_name" value="gripper_link" />
+
+  <rosparam command="load" ns="robot_description_planning" file="$(find turtlebot_arm_bringup)/config/planning_description.yaml" />
+
+  <include file="$(find planning_environment)/launch/environment_server.launch">
+    <arg name="use_monitor" value="false" />
+    <arg name="use_collision_map" value="false" />
   </include>
+
+  <node name="arm_kinematics" pkg="arm_kinematics_constraint_aware" type="arm_kinematics_constraint_aware" output="screen">
+    <param name="group" type="string" value="arm" />
+    <param name="arm/root_name" type="string" value="arm_base_link" />
+    <param name="arm/tip_name" type="string" value="gripper_link" />
+    <param name="kinematics_solver" type="string" value="arm_kinematics_constraint_aware/KDLArmKinematicsPlugin" />
+  </node>
+
+  <node name="simple_arm_server" pkg="simple_arm_server" type="simple_arm_server.py" output="screen" >
+    <param name="arm_dof" value="4" />
+    <param name="root_name" value="arm_base_link" />
+    <param name="tip_name" value="gripper_link" />
+    <remap from="arm_kinematics" to="turtlebot_arm_kinematics"/>
+  </node>
   
   <node name="reset_arm_server" pkg="simple_arm_actions" type="reset_arm_server.py" output="screen">
       <remap from="/simple_arms/joints" to="/arbotix/controllers/arm_controller/joints" />
@@ -14,5 +30,3 @@
   </node>
   
 </launch>
-
-

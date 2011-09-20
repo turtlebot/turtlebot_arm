@@ -4,10 +4,21 @@
   <license>BSD</license>  
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/turtlebot_arm</url>
-  <depend stack="common" /> <!-- xacro -->
+  <depend stack="arbotix" /> <!-- arbotix_msgs, arbotix_python, arbotix_controllers -->
+  <depend stack="arm_navigation" /> <!-- planning_environment, arm_kinematics_constraint_aware -->
+  <depend stack="common" /> <!-- actionlib -->
+  <depend stack="common_msgs" /> <!-- visualization_msgs -->
+  <depend stack="eigen" /> <!-- eigen -->
+  <depend stack="geometry" /> <!-- tf -->
+  <depend stack="image_common" /> <!-- image_transport -->
+  <depend stack="perception_pcl" /> <!-- pcl, pcl_ros -->
   <depend stack="robot_model" /> <!-- urdf -->
   <depend stack="ros" />
-  <depend stack="arbotix" />
+  <depend stack="ros_comm" /> <!-- roscpp -->
+  <depend stack="simple_arms" /> <!-- simple_arm_server, simple_arm_actions -->
   <depend stack="turtlebot" /> <!-- turtlebot_description -->
+  <depend stack="vision_opencv" /> <!-- opencv2, image_geometry, cv_bridge -->
+  <depend stack="visualization" /> <!-- interactive_markers -->
+  <depend stack="xacro" /> <!-- xacro -->
 
 </stack>

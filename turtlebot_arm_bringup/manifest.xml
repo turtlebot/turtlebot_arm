@@ -9,6 +9,11 @@
   
   <depend package="arbotix_python" />
   <depend package="arbotix_controllers" />
+  <depend package="planning_environment" />
+  <depend package="simple_arm_server" />
+  <depend package="arm_kinematics_constraint_aware" />
+  <depend package="arbotix_controllers" />
+  <depend package="arbotix_controllers" />
 
 </package>
 
