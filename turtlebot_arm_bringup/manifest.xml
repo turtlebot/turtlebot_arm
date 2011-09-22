@@ -2,7 +2,7 @@
   <description brief="turtlebot_arm_bringup">
      turtlebot_arm_bringup provides launch files for starting the drivers for the TurtleBot arm.
   </description>
-  <author>Melonee Wise, Helen Oleynikova</author>
+  <author>Melonee Wise, Helen Oleynikova, Michael Ferguson</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/turtlebot_arm_bringup</url>
@@ -12,9 +12,6 @@
   <depend package="planning_environment" />
   <depend package="simple_arm_server" />
   <depend package="arm_kinematics_constraint_aware" />
-  <depend package="arbotix_controllers" />
-  <depend package="arbotix_controllers" />
-
 </package>
 
 

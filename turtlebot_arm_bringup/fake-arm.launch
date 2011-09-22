@@ -1,4 +1,5 @@
 <launch>
+
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/arm.urdf.xacro'" />
 
   <node name="arbotix" pkg="arbotix_python" type="driver.py" output="screen">
@@ -12,4 +13,6 @@
   </node>
 
   <node pkg="robot_state_publisher" type="state_publisher" name="rob_st_pub" />
+  <node pkg="turtlebot_arm_bringup" type="fake_pub.py" name="fake_pub" />
+
 </launch>
