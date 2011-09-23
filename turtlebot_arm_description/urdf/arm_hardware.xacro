@@ -145,7 +145,7 @@
     <joint name="${joint_name}_joint" type="revolute">
       <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
       <parent link="${parent}"/>
-       <axis xyz="0 0 1"/>
+       <axis xyz="0 0 -1"/>
       <limit effort="30" velocity="1.0" lower="-2.0" upper="2.0" />
       <child link="bioloid_F3_${number}_link" />
     </joint>
