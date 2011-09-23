@@ -100,26 +100,46 @@ public:
     
     // Get the joint list
     XmlRpc::XmlRpcValue joint_list;
-    nh.getParam("joints", joint_list);
-    ROS_ASSERT(joint_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
-
-    for (int32_t i = 0; i < joint_list.size(); ++i) 
+    if (nh.getParam("joints", joint_list))
     {
-      ROS_ASSERT(joint_list[i].getType() == XmlRpc::XmlRpcValue::TypeString);
-      joints.push_back(joint_list[i]);
+      ROS_ASSERT(joint_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
+
+      for (int32_t i = 0; i < joint_list.size(); ++i) 
+      {
+        ROS_ASSERT(joint_list[i].getType() == XmlRpc::XmlRpcValue::TypeString);
+        joints.push_back(joint_list[i]);
+      }
+    }
+    else
+    {
+      joints.push_back("shoulder_pan_joint");
+      joints.push_back("shoulder_lift_joint");
+      joints.push_back("elbow_flex_joint");
+      joints.push_back("wrist_flex_joint");
+      joints.push_back("gripper_joint");
     }
     
     // Get the corresponding link list
     XmlRpc::XmlRpcValue link_list;
-    nh.getParam("links", link_list);
-    ROS_ASSERT(link_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
-
-    for (int32_t i = 0; i < joint_list.size(); ++i) 
+    if (nh.getParam("links", link_list))
     {
-      ROS_ASSERT(link_list[i].getType() == XmlRpc::XmlRpcValue::TypeString);
-      links.push_back(link_list[i]);
+      ROS_ASSERT(link_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
+
+      for (int32_t i = 0; i < joint_list.size(); ++i) 
+      {
+        ROS_ASSERT(link_list[i].getType() == XmlRpc::XmlRpcValue::TypeString);
+        links.push_back(link_list[i]);
+      }
     }
-    
+    else
+    {
+      links.push_back("dynamixel_AX12_0_link");
+      links.push_back("dynamixel_AX12_1_link");
+      links.push_back("dynamixel_AX12_2_link");
+      links.push_back("dynamixel_AX12_3_link");
+      links.push_back("dynamixel_AX12_4_link"); 
+    }
+
     // Get gripper offsets
     nh.param<double>("gripper/marker_offset/x", gripper_marker_offset_x, 0.02);
     nh.param<double>("gripper/marker_offset/y", gripper_marker_offset_y, 0.025);
@@ -486,6 +506,12 @@ public:
   
   void relaxAllCb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
   {
+    BOOST_FOREACH( std::string joint_name, joints )
+    {
+      relaxCb(joint_name, feedback);
+    }
+    
+    // Do this twice to make sure they're all relaxed
     BOOST_FOREACH( std::string joint_name, joints )
     {
       relaxCb(joint_name, feedback);

@@ -68,7 +68,15 @@ private:
   InteractiveBlockManipulationGoal interactive_manipulation_goal_;
   PickAndPlaceGoal pick_and_place_goal_;
   
-
+  // Parameters
+  std::string arm_link;
+  double gripper_open;
+  double gripper_closed;
+  double z_up;
+  double z_down;
+  double block_size;
+  std::string pick_and_place_topic;
+  
 public:
 
   BlockManipulationAction() : 
@@ -77,6 +85,8 @@ public:
     pick_and_place_action_("pick_and_place", true),
     reset_arm_action_("reset_arm", true)
   {
+    // Load parameters
+  
     // Initialize goals
     block_detection_goal_.frame = arm_link;
     block_detection_goal_.table_height = z_down;
