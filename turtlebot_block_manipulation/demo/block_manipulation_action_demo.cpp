@@ -39,15 +39,6 @@
 #include <sstream>
 
 
-const std::string arm_link = "/arm_base_link";
-const double gripper_open = 0.042;
-const double gripper_closed = 0.024;
-
-const double z_up = 0.12;
-double z_down = 0.01;
-
-const double block_size = 0.03;
-
 const std::string pick_and_place_topic = "/pick_and_place";
 
 namespace turtlebot_block_manipulation
@@ -75,7 +66,7 @@ private:
   double z_up;
   double z_down;
   double block_size;
-  std::string pick_and_place_topic;
+  bool once;
   
 public:
 
@@ -86,6 +77,14 @@ public:
     reset_arm_action_("reset_arm", true)
   {
     // Load parameters
+    nh_.param<std::string>("arm_link", arm_link, "/arm_base_link");
+    nh_.param<double>("gripper_open", gripper_open, 0.042);
+    nh_.param<double>("gripper_closed", gripper_closed, 0.024);
+    nh_.param<double>("z_up", z_up, 0.12);
+    nh_.param<double>("table_height", z_down, 0.01);
+    nh_.param<double>("block_size", block_size, 0.03);
+    
+    nh_.param<bool>("once", once, false);
   
     // Initialize goals
     block_detection_goal_.frame = arm_link;
@@ -162,7 +161,11 @@ public:
       ROS_INFO("Did not succeed! %s",  state.toString().c_str());
       
     reset_arm_action_.sendGoal(simple_arm_actions::ResetArmGoal());
-    ros::shutdown();
+    
+    if (once)
+      ros::shutdown();
+    else
+      detectBlocks();
   }
 };
 
@@ -172,16 +175,6 @@ int main(int argc, char** argv)
 {
   // initialize node
   ros::init(argc, argv, "block_manipulation");
-  if (argc == 2)
-  {
-    // Convert the first command-line argument to a double and store it as the 
-    // table height.
-    std::string argument(argv[1]);
-    
-    std::stringstream stream(argument);
-    stream >> z_down;
-    ROS_INFO("Setting the table height to %f", z_down);
-  }
 
 
   turtlebot_block_manipulation::BlockManipulationAction manip;
