@@ -142,11 +142,11 @@ public:
 
     // Get gripper offsets
     nh.param<double>("gripper/marker_offset/x", gripper_marker_offset_x, 0.02);
-    nh.param<double>("gripper/marker_offset/y", gripper_marker_offset_y, 0.025);
+    nh.param<double>("gripper/marker_offset/y", gripper_marker_offset_y, -0.025);
     nh.param<double>("gripper/marker_offset/z", gripper_marker_offset_z, 0.0);
     
     nh.param<double>("gripper/box_offset/x", gripper_box_offset_x, -0.017);
-    nh.param<double>("gripper/box_offset/y", gripper_box_offset_y, -0.008);
+    nh.param<double>("gripper/box_offset/y", gripper_box_offset_y, 0.008);
     nh.param<double>("gripper/box_offset/z", gripper_box_offset_z, 0.0);
     
     createArmMarker();
@@ -258,7 +258,7 @@ public:
     
     goal.header.frame_id = tip_link;
     action.type = simple_arm_server::ArmAction::MOVE_GRIPPER;
-    action.command = feedback->pose.position.y;
+    action.command = -feedback->pose.position.y;
     goal.motions.push_back(action); 
     
     client.sendGoal(goal);

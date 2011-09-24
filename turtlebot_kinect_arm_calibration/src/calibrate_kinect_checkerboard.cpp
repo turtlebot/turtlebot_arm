@@ -165,7 +165,7 @@ public:
     
     // Create proper gripper tip point
     nh_.param<double>("gripper_tip_x", gripper_tip.point.x, -0.002);
-    nh_.param<double>("gripper_tip_y", gripper_tip.point.y, -0.020);
+    nh_.param<double>("gripper_tip_y", gripper_tip.point.y, 0.020);
     nh_.param<double>("gripper_tip_z", gripper_tip.point.z, -0.0185);
     gripper_tip.header.frame_id = tip_frame;
     

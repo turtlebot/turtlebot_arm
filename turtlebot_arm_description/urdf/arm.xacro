@@ -49,7 +49,7 @@
     <!--wrist joint-->
     <dynamixel_AX12_fixed parent="bioloid_F3_2_link" number="3" x_loc="0" y_loc="0" z_loc="${-AX12_HEIGHT-F10_HEIGHT+0.001}" r="0" p="${M_PI}" y="0"/>
     <bioloid_F2_revolute parent="dynamixel_AX12_3_link" number="0" joint_name="wrist_flex" x_loc="0" y_loc="0" z_loc="0" ulimit="2.0" llimit="-2.0" color="${color}"/>
-    <bioloid_F3_fixed parent="bioloid_F2_0_link" number="3" x_loc="0.000" y_loc="-0.016" z_loc="${F2_HEIGHT}" r="0" p="${M_PI}" y="${M_PI/2}" color="${color}"/>
+    <bioloid_F3_fixed parent="bioloid_F2_0_link" number="3" x_loc="0.000" y_loc="0.016" z_loc="${F2_HEIGHT}" r="0" p="${M_PI}" y="${-M_PI/2}" color="${color}"/>
     <!--gripper joint -->
     <dynamixel_AX12_fixed parent="bioloid_F3_3_link" number="4" x_loc="-0.02275" y_loc="0" z_loc="${-AX12_WIDTH/2}" r="${M_PI}" p="${M_PI/2}" y="0"/>
     <!--finger 1-->
