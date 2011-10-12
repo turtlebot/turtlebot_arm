@@ -164,9 +164,9 @@ public:
     ideal_points_.push_back( pcl::PointXYZ((checkerboard_width-1)*checkerboard_grid, (checkerboard_height-1)*checkerboard_grid, 0) );
     
     // Create proper gripper tip point
-    nh_.param<double>("gripper_tip_x", gripper_tip.point.x, -0.002);
-    nh_.param<double>("gripper_tip_y", gripper_tip.point.y, 0.020);
-    nh_.param<double>("gripper_tip_z", gripper_tip.point.z, -0.0185);
+    nh_.param<double>("gripper_tip_x", gripper_tip.point.x, 0.0);
+    nh_.param<double>("gripper_tip_y", gripper_tip.point.y, 0.0);
+    nh_.param<double>("gripper_tip_z", gripper_tip.point.z, 0.0);
     gripper_tip.header.frame_id = tip_frame;
     
     ROS_INFO("[calibrate] Initialized.");
