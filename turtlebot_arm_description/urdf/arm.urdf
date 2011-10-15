@@ -17,7 +17,7 @@
       <wheel_diameter>0.066</wheel_diameter>
       <base_geom>base_link_geom_base_link</base_geom>
       <updateRate>40</updateRate>
-      <torque>0.1</torque>
+      <torque>1.0</torque>
     </controller:gazebo_ros_create>
   </gazebo>
   <gazebo reference="wall_sensor_link">
@@ -109,17 +109,31 @@
       </controller:gazebo_ros_openni_kinect>
     </sensor:camera>
   </gazebo>
+  <gazebo reference="left_wheel_link">
+    <mu1 value="10"/>
+    <mu2 value="10"/>
+    <kp value="100000000.0"/>
+    <kd value="10000.0"/>
+    <fdir value="1 0 0"/>
+  </gazebo>
+  <gazebo reference="right_wheel_link">
+    <mu1 value="10"/>
+    <mu2 value="10"/>
+    <kp value="100000000.0"/>
+    <kd value="10000.0"/>
+    <fdir value="1 0 0"/>
+  </gazebo>
   <gazebo reference="rear_wheel_link">
     <mu1 value="0"/>
     <mu2 value="0"/>
-    <kp value="100000.0"/>
-    <kd value="1.0"/>
+    <kp value="100000000.0"/>
+    <kd value="10000.0"/>
   </gazebo>
   <gazebo reference="front_wheel_link">
     <mu1 value="0"/>
     <mu2 value="0"/>
-    <kp value="100000.0"/>
-    <kd value="1.0"/>
+    <kp value="100000000.0"/>
+    <kd value="10000.0"/>
   </gazebo>
   <material name="Green">
     <color rgba="0.0 0.8 0.0 1.0"/>
@@ -155,9 +169,9 @@
   </link>
   <link name="base_link">
     <inertial>
-      <mass value="1"/>
-      <origin xyz="0 0 0.0308"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <mass value="2"/>
+      <origin xyz="0 0 0.0"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.5"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0.0308"/>
@@ -168,7 +182,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0308"/>
       <geometry>
-        <cylinder length="0.0611632" radius="0.16495"/>
+        <cylinder length="0.0611632" radius="0.016495"/>
       </geometry>
     </collision>
   </link>
@@ -176,35 +190,35 @@
     <inertial>
       <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
   </link>
   <link name="left_cliff_sensor_link">
     <inertial>
       <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
   </link>
   <link name="right_cliff_sensor_link">
     <inertial>
       <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
   </link>
   <link name="leftfront_cliff_sensor_link">
     <inertial>
       <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
     </inertial>
   </link>
   <link name="rightfront_cliff_sensor_link">
     <inertial>
       <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
   </link>
   <joint name="base_footprint_joint" type="fixed">
@@ -241,7 +255,7 @@
     <inertial>
       <origin xyz="0 0 0"/>
       <mass value="0.01"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
     <visual>
       <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
@@ -266,7 +280,7 @@
     <inertial>
       <origin xyz="0 0 0"/>
       <mass value="0.01"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
     <visual>
       <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
@@ -291,22 +305,22 @@
     <inertial>
       <origin xyz="0 0 0"/>
       <mass value="0.001"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
       <geometry>
-        <sphere radius="0.018"/>
+        <sphere radius="0.015"/>
       </geometry>
     </visual>
     <collision>
       <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
       <geometry>
-        <sphere radius="0.018"/>
+        <sphere radius="0.015"/>
       </geometry>
     </collision>
   </link>
-  <joint name="rear_castor_joint" type="continuous">
+  <joint name="rear_castor_joint" type="fixed">
     <origin rpy="0 0 0" xyz="-0.13 0 0.0"/>
     <parent link="base_link"/>
     <child link="rear_wheel_link"/>
@@ -316,7 +330,7 @@
     <inertial>
       <origin xyz="0 0 0"/>
       <mass value="0.01"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
     <visual>
       <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
@@ -331,7 +345,7 @@
       </geometry>
     </collision>
   </link>
-  <joint name="front_castor_joint" type="continuous">
+  <joint name="front_castor_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0.13 0 0.0"/>
     <parent link="base_link"/>
     <child link="front_wheel_link"/>
@@ -344,9 +358,9 @@
   </joint>
   <link name="spacer_0_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -368,9 +382,9 @@
   </joint>
   <link name="spacer_1_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -392,9 +406,9 @@
   </joint>
   <link name="spacer_2_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -416,9 +430,9 @@
   </joint>
   <link name="spacer_3_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -446,7 +460,7 @@
       <material name="Green"/>
     </visual>
     <inertial>
-      <mass value="0.000001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
       <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
@@ -464,7 +478,7 @@
       <material name="Green"/>
     </visual>
     <inertial>
-      <mass value="0.000001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
       <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
@@ -478,7 +492,7 @@
     <inertial>
       <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -500,9 +514,9 @@
   </joint>
   <link name="standoff_2in_0_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -524,9 +538,9 @@
   </joint>
   <link name="standoff_2in_1_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -548,9 +562,9 @@
   </joint>
   <link name="standoff_2in_2_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -572,9 +586,9 @@
   </joint>
   <link name="standoff_2in_3_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -598,7 +612,7 @@
     <inertial>
       <mass value="0.1"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -620,9 +634,9 @@
   </joint>
   <link name="standoff_2in_4_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -644,9 +658,9 @@
   </joint>
   <link name="standoff_2in_5_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -668,9 +682,9 @@
   </joint>
   <link name="standoff_2in_6_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -692,9 +706,9 @@
   </joint>
   <link name="standoff_2in_7_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -718,7 +732,7 @@
     <inertial>
       <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -740,9 +754,9 @@
   </joint>
   <link name="kinect_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -764,9 +778,9 @@
   </joint>
   <link name="kinect_depth_frame">
     <inertial>
-      <mass value="0.000001"/>
+      <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
     </inertial>
   </link>
   <joint name="kinect_depth_optical_joint" type="fixed">
@@ -776,7 +790,7 @@
   </joint>
   <link name="kinect_depth_optical_frame">
     <inertial>
-      <mass value="0.000001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
       <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
@@ -788,7 +802,7 @@
   </joint>
   <link name="kinect_rgb_frame">
     <inertial>
-      <mass value="0.000001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
       <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
@@ -800,7 +814,7 @@
   </joint>
   <link name="kinect_rgb_optical_frame">
     <inertial>
-      <mass value="0.000001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
       <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
@@ -812,9 +826,9 @@
   </joint>
   <link name="standoff_kinect_0_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -836,9 +850,9 @@
   </joint>
   <link name="standoff_kinect_1_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -860,9 +874,9 @@
   </joint>
   <link name="standoff_8in_0_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -884,9 +898,9 @@
   </joint>
   <link name="standoff_8in_1_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -908,9 +922,9 @@
   </joint>
   <link name="standoff_8in_2_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -932,9 +946,9 @@
   </joint>
   <link name="standoff_8in_3_link">
     <inertial>
-      <mass value="0.00001"/>
+      <mass value="0.001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -958,7 +972,7 @@
     <inertial>
       <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -982,15 +996,15 @@
   <link name="gripper_link"/>
   <joint name="gripper_link_joint" type="fixed">
     <origin rpy="0 -1.570795 0" xyz="0 0 .112"/>
-    <parent link="bioloid_F2_0_link"/>
+    <parent link="arm_wrist_flex_link"/>
     <child link="gripper_link"/>
   </joint>
-  <joint name="dynamixel_AX12_0_joint" type="fixed">
-    <origin rpy="1.570795 0 1.570795" xyz="0 0 -0.019"/>
+  <joint name="arm_shoulder_pan_servo_joint" type="fixed">
+    <origin rpy="1.570795 0 1.570795" xyz="0 0 0"/>
     <parent link="arm_base_link"/>
-    <child link="dynamixel_AX12_0_link"/>
+    <child link="arm_shoulder_pan_servo_link"/>
   </joint>
-  <link name="dynamixel_AX12_0_link">
+  <link name="arm_shoulder_pan_servo_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1010,14 +1024,14 @@
       </geometry>
     </collision>
   </link>
-  <joint name="shoulder_pan_joint" type="revolute">
+  <joint name="arm_shoulder_pan_joint" type="revolute">
     <origin rpy="-1.570795 1.570795 3.14159" xyz="0 0.019 0"/>
-    <parent link="dynamixel_AX12_0_link"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="30" lower="-2.0" upper="2.0" velocity="1.0"/>
-    <child link="bioloid_F3_0_link"/>
+    <axis xyz="0 0 -1"/>
+    <limit effort="30" lower="-2.617" upper="2.617" velocity="0.785"/>
+    <parent link="arm_shoulder_pan_servo_link"/>
+    <child link="arm_shoulder_pan_link"/>
   </joint>
-  <link name="bioloid_F3_0_link">
+  <link name="arm_shoulder_pan_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1037,12 +1051,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="dynamixel_AX12_1_joint" type="fixed">
+  <joint name="arm_shoulder_lift_servo_joint" type="fixed">
     <origin rpy="0 3.14159 0" xyz="0 0 -0.0415"/>
-    <parent link="bioloid_F3_0_link"/>
-    <child link="dynamixel_AX12_1_link"/>
+    <parent link="arm_shoulder_pan_link"/>
+    <child link="arm_shoulder_lift_servo_link"/>
   </joint>
-  <link name="dynamixel_AX12_1_link">
+  <link name="arm_shoulder_lift_servo_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1062,14 +1076,14 @@
       </geometry>
     </collision>
   </link>
-  <joint name="shoulder_lift_joint" type="revolute">
+  <joint name="arm_shoulder_lift_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="dynamixel_AX12_1_link"/>
     <axis xyz="0 1 0"/>
-    <limit effort="30" lower="-2.0" upper="2.0" velocity="1.0"/>
-    <child link="bioloid_F4_0_link"/>
+    <limit effort="30" lower="-2.617" upper="2.617" velocity="1.571"/>
+    <parent link="arm_shoulder_lift_servo_link"/>
+    <child link="arm_shoulder_lift_link"/>
   </joint>
-  <link name="bioloid_F4_0_link">
+  <link name="arm_shoulder_lift_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1089,12 +1103,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="bioloid_F10_0_joint" type="fixed">
+  <joint name="arm_shoulder_F10_0_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.0545"/>
-    <parent link="bioloid_F4_0_link"/>
-    <child link="bioloid_F10_0_link"/>
+    <parent link="arm_shoulder_lift_link"/>
+    <child link="arm_shoulder_F10_0_link"/>
   </joint>
-  <link name="bioloid_F10_0_link">
+  <link name="arm_shoulder_F10_0_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1114,12 +1128,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="bioloid_F10_1_joint" type="fixed">
+  <joint name="arm_shoulder_F10_1_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.004"/>
-    <parent link="bioloid_F10_0_link"/>
-    <child link="bioloid_F10_1_link"/>
+    <parent link="arm_shoulder_F10_0_link"/>
+    <child link="arm_shoulder_F10_1_link"/>
   </joint>
-  <link name="bioloid_F10_1_link">
+  <link name="arm_shoulder_F10_1_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1139,12 +1153,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="bioloid_F10_2_joint" type="fixed">
+  <joint name="arm_shoulder_F10_2_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.004"/>
-    <parent link="bioloid_F10_1_link"/>
-    <child link="bioloid_F10_2_link"/>
+    <parent link="arm_shoulder_F10_1_link"/>
+    <child link="arm_shoulder_F10_2_link"/>
   </joint>
-  <link name="bioloid_F10_2_link">
+  <link name="arm_shoulder_F10_2_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1164,12 +1178,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="bioloid_F3_1_joint" type="fixed">
+  <joint name="arm_shoulder_F3_0_joint" type="fixed">
     <origin rpy="0 3.14159 0" xyz="0 0 0.002"/>
-    <parent link="bioloid_F10_2_link"/>
-    <child link="bioloid_F3_1_link"/>
+    <parent link="arm_shoulder_F10_2_link"/>
+    <child link="arm_shoulder_F3_0_link"/>
   </joint>
-  <link name="bioloid_F3_1_link">
+  <link name="arm_shoulder_F3_0_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1189,12 +1203,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="dynamixel_AX12_2_joint" type="fixed">
+  <joint name="arm_elbow_flex_servo_joint" type="fixed">
     <origin rpy="0 3.14159 0" xyz="0 0 -0.0415"/>
-    <parent link="bioloid_F3_1_link"/>
-    <child link="dynamixel_AX12_2_link"/>
+    <parent link="arm_shoulder_F3_0_link"/>
+    <child link="arm_elbow_flex_servo_link"/>
   </joint>
-  <link name="dynamixel_AX12_2_link">
+  <link name="arm_elbow_flex_servo_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1214,14 +1228,14 @@
       </geometry>
     </collision>
   </link>
-  <joint name="elbow_flex_joint" type="revolute">
+  <joint name="arm_elbow_flex_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="dynamixel_AX12_2_link"/>
     <axis xyz="0 1 0"/>
-    <limit effort="30" lower="-2.0" upper="2.0" velocity="1.0"/>
-    <child link="bioloid_F4_1_link"/>
+    <limit effort="30" lower="-2.617" upper="2.617" velocity="1.571"/>
+    <parent link="arm_elbow_flex_servo_link"/>
+    <child link="arm_elbow_flex_link"/>
   </joint>
-  <link name="bioloid_F4_1_link">
+  <link name="arm_elbow_flex_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1241,12 +1255,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="bioloid_F10_3_joint" type="fixed">
+  <joint name="arm_elbow_F10_0_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.0545"/>
-    <parent link="bioloid_F4_1_link"/>
-    <child link="bioloid_F10_3_link"/>
+    <parent link="arm_elbow_flex_link"/>
+    <child link="arm_elbow_F10_0_link"/>
   </joint>
-  <link name="bioloid_F10_3_link">
+  <link name="arm_elbow_F10_0_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1266,12 +1280,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="bioloid_F10_4_joint" type="fixed">
+  <joint name="arm_elbow_F10_1_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.004"/>
-    <parent link="bioloid_F10_3_link"/>
-    <child link="bioloid_F10_4_link"/>
+    <parent link="arm_elbow_F10_0_link"/>
+    <child link="arm_elbow_F10_1_link"/>
   </joint>
-  <link name="bioloid_F10_4_link">
+  <link name="arm_elbow_F10_1_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1291,12 +1305,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="bioloid_F10_5_joint" type="fixed">
+  <joint name="arm_elbow_F10_2_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.004"/>
-    <parent link="bioloid_F10_4_link"/>
-    <child link="bioloid_F10_5_link"/>
+    <parent link="arm_elbow_F10_1_link"/>
+    <child link="arm_elbow_F10_2_link"/>
   </joint>
-  <link name="bioloid_F10_5_link">
+  <link name="arm_elbow_F10_2_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1316,12 +1330,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="bioloid_F3_2_joint" type="fixed">
+  <joint name="arm_elbow_F3_0_joint" type="fixed">
     <origin rpy="0 3.14159 0" xyz="0 0 0.002"/>
-    <parent link="bioloid_F10_5_link"/>
-    <child link="bioloid_F3_2_link"/>
+    <parent link="arm_elbow_F10_2_link"/>
+    <child link="arm_elbow_F3_0_link"/>
   </joint>
-  <link name="bioloid_F3_2_link">
+  <link name="arm_elbow_F3_0_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1341,12 +1355,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="dynamixel_AX12_3_joint" type="fixed">
+  <joint name="arm_wrist_flex_servo_joint" type="fixed">
     <origin rpy="0 3.14159 0" xyz="0 0 -0.0415"/>
-    <parent link="bioloid_F3_2_link"/>
-    <child link="dynamixel_AX12_3_link"/>
+    <parent link="arm_elbow_F3_0_link"/>
+    <child link="arm_wrist_flex_servo_link"/>
   </joint>
-  <link name="dynamixel_AX12_3_link">
+  <link name="arm_wrist_flex_servo_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1366,14 +1380,14 @@
       </geometry>
     </collision>
   </link>
-  <joint name="wrist_flex_joint" type="revolute">
+  <joint name="arm_wrist_flex_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="dynamixel_AX12_3_link"/>
     <axis xyz="0 1 0"/>
-    <limit effort="30" lower="-2.0" upper="2.0" velocity="1.0"/>
-    <child link="bioloid_F2_0_link"/>
+    <limit effort="30" lower="-1.745" upper="1.745" velocity="1.571"/>
+    <parent link="arm_wrist_flex_servo_link"/>
+    <child link="arm_wrist_flex_link"/>
   </joint>
-  <link name="bioloid_F2_0_link">
+  <link name="arm_wrist_flex_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1393,12 +1407,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="bioloid_F3_3_joint" type="fixed">
-    <origin rpy="0 3.14159 1.570795" xyz="0.0 -0.016 0.0265"/>
-    <parent link="bioloid_F2_0_link"/>
-    <child link="bioloid_F3_3_link"/>
+  <joint name="arm_wrist_F3_0_joint" type="fixed">
+    <origin rpy="0 3.14159 -1.570795" xyz="0 0.016 0.0265"/>
+    <parent link="arm_wrist_flex_link"/>
+    <child link="arm_wrist_F3_0_link"/>
   </joint>
-  <link name="bioloid_F3_3_link">
+  <link name="arm_wrist_F3_0_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1418,12 +1432,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="dynamixel_AX12_4_joint" type="fixed">
+  <joint name="gripper_servo_joint" type="fixed">
     <origin rpy="3.14159 1.570795 0" xyz="-0.02275 0 -0.019"/>
-    <parent link="bioloid_F3_3_link"/>
-    <child link="dynamixel_AX12_4_link"/>
+    <parent link="arm_wrist_F3_0_link"/>
+    <child link="gripper_servo_link"/>
   </joint>
-  <link name="dynamixel_AX12_4_link">
+  <link name="gripper_servo_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1445,12 +1459,12 @@
   </link>
   <joint name="gripper_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="dynamixel_AX12_4_link"/>
     <axis xyz="0 1 0"/>
-    <limit effort="30" lower="-0.6" upper="0.5" velocity="1.0"/>
-    <child link="bioloid_F2_1_link"/>
+    <limit effort="30" lower="-0.060" upper="0.50" velocity="0.785"/>
+    <parent link="gripper_servo_link"/>
+    <child link="gripper_active_link"/>
   </joint>
-  <link name="bioloid_F2_1_link">
+  <link name="gripper_active_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1470,12 +1484,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="finger_0_joint" type="fixed">
+  <joint name="gripper_active_finger_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.0265"/>
-    <parent link="bioloid_F2_1_link"/>
-    <child link="finger_0_link"/>
+    <parent link="gripper_active_link"/>
+    <child link="gripper_active_finger_link"/>
   </joint>
-  <link name="finger_0_link">
+  <link name="gripper_active_finger_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1495,12 +1509,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="bioloid_F3_4_joint" type="fixed">
+  <joint name="gripper_static_joint" type="fixed">
     <origin rpy="0 3.14159 0" xyz="0 0 -0.0415"/>
-    <parent link="dynamixel_AX12_4_link"/>
-    <child link="bioloid_F3_4_link"/>
+    <parent link="gripper_servo_link"/>
+    <child link="gripper_static_link"/>
   </joint>
-  <link name="bioloid_F3_4_link">
+  <link name="gripper_static_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
@@ -1520,12 +1534,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="finger_1_joint" type="fixed">
+  <joint name="gripper_static_finger_joint" type="fixed">
     <origin rpy="0 0 3.14159" xyz="0 0 0"/>
-    <parent link="bioloid_F3_4_link"/>
-    <child link="finger_1_link"/>
+    <parent link="gripper_static_link"/>
+    <child link="gripper_static_finger_link"/>
   </joint>
-  <link name="finger_1_link">
+  <link name="gripper_static_finger_link">
     <inertial>
       <mass value="0.00001"/>
       <origin xyz="0 0 0"/>

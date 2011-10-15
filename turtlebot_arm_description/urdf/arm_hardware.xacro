@@ -9,14 +9,14 @@
   <property name="AX12_WIDTH" value="0.038"/>
   <property name="F2_HEIGHT" value="0.0265"/>
 
-  <macro name="bioloid_F10_fixed" params="parent number x_loc y_loc z_loc color">
-    <joint name="bioloid_F10_${number}_joint" type="fixed">
-      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
+  <macro name="bioloid_F10_fixed" params="parent name color *origin">
+    <joint name="${name}_joint" type="fixed">
+      <insert_block name="origin" />
       <parent link="${parent}"/>
-      <child link="bioloid_F10_${number}_link" />
+      <child link="${name}_link" />
     </joint>
 
-    <link name="bioloid_F10_${number}_link">
+    <link name="${name}_link">
       <inertial>
         <mass value="0.00001" />
         <origin xyz="0 0 0" />
@@ -42,14 +42,14 @@
     </link>
   </macro>
 
-  <macro name="finger_fixed" params="parent number x_loc y_loc z_loc r p y color">
-    <joint name="finger_${number}_joint" type="fixed">
-      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
+  <macro name="finger_fixed" params="parent name color *origin">
+    <joint name="${name}_joint" type="fixed">
+      <insert_block name="origin" />
       <parent link="${parent}"/>
-      <child link="finger_${number}_link" />
+      <child link="${name}_link" />
     </joint>
 
-    <link name="finger_${number}_link">
+    <link name="${name}_link">
       <inertial>
         <mass value="0.00001" />
         <origin xyz="0 0 0" />
@@ -75,14 +75,14 @@
     </link>
   </macro>
 
-  <macro name="bioloid_F3_fixed" params="parent number x_loc y_loc z_loc r p y color">
-    <joint name="bioloid_F3_${number}_joint" type="fixed">
-      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
+  <macro name="bioloid_F3_fixed" params="parent name color *origin">
+    <joint name="${name}_joint" type="fixed">
+      <insert_block name="origin" />
       <parent link="${parent}"/>
-      <child link="bioloid_F3_${number}_link" />
+      <child link="${name}_link" />
     </joint>
 
-    <link name="bioloid_F3_${number}_link">
+    <link name="${name}_link">
       <inertial>
         <mass value="0.00001" />
         <origin xyz="0 0 0" />
@@ -108,14 +108,14 @@
     </link>
   </macro>
 
-  <macro name="dynamixel_AX12_fixed" params="parent number x_loc y_loc z_loc r p y">
-    <joint name="dynamixel_AX12_${number}_joint" type="fixed">
-      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
+  <macro name="dynamixel_AX12_fixed" params="parent name *origin">
+    <joint name="${name}_joint" type="fixed">
+      <insert_block name="origin" />
       <parent link="${parent}"/>
-      <child link="dynamixel_AX12_${number}_link" />
+      <child link="${name}_link" />
     </joint>
 
-    <link name="dynamixel_AX12_${number}_link">
+    <link name="${name}_link">
       <inertial>
         <mass value="0.00001" />
         <origin xyz="0 0 0" />
@@ -141,16 +141,16 @@
     </link>
   </macro>
 
-  <macro name="bioloid_F3_revolute" params="parent number joint_name x_loc y_loc z_loc r p y color">
-    <joint name="${joint_name}_joint" type="revolute">
-      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="${r} ${p} ${y}" />
+  <macro name="bioloid_F3_revolute" params="parent name color llimit ulimit vlimit *origin">
+    <joint name="${name}_joint" type="revolute">
+      <insert_block name="origin" />
+      <axis xyz="0 0 -1"/>
+      <limit effort="30" velocity="${vlimit}" lower="${llimit}" upper="${ulimit}" />
       <parent link="${parent}"/>
-       <axis xyz="0 0 -1"/>
-      <limit effort="30" velocity="1.0" lower="-2.0" upper="2.0" />
-      <child link="bioloid_F3_${number}_link" />
+      <child link="${name}_link" />
     </joint>
 
-    <link name="bioloid_F3_${number}_link">
+    <link name="${name}_link">
       <inertial>
         <mass value="0.00001" />
         <origin xyz="0 0 0" />
@@ -176,16 +176,16 @@
     </link>
   </macro>
 
-  <macro name="bioloid_F2_revolute" params="parent number joint_name x_loc y_loc z_loc ulimit llimit color">
-    <joint name="${joint_name}_joint" type="revolute">
-      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
+  <macro name="bioloid_F2_revolute" params="parent name color llimit ulimit vlimit *origin">
+    <joint name="${name}_joint" type="revolute">
+      <insert_block name="origin" />
+      <axis xyz="0 1 0"/>
+      <limit effort="30" velocity="${vlimit}" lower="${llimit}" upper="${ulimit}" />
       <parent link="${parent}"/>
-       <axis xyz="0 1 0"/>
-      <limit effort="30" velocity="1.0" lower="${llimit}" upper="${ulimit}" />
-      <child link="bioloid_F2_${number}_link" />
+      <child link="${name}_link" />
     </joint>
 
-    <link name="bioloid_F2_${number}_link">
+    <link name="${name}_link">
       <inertial>
         <mass value="0.00001" />
         <origin xyz="0 0 0" />
@@ -211,16 +211,16 @@
     </link>
   </macro>
 
-  <macro name="bioloid_F4_revolute" params="parent number joint_name x_loc y_loc z_loc color">
-    <joint name="${joint_name}_joint" type="revolute">
-      <origin xyz="${x_loc} ${y_loc} ${z_loc}" rpy="0 0 0" />
+  <macro name="bioloid_F4_revolute" params="parent name color llimit ulimit vlimit *origin">
+    <joint name="${name}_joint" type="revolute">
+      <insert_block name="origin" />
+      <axis xyz="0 1 0"/>
+      <limit effort="30" velocity="${vlimit}" lower="${llimit}" upper="${ulimit}" />
       <parent link="${parent}"/>
-       <axis xyz="0 1 0"/>
-      <limit effort="30" velocity="1.0" lower="-2.0" upper="2.0" />
-      <child link="bioloid_F4_${number}_link" />
+      <child link="${name}_link" />
     </joint>
 
-    <link name="bioloid_F4_${number}_link">
+    <link name="${name}_link">
       <inertial>
         <mass value="0.00001" />
         <origin xyz="0 0 0" />

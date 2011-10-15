@@ -112,10 +112,10 @@ public:
     }
     else
     {
-      joints.push_back("shoulder_pan_joint");
-      joints.push_back("shoulder_lift_joint");
-      joints.push_back("elbow_flex_joint");
-      joints.push_back("wrist_flex_joint");
+      joints.push_back("arm_shoulder_pan_joint");
+      joints.push_back("arm_shoulder_lift_joint");
+      joints.push_back("arm_elbow_flex_joint");
+      joints.push_back("arm_wrist_flex_joint");
       joints.push_back("gripper_joint");
     }
     
@@ -133,11 +133,11 @@ public:
     }
     else
     {
-      links.push_back("dynamixel_AX12_0_link");
-      links.push_back("dynamixel_AX12_1_link");
-      links.push_back("dynamixel_AX12_2_link");
-      links.push_back("dynamixel_AX12_3_link");
-      links.push_back("dynamixel_AX12_4_link"); 
+      links.push_back("arm_shoulder_pan_servo_link");
+      links.push_back("arm_shoulder_lift_servo_link");
+      links.push_back("arm_elbow_flex_servo_link");
+      links.push_back("arm_wrist_flex_servo_link");
+      links.push_back("gripper_servo_link"); 
     }
 
     // Get gripper offsets
