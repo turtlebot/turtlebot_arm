@@ -4,7 +4,7 @@
   <license>BSD</license>  
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/turtlebot_arm</url>
-  <depend stack="arbotix" /> <!-- arbotix_msgs, arbotix_python, arbotix_controllers -->
+  <depend stack="arbotix" /> <!-- arbotix_msgs, arbotix_controllers, arbotix_python -->
   <depend stack="arm_navigation" /> <!-- planning_environment, arm_kinematics_constraint_aware -->
   <depend stack="common" /> <!-- actionlib -->
   <depend stack="common_msgs" /> <!-- visualization_msgs -->
