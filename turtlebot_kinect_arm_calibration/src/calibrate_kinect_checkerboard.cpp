@@ -39,6 +39,7 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/registration/registration.h>
+#include <pcl/registration/transformation_estimation_svd.h>
 
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
@@ -51,12 +52,12 @@ using namespace Eigen;
 
 tf::Transform tfFromEigen(Eigen::Matrix4f trans)
 {
-    btMatrix3x3 btm;
+    tf::Matrix3x3 btm;
     btm.setValue(trans(0,0),trans(0,1),trans(0,2),
                  trans(1,0),trans(1,1),trans(1,2),
                  trans(2,0),trans(2,1),trans(2,2));
-    btTransform ret;
-    ret.setOrigin(btVector3(trans(0,3),trans(1,3),trans(2,3)));
+    tf::Transform ret;
+    ret.setOrigin(tf::Vector3(trans(0,3),trans(1,3),trans(2,3)));
     ret.setBasis(btm);
     return ret;
 }
@@ -64,8 +65,8 @@ tf::Transform tfFromEigen(Eigen::Matrix4f trans)
 Eigen::Matrix4f EigenFromTF(tf::Transform trans)
 {
   Eigen::Matrix4f out;
-  btQuaternion quat = trans.getRotation();
-  btVector3 origin = trans.getOrigin();
+  tf::Quaternion quat = trans.getRotation();
+  tf::Vector3 origin = trans.getOrigin();
   
   Eigen::Quaternionf quat_out(quat.w(), quat.x(), quat.y(), quat.z());
   Eigen::Vector3f origin_out(origin.x(), origin.y(), origin.z());
@@ -314,7 +315,8 @@ public:
     
     physical_pub_.publish(physical_points_);
     
-    pcl::estimateRigidTransformationSVD( physical_points_, image_points_, t );
+    pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ> svd_estimator;
+    svd_estimator.estimateRigidTransformation( physical_points_, image_points_, t );
 
     // Output       
     tf::Transform transform = tfFromEigen(t), trans_full, camera_transform_unstamped;

@@ -201,7 +201,7 @@ public:
     }
 
     // Creating the KdTree object for the search method of the extraction
-    pcl::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::KdTreeFLANN<pcl::PointXYZRGB>);
+    pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
     tree->setInputCloud (cloud_filtered);
 
     std::vector<pcl::PointIndices> cluster_indices;

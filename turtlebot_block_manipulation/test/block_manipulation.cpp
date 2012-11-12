@@ -40,7 +40,7 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/segmentation/extract_clusters.h>
-#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/kdtree.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
@@ -150,7 +150,7 @@ public:
         simple_arm_server::ArmAction action;
         
         /* arm straight up */
-        btQuaternion temp;
+        tf::Quaternion temp;
         temp.setRPY(0,1.57,0);
         action.goal.orientation.x = temp.getX();
         action.goal.orientation.y = temp.getY();
@@ -306,7 +306,7 @@ public:
     pub_.publish(*cloud_filtered);
 
     // cluster
-    pcl::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::KdTreeFLANN<pcl::PointXYZRGB>);
+    pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
     tree->setInputCloud(cloud_filtered);
     
     std::vector<pcl::PointIndices> clusters;

@@ -119,7 +119,7 @@ public:
     goal.motions.push_back(grip);
     
     /* arm straight up */
-    btQuaternion temp;
+    tf::Quaternion temp;
     temp.setRPY(0,1.57,0);
     action.goal.orientation.x = temp.getX();
     action.goal.orientation.y = temp.getY();
