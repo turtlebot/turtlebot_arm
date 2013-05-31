@@ -1,0 +1,19 @@
+<package>
+  <name>turtlebot_arm_description</name>
+  <version>0.2.0</version>
+  <description>
+   turtlebot_arm_description contains URDF files and meshes for the TurtleBot arm.
+  </description>
+  <author>Michael Ferguson</author>
+  <author>Melonee Wise</author>
+  <maintainer email="mike@vanadiumlabs.com">Michael Ferguson</maintainer>
+  <license>BSD</license>
+  <url>http://ros.org/wiki/turtlebot_arm_description</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>urdf</run_depend>
+  <run_depend>xacro</run_depend>
+  <!--<run_depend>turtlebot_description</run_depend>-->
+
+</package>
