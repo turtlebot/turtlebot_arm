@@ -1,0 +1,8 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: turtlebot_arm_description
+    relative_path: urdf/arm.urdf
+  SRDF:
+    relative_path: config/turtlebot_arm.srdf
+  CONFIG:
+    generated_timestamp: 1369977282
