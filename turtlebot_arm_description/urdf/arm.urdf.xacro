@@ -6,12 +6,17 @@
     xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface">
 
     <!-- Included URDF Files -->
-    <include filename="$(find turtlebot_description)/urdf/turtlebot.urdf.xacro" />
+    <!--<include filename="$(find turtlebot_description)/urdf/turtlebot.urdf.xacro" />-->
     <include filename="$(find turtlebot_arm_description)/urdf/arm.xacro" />
 
-    <turtlebot />
-    <turtlebot_arm parent="plate_3_link" color="white" gripper_color="green">
-      <origin xyz="0.1143 0 0.0508"/>
+    <!-- For now I have removed the turtlebot since this all moved around..
+    <turtlebot />-->
+
+    <!-- Instead, there is a base_link -->
+    <link name="base_link"/>
+
+    <turtlebot_arm parent="base_link" color="white" gripper_color="green">
+      <origin xyz="0 0 0"/>
     </turtlebot_arm>
 
 </robot>
