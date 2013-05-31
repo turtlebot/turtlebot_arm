@@ -215,6 +215,7 @@ bool IKFastKinematicsPlugin::initialize(const std::string &robot_description,
                                         double search_discretization)
 {
   setValues(robot_description, group_name, base_name, tip_name, search_discretization);
+  base_frame_ = "arm_base_link";
 
   ros::NodeHandle node_handle("~/"+group_name);
 
