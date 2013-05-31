@@ -9,24 +9,12 @@
     <!--<include filename="$(find turtlebot_description)/urdf/turtlebot.urdf.xacro" />-->
     <include filename="$(find turtlebot_arm_description)/urdf/arm.xacro" />
 
-    <link name="base_link">
-      <visual>
-        <origin xyz=" 0 0 0 " rpy="0 0 0" />
-        <geometry>
-          <box size="0.01 0.01 0.01"/>
-        </geometry>
-        <material name="black"/>
-      </visual>
+    <!-- For now I have removed the turtlebot since this all moved around..
+    <turtlebot />-->
 
-      <collision>
-        <origin xyz="0.0 0.0 0" rpy="0 0 0" />
-        <geometry>
-          <box size="0.01 0.01 0.01"/>
-        </geometry>
-      </collision>
-    </link>
+    <!-- Instead, there is a base_link -->
+    <link name="base_link"/>
 
-    <!--<turtlebot />-->
     <turtlebot_arm parent="base_link" color="white" gripper_color="green">
       <origin xyz="0 0 0"/>
     </turtlebot_arm>
