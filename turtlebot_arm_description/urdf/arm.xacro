@@ -21,12 +21,16 @@
       <child link="arm_base_link" />
     </joint>
 
-    <!-- fake gripper_link joint -->
+    <!-- fake gripper_link joint gives us a free servo!
+         this makes us 5DOF and saves you $44.90
+         that's a lot of coin! -->
     <link name="gripper_link" />
-    <joint name="gripper_link_joint" type="fixed">
-      <origin xyz="0 0 .112" rpy="0 -${M_PI/2} 0" />
+    <joint name="gripper_link_joint" type="revolute">
+      <origin xyz="0 0 .112" rpy="0 -1.57 0" />
       <parent link="arm_wrist_flex_link"/>
       <child link="gripper_link" />
+      <limit effort="30" velocity="1" lower="-3.14" upper="3.14"/>
+      <axis xyz="1 0 0"/>
     </joint>
 
     <!-- shoulder pan joint -->

@@ -1,6 +1,0 @@
-<launch>
-  <node name="turtlebot_arm_marker_server" type="turtlebot_arm_marker_server" pkg="turtlebot_arm_interactive_markers" output="screen">
-    <param name="root_link" value="/arm_base_link" />
-    <param name="tip_link" value="/gripper_link" />
-  </node>
-</launch>
