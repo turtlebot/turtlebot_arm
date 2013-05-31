@@ -27,6 +27,7 @@
         <joint name="arm_elbow_F10_2_joint" />
         <joint name="arm_elbow_F3_0_joint" />
         <joint name="arm_wrist_flex_servo_joint" />
+        <joint name="gripper_link_joint" />
     </group>
     <group name="gripper">
         <link name="gripper_servo_link" />
@@ -37,20 +38,8 @@
         <joint name="gripper_joint" />
     </group>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
-    <end_effector name="gripper" parent_link="arm_wrist_flex_link" group="gripper" parent_group="arm" />
+    <end_effector name="gripper" parent_link="gripper_link" group="gripper" parent_group="arm" />
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
-    <disable_collisions link1="arm_base_link" link2="arm_elbow_flex_servo_link" reason="Never" />
-    <disable_collisions link1="arm_base_link" link2="arm_shoulder_F10_0_link" reason="Never" />
-    <disable_collisions link1="arm_base_link" link2="arm_shoulder_F10_1_link" reason="Never" />
-    <disable_collisions link1="arm_base_link" link2="arm_shoulder_F10_2_link" reason="Never" />
-    <disable_collisions link1="arm_base_link" link2="arm_shoulder_F3_0_link" reason="Never" />
-    <disable_collisions link1="arm_base_link" link2="arm_shoulder_lift_link" reason="Never" />
-    <disable_collisions link1="arm_base_link" link2="arm_shoulder_lift_servo_link" reason="Never" />
-    <disable_collisions link1="arm_base_link" link2="arm_shoulder_pan_link" reason="Never" />
-    <disable_collisions link1="arm_base_link" link2="arm_shoulder_pan_servo_link" reason="Adjacent" />
-    <disable_collisions link1="arm_base_link" link2="base_link" reason="Adjacent" />
-    <disable_collisions link1="arm_base_link" link2="gripper_static_finger_link" reason="Never" />
-    <disable_collisions link1="arm_base_link" link2="gripper_static_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_0_link" link2="arm_elbow_F10_1_link" reason="Adjacent" />
     <disable_collisions link1="arm_elbow_F10_0_link" link2="arm_elbow_F10_2_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_0_link" link2="arm_elbow_F3_0_link" reason="Never" />
@@ -68,7 +57,6 @@
     <disable_collisions link1="arm_elbow_F10_0_link" link2="arm_wrist_flex_servo_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_0_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_0_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_elbow_F10_0_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_0_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_0_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_0_link" link2="gripper_static_link" reason="Never" />
@@ -88,7 +76,6 @@
     <disable_collisions link1="arm_elbow_F10_1_link" link2="arm_wrist_flex_servo_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_1_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_1_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_elbow_F10_1_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_1_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_1_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_1_link" link2="gripper_static_link" reason="Never" />
@@ -107,7 +94,6 @@
     <disable_collisions link1="arm_elbow_F10_2_link" link2="arm_wrist_flex_servo_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_2_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_2_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_elbow_F10_2_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_2_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_2_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F10_2_link" link2="gripper_static_link" reason="Never" />
@@ -125,7 +111,6 @@
     <disable_collisions link1="arm_elbow_F3_0_link" link2="arm_wrist_flex_servo_link" reason="Adjacent" />
     <disable_collisions link1="arm_elbow_F3_0_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F3_0_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_elbow_F3_0_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F3_0_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F3_0_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_F3_0_link" link2="gripper_static_link" reason="Never" />
@@ -137,7 +122,6 @@
     <disable_collisions link1="arm_elbow_flex_link" link2="arm_wrist_flex_servo_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_elbow_flex_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_link" link2="gripper_static_link" reason="Never" />
@@ -151,10 +135,8 @@
     <disable_collisions link1="arm_elbow_flex_servo_link" link2="arm_wrist_F3_0_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_servo_link" link2="arm_wrist_flex_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_servo_link" link2="arm_wrist_flex_servo_link" reason="Never" />
-    <disable_collisions link1="arm_elbow_flex_servo_link" link2="base_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_servo_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_servo_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_elbow_flex_servo_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_servo_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_servo_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_elbow_flex_servo_link" link2="gripper_static_link" reason="Never" />
@@ -167,10 +149,8 @@
     <disable_collisions link1="arm_shoulder_F10_0_link" link2="arm_wrist_F3_0_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_0_link" link2="arm_wrist_flex_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_0_link" link2="arm_wrist_flex_servo_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_F10_0_link" link2="base_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_0_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_0_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_F10_0_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_0_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_0_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_0_link" link2="gripper_static_link" reason="Never" />
@@ -182,10 +162,8 @@
     <disable_collisions link1="arm_shoulder_F10_1_link" link2="arm_wrist_F3_0_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_1_link" link2="arm_wrist_flex_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_1_link" link2="arm_wrist_flex_servo_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_F10_1_link" link2="base_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_1_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_1_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_F10_1_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_1_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_1_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_1_link" link2="gripper_static_link" reason="Never" />
@@ -196,10 +174,8 @@
     <disable_collisions link1="arm_shoulder_F10_2_link" link2="arm_wrist_F3_0_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_2_link" link2="arm_wrist_flex_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_2_link" link2="arm_wrist_flex_servo_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_F10_2_link" link2="base_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_2_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_2_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_F10_2_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_2_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_2_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F10_2_link" link2="gripper_static_link" reason="Never" />
@@ -209,63 +185,47 @@
     <disable_collisions link1="arm_shoulder_F3_0_link" link2="arm_wrist_F3_0_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F3_0_link" link2="arm_wrist_flex_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F3_0_link" link2="arm_wrist_flex_servo_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_F3_0_link" link2="base_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F3_0_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F3_0_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_F3_0_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F3_0_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F3_0_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_F3_0_link" link2="gripper_static_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_lift_link" link2="arm_shoulder_lift_servo_link" reason="Adjacent" />
     <disable_collisions link1="arm_shoulder_lift_link" link2="arm_wrist_flex_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_lift_link" link2="arm_wrist_flex_servo_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_lift_link" link2="base_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_lift_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_lift_link" link2="gripper_static_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_lift_servo_link" link2="arm_shoulder_pan_link" reason="Adjacent" />
     <disable_collisions link1="arm_shoulder_lift_servo_link" link2="arm_shoulder_pan_servo_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_lift_servo_link" link2="arm_wrist_flex_servo_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_lift_servo_link" link2="base_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_lift_servo_link" link2="gripper_static_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_pan_link" link2="arm_shoulder_pan_servo_link" reason="Adjacent" />
-    <disable_collisions link1="arm_shoulder_pan_link" link2="base_link" reason="Never" />
     <disable_collisions link1="arm_shoulder_pan_link" link2="gripper_static_link" reason="Never" />
-    <disable_collisions link1="arm_shoulder_pan_servo_link" link2="base_link" reason="Default" />
     <disable_collisions link1="arm_wrist_F3_0_link" link2="arm_wrist_flex_link" reason="Adjacent" />
     <disable_collisions link1="arm_wrist_F3_0_link" link2="arm_wrist_flex_servo_link" reason="Never" />
     <disable_collisions link1="arm_wrist_F3_0_link" link2="gripper_active_finger_link" reason="Never" />
-    <disable_collisions link1="arm_wrist_F3_0_link" link2="gripper_active_link" reason="Default" />
-    <disable_collisions link1="arm_wrist_F3_0_link" link2="gripper_link" reason="Never" />
+    <disable_collisions link1="arm_wrist_F3_0_link" link2="gripper_active_link" reason="Never" />
     <disable_collisions link1="arm_wrist_F3_0_link" link2="gripper_servo_link" reason="Adjacent" />
-    <disable_collisions link1="arm_wrist_F3_0_link" link2="gripper_static_finger_link" reason="Default" />
-    <disable_collisions link1="arm_wrist_F3_0_link" link2="gripper_static_link" reason="Default" />
+    <disable_collisions link1="arm_wrist_F3_0_link" link2="gripper_static_finger_link" reason="Never" />
+    <disable_collisions link1="arm_wrist_F3_0_link" link2="gripper_static_link" reason="Never" />
     <disable_collisions link1="arm_wrist_flex_link" link2="arm_wrist_flex_servo_link" reason="Adjacent" />
     <disable_collisions link1="arm_wrist_flex_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_wrist_flex_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_wrist_flex_link" link2="gripper_link" reason="Adjacent" />
     <disable_collisions link1="arm_wrist_flex_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_wrist_flex_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_wrist_flex_link" link2="gripper_static_link" reason="Never" />
     <disable_collisions link1="arm_wrist_flex_servo_link" link2="gripper_active_finger_link" reason="Never" />
     <disable_collisions link1="arm_wrist_flex_servo_link" link2="gripper_active_link" reason="Never" />
-    <disable_collisions link1="arm_wrist_flex_servo_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="arm_wrist_flex_servo_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="arm_wrist_flex_servo_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="arm_wrist_flex_servo_link" link2="gripper_static_link" reason="Never" />
-    <disable_collisions link1="base_link" link2="gripper_static_finger_link" reason="Never" />
-    <disable_collisions link1="base_link" link2="gripper_static_link" reason="Never" />
     <disable_collisions link1="gripper_active_finger_link" link2="gripper_active_link" reason="Adjacent" />
-    <disable_collisions link1="gripper_active_finger_link" link2="gripper_servo_link" reason="Default" />
+    <disable_collisions link1="gripper_active_finger_link" link2="gripper_servo_link" reason="Never" />
     <disable_collisions link1="gripper_active_finger_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="gripper_active_finger_link" link2="gripper_static_link" reason="Never" />
-    <disable_collisions link1="gripper_active_link" link2="gripper_link" reason="Never" />
     <disable_collisions link1="gripper_active_link" link2="gripper_servo_link" reason="Adjacent" />
     <disable_collisions link1="gripper_active_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="gripper_active_link" link2="gripper_static_link" reason="Never" />
-    <disable_collisions link1="gripper_link" link2="gripper_servo_link" reason="Never" />
-    <disable_collisions link1="gripper_link" link2="gripper_static_finger_link" reason="Never" />
-    <disable_collisions link1="gripper_link" link2="gripper_static_link" reason="Never" />
-    <disable_collisions link1="gripper_servo_link" link2="gripper_static_finger_link" reason="Default" />
+    <disable_collisions link1="gripper_servo_link" link2="gripper_static_finger_link" reason="Never" />
     <disable_collisions link1="gripper_servo_link" link2="gripper_static_link" reason="Adjacent" />
     <disable_collisions link1="gripper_static_finger_link" link2="gripper_static_link" reason="Adjacent" />
 </robot>
