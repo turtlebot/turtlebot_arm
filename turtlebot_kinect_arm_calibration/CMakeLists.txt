@@ -1,32 +1,28 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8.3)
+project(turtlebot_kinect_arm_calibration)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+# setup
+find_package(catkin REQUIRED cv_bridge eigen image_geometry image_transport pcl pcl_ros roscpp tf visualization_msgs)
+find_package(Boost REQUIRED system filesystem)
+find_package(PCL REQUIRED)
+find_package(OpenCV REQUIRED)
 
-rosbuild_init()
+link_directories(${catkin_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS} ${OpenCV_LIBRARY_DIRS} ${PCL_LIBRARY_DIRS})
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+catkin_package(DEPENDS cv_bridge eigen image_geometry image_transport pcl pcl_ros roscpp tf visualization_msgs)
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
+include_directories(include
+                    SYSTEM
+                    ${Boost_INCLUDE_DIRS}
+                    ${catkin_INCLUDE_DIRS}
+                    ${PCL_INCLUDE_DIRS}
+                    ${OpenCV_INCLUDE_DIRS}
+                   )
 
-rosbuild_add_executable(calibrate_kinect_checkerboard src/calibrate_kinect_checkerboard.cpp src/detect_calibration_pattern.cpp)
-
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+# node
+add_executable(calibrate_kinect_checkerboard src/calibrate_kinect_checkerboard.cpp
+                                             src/detect_calibration_pattern.cpp)
+target_link_libraries(calibrate_kinect_checkerboard ${Boost_LIBRARIES}
+                                                    ${catkin_LIBRARIES}
+                                                    ${PCL_LIBRARIES}
+                                                    ${OpenCV_LIBRARIES})
