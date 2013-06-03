@@ -1,0 +1,37 @@
+<package>
+  <name>turtlebot_kinect_arm_calibration</name>
+  <version>0.2.0</version>
+  <description>
+    turtlebot_kinect_arm_calibration allows calibration of a kinect to a TurtleBot arm,
+    including a kinect on-board and off-board the TurtleBot for more precise manipulation.
+  </description>
+  <author>Michael Ferguson</author>
+  <author>Helen Oleynikova</author>
+  <maintainer email="mike@vanadiumlabs.com">Michael Ferguson</maintainer>
+  <license>BSD</license>
+  <url>http://ros.org/wiki/turtlebot_kinect_arm_calibration</url>
+  
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>eigen</build_depend>
+  <build_depend>image_geometry</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>opencv2</build_depend>
+  <build_depend>pcl</build_depend>
+  <build_depend>pcl_ros</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+
+  <run_depend>cv_bridge</run_depend>
+  <run_depend>eigen</run_depend>
+  <run_depend>image_geometry</run_depend>
+  <run_depend>image_transport</run_depend>
+  <run_depend>opencv2</run_depend>
+  <run_depend>pcl</run_depend>
+  <run_depend>pcl_ros</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>visualization_msgs</run_depend>
+</package>
