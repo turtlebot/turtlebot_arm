@@ -146,7 +146,7 @@ public:
     {
       case visualization_msgs::InteractiveMarkerFeedback::MOUSE_DOWN:
         ROS_INFO_STREAM("Staging " << feedback->marker_name);     
-          old_pose_ = feedback->pose;
+        old_pose_ = feedback->pose;
         break;
    
       case visualization_msgs::InteractiveMarkerFeedback::MOUSE_UP:
@@ -160,6 +160,9 @@ public:
   
   void moveBlock(const geometry_msgs::Pose& start_pose, const geometry_msgs::Pose& end_pose)
   {
+    /*
+     * TODO: this needs to be updated to MoveIt before we can make it work
+     */
     geometry_msgs::Pose start_pose_bumped, end_pose_bumped;
     start_pose_bumped = start_pose;
     start_pose_bumped.position.y -= bump_size;

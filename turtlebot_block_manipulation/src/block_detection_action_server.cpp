@@ -48,7 +48,6 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 
-
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 
