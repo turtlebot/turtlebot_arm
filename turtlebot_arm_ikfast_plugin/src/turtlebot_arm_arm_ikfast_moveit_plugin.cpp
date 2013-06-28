@@ -332,7 +332,7 @@ int IKFastKinematicsPlugin::solve(KDL::Frame &pose_frame, const std::vector<doub
   KDL::Rotation orig = pose_frame.M;
   KDL::Rotation mult = orig;//*rot;
 
-  double vals[9];
+  /*double vals[9];
   vals[0] = mult(0,0);
   vals[1] = mult(0,1);
   vals[2] = mult(0,2);
@@ -341,7 +341,8 @@ int IKFastKinematicsPlugin::solve(KDL::Frame &pose_frame, const std::vector<doub
   vals[5] = mult(1,2);
   vals[6] = mult(2,0);
   vals[7] = mult(2,1);
-  vals[8] = mult(2,2);
+  vals[8] = mult(2,2);*/
+  KDL::Vector direction = mult * KDL::Vector(0,0,1);
 
   double trans[3];
   trans[0] = pose_frame.p[0];//-.18;
@@ -349,7 +350,8 @@ int IKFastKinematicsPlugin::solve(KDL::Frame &pose_frame, const std::vector<doub
   trans[2] = pose_frame.p[2];
 
   // IKFast56/61
-  ComputeIk(trans, vals, vfree.size() > 0 ? &vfree[0] : NULL, solutions);
+  ComputeIk(trans, direction.data, vfree.size() > 0 ? &vfree[0] : NULL, solutions);
+  //ComputeIk(trans, vals, vfree.size() > 0 ? &vfree[0] : NULL, solutions);
   return solutions.GetNumSolutions();
 }
 
