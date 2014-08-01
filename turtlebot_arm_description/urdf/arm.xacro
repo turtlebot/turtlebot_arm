@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
-<robot>
-  <include filename="$(find turtlebot_arm_description)/urdf/arm_hardware.xacro" />
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find turtlebot_arm_description)/urdf/arm_hardware.xacro"/>
 
   <material name="white">
     <color rgba="0.87 0.90 0.87 1.0"/>
@@ -13,7 +13,8 @@
     <color rgba="0.22 0.32 0.14 1.0"/>
   </material>
 
-  <macro name="turtlebot_arm" params="parent color gripper_color *origin"> 
+  <xacro:macro name="turtlebot_arm" params="parent color gripper_color *origin
+                                            joints_vlimit pan_llimit pan_ulimit">
     <link name="arm_base_link" />     
     <joint name="arm_base_joint" type="fixed">
       <insert_block name="origin" />
@@ -37,7 +38,8 @@
     <dynamixel_AX12_fixed parent="arm_base_link" name="arm_shoulder_pan_servo">
       <origin xyz="0 0 0" rpy="${M_PI/2} 0 ${M_PI/2}"/>
     </dynamixel_AX12_fixed>
-    <bioloid_F3_revolute parent="arm_shoulder_pan_servo_link" name="arm_shoulder_pan" color="${color}" vlimit="0.785" llimit="-2.617" ulimit="2.617">
+    <bioloid_F3_revolute parent="arm_shoulder_pan_servo_link" name="arm_shoulder_pan" color="${color}"
+                         vlimit="${joints_vlimit}" llimit="${pan_llimit}" ulimit="${pan_ulimit}">
       <origin xyz="0 ${AX12_WIDTH/2} 0" rpy="${-M_PI/2} ${M_PI/2} ${M_PI}" />
     </bioloid_F3_revolute>
 
@@ -45,7 +47,8 @@
     <dynamixel_AX12_fixed parent="arm_shoulder_pan_link" name="arm_shoulder_lift_servo">
       <origin xyz="0 0 ${-AX12_HEIGHT-F10_HEIGHT+0.001}" rpy="0 ${M_PI} 0" />
     </dynamixel_AX12_fixed>
-    <bioloid_F4_revolute parent="arm_shoulder_lift_servo_link" name="arm_shoulder_lift" color="${color}" vlimit="1.571" llimit="-2.617" ulimit="2.617">
+    <bioloid_F4_revolute parent="arm_shoulder_lift_servo_link" name="arm_shoulder_lift" color="${color}"
+                         vlimit="${joints_vlimit}" llimit="-2.617" ulimit="2.617">
       <origin xyz="0 0 0" rpy="0 0 0" />
     </bioloid_F4_revolute>
     <bioloid_F10_fixed parent="arm_shoulder_lift_link" name="arm_shoulder_F10_0" color="${color}">
@@ -65,7 +68,8 @@
     <dynamixel_AX12_fixed parent="arm_shoulder_F3_0_link" name="arm_elbow_flex_servo">
       <origin xyz="0 0 ${-AX12_HEIGHT-F10_HEIGHT+0.001}" rpy="0 ${M_PI} 0"/>
     </dynamixel_AX12_fixed>
-    <bioloid_F4_revolute parent="arm_elbow_flex_servo_link" name="arm_elbow_flex" color="${color}" vlimit="1.571" llimit="-2.617" ulimit="2.617">
+    <bioloid_F4_revolute parent="arm_elbow_flex_servo_link" name="arm_elbow_flex" color="${color}"
+                         vlimit="${joints_vlimit}" llimit="-2.617" ulimit="2.617">
       <origin xyz="0 0 0" rpy="0 0 0" />
     </bioloid_F4_revolute>
     <bioloid_F10_fixed parent="arm_elbow_flex_link" name="arm_elbow_F10_0" color="${color}">
@@ -85,7 +89,8 @@
     <dynamixel_AX12_fixed parent="arm_elbow_F3_0_link" name="arm_wrist_flex_servo">
       <origin xyz="0 0 ${-AX12_HEIGHT-F10_HEIGHT+0.001}" rpy="0 ${M_PI} 0"/>
     </dynamixel_AX12_fixed>
-    <bioloid_F2_revolute parent="arm_wrist_flex_servo_link" name="arm_wrist_flex" color="${color}" vlimit="1.571" llimit="-1.745" ulimit="1.745">
+    <bioloid_F2_revolute parent="arm_wrist_flex_servo_link" name="arm_wrist_flex" color="${color}"
+                         vlimit="${joints_vlimit}" llimit="-1.745" ulimit="1.745">
       <origin xyz="0 0 0" rpy="0 0 0" />
     </bioloid_F2_revolute>
     <bioloid_F3_fixed parent="arm_wrist_flex_link" name="arm_wrist_F3_0" color="${color}">
@@ -139,6 +144,6 @@
       <origin xyz="0 0 0" rpy="0 0 ${M_PI}" />
     </finger_fixed>
 
-  </macro>
+  </xacro:macro>
 
 </robot>

@@ -1,6 +1,6 @@
 controller_list:
   - name: arm_controller
-    ns: follow_joint_trajectory
+    action_ns: follow_joint_trajectory
     type: FollowJointTrajectory
     default: true
     joints:
@@ -10,6 +10,7 @@ controller_list:
       - arm_wrist_flex_joint
       - gripper_link_joint
   - name: gripper_controller
+    action_ns: gripper_action
     type: GripperCommand
     default: true
     command_joint: gripper_joint

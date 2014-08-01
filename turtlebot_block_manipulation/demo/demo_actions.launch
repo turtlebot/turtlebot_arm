@@ -1,8 +1,0 @@
-<launch>
-
-  <include file="$(find openni_camera)/launch/openni_node.launch" />
-  <include file="$(find turtlebot_block_manipulation)/launch/block_manipulation_old_kinect.launch" />
-
-  <node name="block_manipulation_action_demo" pkg="turtlebot_block_manipulation" type="block_manipulation_action_demo" output="screen" />
-  
-</launch>

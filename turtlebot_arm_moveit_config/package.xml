@@ -15,6 +15,12 @@
   <url type="repository">https://github.com/ros-planning/moveit_setup_assistant</url>
 
   <run_depend>moveit_ros_move_group</run_depend>
+  <run_depend>moveit_planners_ompl</run_depend>
+  <run_depend>moveit_ros_visualization</run_depend>
+  <run_depend>moveit_simple_controller_manager</run_depend>  <!-- this is missing originally -> make issue if not fixed on indigo -->
+  <run_depend>joint_state_publisher</run_depend>
+  <run_depend>robot_state_publisher</run_depend>
+  <run_depend>xacro</run_depend>
   <build_depend>turtlebot_arm_description</build_depend>
   <run_depend>turtlebot_arm_description</run_depend>
 

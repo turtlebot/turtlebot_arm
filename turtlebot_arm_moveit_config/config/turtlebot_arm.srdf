@@ -10,37 +10,33 @@
     <!--CHAINS: When a chain is specified, all the links along the chain (including endpoints) are included in the group. Additionally, all the joints that are parents to included links are also included. This means that joints along the chain and the parent joint of the base link are included in the group-->
     <!--SUBGROUPS: Groups can also be formed by referencing to already defined group names-->
     <group name="arm">
-        <joint name="arm_shoulder_pan_joint" />
-        <joint name="arm_shoulder_lift_joint" />
-        <joint name="arm_elbow_flex_joint" />
-        <joint name="arm_wrist_flex_joint" />
-        <joint name="arm_base_joint" />
-        <joint name="arm_shoulder_pan_servo_joint" />
-        <joint name="arm_shoulder_lift_servo_joint" />
-        <joint name="arm_shoulder_F10_0_joint" />
-        <joint name="arm_shoulder_F10_1_joint" />
-        <joint name="arm_shoulder_F10_2_joint" />
-        <joint name="arm_shoulder_F3_0_joint" />
-        <joint name="arm_elbow_flex_servo_joint" />
-        <joint name="arm_elbow_F10_0_joint" />
-        <joint name="arm_elbow_F10_1_joint" />
-        <joint name="arm_elbow_F10_2_joint" />
-        <joint name="arm_elbow_F3_0_joint" />
-        <joint name="arm_wrist_flex_servo_joint" />
-        <joint name="gripper_link_joint" />
+        <chain base_link="arm_base_link" tip_link="gripper_link" />
     </group>
     <group name="gripper">
+        <joint name="gripper_joint" />
         <link name="gripper_servo_link" />
         <link name="gripper_active_finger_link" />
         <link name="gripper_active_link" />
         <link name="gripper_static_finger_link" />
         <link name="gripper_static_link" />
-        <joint name="gripper_joint" />
     </group>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
     <end_effector name="gripper" parent_link="gripper_link" group="gripper" parent_group="arm" />
     <!--PASSIVE JOINT: Purpose: this element is used to mark joints that are not actuated-->
     <passive_joint name="gripper_link_joint" />
+    <!--GROUP STATES: Purpose: Define a named state for a particular group, in terms of joint values. This is useful to define states like 'folded arms'-->
+    <group_state name="right_up" group="arm">
+        <joint name="arm_elbow_flex_joint" value="0.0" />
+        <joint name="arm_shoulder_lift_joint" value="0.0" />
+        <joint name="arm_shoulder_pan_joint" value="0.0" />
+        <joint name="arm_wrist_flex_joint" value="0.0" />
+    </group_state>
+    <group_state name="resting" group="arm">
+        <joint name="arm_elbow_flex_joint" value="0.0" />
+        <joint name="arm_shoulder_lift_joint" value="0.0" />
+        <joint name="arm_shoulder_pan_joint" value="0.0" />
+        <joint name="arm_wrist_flex_joint" value="0.0" />
+    </group_state>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="arm_elbow_F10_0_link" link2="arm_elbow_F10_1_link" reason="Adjacent" />
     <disable_collisions link1="arm_elbow_F10_0_link" link2="arm_elbow_F10_2_link" reason="Never" />

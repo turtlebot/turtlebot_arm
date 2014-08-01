@@ -1,22 +1,28 @@
 <?xml version="1.0"?>
 
-<robot name="turtlebot_arm"
+<robot name="turtlebot_arm" xmlns:xacro="http://ros.org/wiki/xacro"
     xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
     xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
     xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface">
 
     <!-- Included URDF Files -->
     <!--<include filename="$(find turtlebot_description)/urdf/turtlebot.urdf.xacro" />-->
-    <include filename="$(find turtlebot_arm_description)/urdf/arm.xacro" />
+    <xacro:include filename="$(find turtlebot_arm_description)/urdf/arm.xacro" />
 
     <!-- For now I have removed the turtlebot since this all moved around..
     <turtlebot />-->
 
-    <!-- Instead, there is a base_link -->
-    <link name="base_link"/>
+    <!-- Instead, add a base_footprint link as turtlebot location reference -->
+    <link name="base_footprint"/>
 
-    <turtlebot_arm parent="base_link" color="white" gripper_color="green">
-      <origin xyz="0 0 0"/>
+    <!-- Turtlebot arm macro: we can configure joints velocity limit and lower/upper limits
+         for the first joint (arm_shoulder_pan) to allow accessing to different operational 
+         areas, e.g. left handed vs. right handed robot -->
+    <turtlebot_arm parent="base_footprint" color="white" gripper_color="green"
+                   joints_vlimit="1.571" pan_llimit="-2.617" pan_ulimit="2.617">
+      <!-- Place the "floating" arm at the location it should be if mounted on a turtlebot,
+           as pick and place and other demos assume this location -->
+      <origin xyz="0.1 0.03 0.435"/>
     </turtlebot_arm>
 
 </robot>
