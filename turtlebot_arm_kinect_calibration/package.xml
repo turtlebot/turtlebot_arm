@@ -1,15 +1,15 @@
 <package>
-  <name>turtlebot_kinect_arm_calibration</name>
+  <name>turtlebot_arm_kinect_calibration</name>
   <version>0.2.0</version>
   <description>
-    turtlebot_kinect_arm_calibration allows calibration of a kinect to a TurtleBot arm,
+    turtlebot_arm_kinect_calibration allows calibration of a kinect to a TurtleBot arm,
     including a kinect on-board and off-board the TurtleBot for more precise manipulation.
   </description>
   <author>Michael Ferguson</author>
   <author>Helen Oleynikova</author>
   <maintainer email="mike@vanadiumlabs.com">Michael Ferguson</maintainer>
   <license>BSD</license>
-  <url>http://ros.org/wiki/turtlebot_kinect_arm_calibration</url>
+  <url>http://ros.org/wiki/turtlebot_arm_kinect_calibration</url>
   
   <buildtool_depend>catkin</buildtool_depend>
 

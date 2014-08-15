@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(turtlebot_kinect_arm_calibration)
+project(turtlebot_arm_kinect_calibration)
 
 # setup
 find_package(catkin REQUIRED cmake_modules cv_bridge image_geometry image_transport pcl_ros roscpp tf visualization_msgs)

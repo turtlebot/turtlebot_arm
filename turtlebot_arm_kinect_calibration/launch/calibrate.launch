@@ -1,6 +1,6 @@
 <launch>
 
-  <node name="calibrate_kinect_checkerboard" pkg="turtlebot_kinect_arm_calibration" type="calibrate_kinect_checkerboard" output="screen">
+  <node name="calibrate_kinect_checkerboard" pkg="turtlebot_arm_kinect_calibration" type="calibrate_kinect_checkerboard" output="screen">
     <param name="gripper_tip_x" value="-0.002" />
     <param name="gripper_tip_y" value="0.020" />
     <param name="gripper_tip_z" value="-0.0185" />

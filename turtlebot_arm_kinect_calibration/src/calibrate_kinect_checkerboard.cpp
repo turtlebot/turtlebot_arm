@@ -45,7 +45,7 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <geometry_msgs/PointStamped.h>
 
-#include <turtlebot_kinect_arm_calibration/detect_calibration_pattern.h>
+#include <turtlebot_arm_kinect_calibration/detect_calibration_pattern.h>
 
 using namespace std;
 using namespace Eigen;

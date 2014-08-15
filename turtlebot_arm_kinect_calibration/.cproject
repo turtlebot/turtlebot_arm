@@ -33,7 +33,7 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="turtlebot_kinect_arm_calibration.null.874760565" name="turtlebot_kinect_arm_calibration"/>
+		<project id="turtlebot_arm_kinect_calibration.null.874760565" name="turtlebot_arm_kinect_calibration"/>
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
