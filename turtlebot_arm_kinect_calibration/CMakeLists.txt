@@ -26,3 +26,13 @@ target_link_libraries(calibrate_kinect_checkerboard ${Boost_LIBRARIES}
                                                     ${catkin_LIBRARIES}
                                                     ${PCL_LIBRARIES}
                                                     ${OpenCV_LIBRARIES})
+
+# install
+
+install(TARGETS calibrate_kinect_checkerboard
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY launch
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
