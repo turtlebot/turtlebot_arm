@@ -4,8 +4,6 @@ project(turtlebot_arm_bringup)
 find_package(catkin REQUIRED)
 catkin_package()
 
-#catkin_python_setup()
-
 install(DIRECTORY config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
@@ -13,9 +11,3 @@ install(DIRECTORY config
 install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
-
-install(DIRECTORY scripts
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-

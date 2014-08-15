@@ -14,7 +14,5 @@
   </node>
 
   <node pkg="robot_state_publisher" type="state_publisher" name="rob_st_pub" />
-  <!-- NO TURTLEBOT!
-       <node pkg="turtlebot_arm_bringup" type="fake_pub.py" name="fake_pub" />-->
 
 </launch>
