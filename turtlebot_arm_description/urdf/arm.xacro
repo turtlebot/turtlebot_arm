@@ -106,7 +106,7 @@
     <joint name="gripper_joint" type="revolute">
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
-      <limit effort="30" velocity="0.785" lower="-0.060" upper="0.50" />
+      <limit effort="30" velocity="0.785" lower="-0.40" upper="0.46" />
       <parent link="gripper_servo_link"/>
       <child link="gripper_active_link" />
     </joint>
