@@ -9,7 +9,7 @@
     Created for the Pi Robot Project: http://www.pirobot.org
     Copyright (c) 2014 Patrick Goebel. All rights reserved.
     
-    Adapted to the Turtlebot arm by Jorge Santos Simón
+    Adapted to the Turtlebot arm by Jorge Santos
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,9 +40,9 @@ GROUP_NAME_GRIPPER = 'gripper'
 
 GRIPPER_FRAME = 'gripper_link'
 
-GRIPPER_OPEN = [0.07]
-GRIPPER_CLOSED = [0.0]
-GRIPPER_NEUTRAL = [0.05]
+GRIPPER_OPENED = [0.053]
+GRIPPER_CLOSED = [0.001]
+GRIPPER_NEUTRAL = [0.028]
 GRASP_OVERTIGHTEN = 0.002
 
 GRIPPER_JOINT_NAMES = ['gripper_joint']
@@ -121,8 +121,8 @@ class MoveItDemo:
         # Give the scene a chance to catch up
         rospy.sleep(1)
 
-        # Start the arm in the "resting" pose stored in the SRDF file
-        arm.set_named_target('resting')
+        # Start the arm in the "arm_up" pose stored in the SRDF file
+        arm.set_named_target('right_up')
         arm.go()
 
         # Open the gripper to the neutral position
@@ -132,7 +132,7 @@ class MoveItDemo:
         rospy.sleep(1)
 
         # Set the height of the table off the ground
-        table_ground = 0.35
+        table_ground = 0.4
 
         # Set the dimensions of the scene objects [l, w, h]
         table_size = [0.2, 0.7, 0.01]
@@ -145,7 +145,7 @@ class MoveItDemo:
         # Add a table top and two boxes to the scene
         table_pose = PoseStamped()
         table_pose.header.frame_id = REFERENCE_FRAME
-        table_pose.pose.position.x = 0.35
+        table_pose.pose.position.x = 0.4
         table_pose.pose.position.y = 0.0
         table_pose.pose.position.z = table_ground + table_size[2] / 2.0
         table_pose.pose.orientation.w = 1.0
@@ -252,7 +252,9 @@ class MoveItDemo:
         else:
             rospy.loginfo("Pick operation failed after " + str(n_attempts) + " attempts.")
 
-        # Return the arm to the "resting" pose stored in the SRDF file
+        # Return the arm to the "resting" pose stored in the SRDF file (passing through right_up)
+        arm.set_named_target('right_up')
+        arm.go()
         arm.set_named_target('resting')
         arm.go()
 
@@ -319,7 +321,7 @@ class MoveItDemo:
 
         # Set the pre-grasp and grasp postures appropriately;
         # grasp_opening should be a bit smaller than target width
-        g.pre_grasp_posture = self.make_gripper_posture(GRIPPER_OPEN)
+        g.pre_grasp_posture = self.make_gripper_posture(GRIPPER_OPENED)
         g.grasp_posture = self.make_gripper_posture(grasp_opening)
 
         # Set the approach and retreat parameters as desired
