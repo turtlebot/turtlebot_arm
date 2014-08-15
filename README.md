@@ -1,7 +1,7 @@
 TurtleBot Arm
 =============
 
-Indigo version of turtlebot arm code. It should easily work on Hydro, too. Packages turtlebot_block_manipulation and turtlebot_kinect_arm_calibration have been temporally removed, as they are not compatible with Hydro and Indigo. Part of the functionality available there will appear here (hopefully) in the following months. Meanwhile, the turtlebot_arm_moveit_demos provides use examples to start playing with the arm on MoveIt!
+Indigo version of turtlebot arm code. It should easily work on Hydro, too. Package turtlebot_block_manipulation has been temporally removed, as it is not compatible with Hydro and Indigo. I will try to make an up-to-date version, if I ever find time. Meanwhile, the turtlebot_arm_moveit_demos provides use examples to start playing with the arm on MoveIt!
 
 ## Attaching the Arm to a Robot
 Open your xacro-macro-magic URDF, and add something like:
@@ -19,6 +19,8 @@ Ensure you have all the required dependencies by running (you probably did it be
 
        cd turtlebot_arm
        rosdep install --from-paths -i -y src
+
+Before start playing, I highly recommend to calibrate your camera extrinsic parameters following [this tutorial](http://wiki.ros.org/turtlebot_kinect_arm_calibration/Tutorials/CalibratingKinectToTurtleBotArm)
 
 The turtlebot_arm_moveit_config/demo.launch is a bit wonky, but the move_group action underlying it works fine. To test your installation, run one of the demos (well, demo by now) from turtlebot_arm_moveit_demos, e.g.:
 
