@@ -7,8 +7,9 @@
   </description>
   <author>Michael Ferguson</author>
   <author>Helen Oleynikova</author>
-  <maintainer email="mike@vanadiumlabs.com">Michael Ferguson</maintainer>
+  <maintainer email="jsantossimon@gmail.com">Jorge Santos</maintainer>
   <license>BSD</license>
+
   <url>http://ros.org/wiki/turtlebot_arm_kinect_calibration</url>
   
   <buildtool_depend>catkin</buildtool_depend>

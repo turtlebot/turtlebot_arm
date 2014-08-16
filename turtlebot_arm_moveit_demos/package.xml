@@ -5,8 +5,8 @@
   <description>
    The turtlebot_arm_moveit_demos package contains scripts to start playing with a turtlebot arm and MoveIt.
   </description>
-  <author>Jorge Santos Simón</author>
-  <maintainer email="jsantossimon@gmail.com">Jorge Santos Simón</maintainer>
+  <author>Jorge Santos</author>
+  <maintainer email="jsantossimon@gmail.com">Jorge Santos</maintainer>
   <license>BSD</license>
 
   <url type="website">http://ros.org/wiki/turtlebot_arm_moveit_demos</url>

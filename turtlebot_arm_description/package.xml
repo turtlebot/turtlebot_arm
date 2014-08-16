@@ -6,8 +6,9 @@
   </description>
   <author>Michael Ferguson</author>
   <author>Melonee Wise</author>
-  <maintainer email="mike@vanadiumlabs.com">Michael Ferguson</maintainer>
+  <maintainer email="jsantossimon@gmail.com">Jorge Santos</maintainer>
   <license>BSD</license>
+  
   <url>http://ros.org/wiki/turtlebot_arm_description</url>
 
   <buildtool_depend>catkin</buildtool_depend>
