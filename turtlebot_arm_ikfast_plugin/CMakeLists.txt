@@ -6,6 +6,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_core
   pluginlib
   roscpp
+  tf_conversions
   )
 find_package(Boost REQUIRED)
 find_package(Eigen REQUIRED)
@@ -16,6 +17,7 @@ catkin_package(
   moveit_core
   pluginlib
   roscpp
+  tf_conversions
   )
 
 include_directories(${catkin_INCLUDE_DIRS})
@@ -32,12 +34,9 @@ target_link_libraries(${MOVEIT_LIB_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 install(TARGETS ${MOVEIT_LIB_NAME} LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 install(DIRECTORY include/ DESTINATION include)
 
-install(
-  FILES
-  turtlebot_arm_moveit_ikfast_plugin_description.xml
-  DESTINATION
-  ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  )
+install(FILES turtlebot_arm_moveit_ikfast_plugin_description.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 
 
