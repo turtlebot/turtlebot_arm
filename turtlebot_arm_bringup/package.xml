@@ -1,6 +1,6 @@
 <package>
   <name>turtlebot_arm_bringup</name>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
   <description>
    turtlebot_arm_bringup provides launch files for starting the drivers for the TurtleBot arm.
   </description>
