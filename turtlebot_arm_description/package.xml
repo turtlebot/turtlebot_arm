@@ -9,11 +9,12 @@
   <maintainer email="jsantossimon@gmail.com">Jorge Santos</maintainer>
   <license>BSD</license>
   
-  <url>http://ros.org/wiki/turtlebot_arm_description</url>
+  <url type="website">http://ros.org/wiki/turtlebot_arm_description</url>
+  <url type="repository">https://github.com/turtlebot/turtlebot_arm</url>
+  <url type="bugtracker">https://github.com/turtlebot/turtlebot_arm/issues</url>
 
   <buildtool_depend>catkin</buildtool_depend>
 
   <run_depend>urdf</run_depend>
   <run_depend>xacro</run_depend>
-
 </package>

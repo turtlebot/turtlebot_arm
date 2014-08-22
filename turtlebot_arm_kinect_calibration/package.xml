@@ -10,8 +10,10 @@
   <maintainer email="jsantossimon@gmail.com">Jorge Santos</maintainer>
   <license>BSD</license>
 
-  <url>http://ros.org/wiki/turtlebot_arm_kinect_calibration</url>
-  
+  <url type="website">http://ros.org/wiki/turtlebot_arm_kinect_calibration</url>
+  <url type="repository">https://github.com/turtlebot/turtlebot_arm</url>
+  <url type="bugtracker">https://github.com/turtlebot/turtlebot_arm/issues</url>
+
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>cmake_modules</build_depend>
