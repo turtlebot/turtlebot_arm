@@ -1,0 +1,26 @@
+<package>
+  <name>turtlebot_arm</name>
+  <version>0.3.0</version>
+  <description>
+    The turtlebot arm meta package.
+  </description>
+  <author>Jorge Santos</author>
+  <maintainer email="jsantossimon@gmail.com">Jorge Santos</maintainer>
+  <license>BSD</license>
+  <url type="website">http://ros.org/wiki/turtlebot_arm</url>
+  <url type="repository">https://github.com/turtlebot/turtlebot_arm</url>
+  <url type="bugtracker">https://github.com/turtlebot/turtlebot_arm/issues</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>turtlebot_arm_bringup</run_depend>
+  <run_depend>turtlebot_arm_description</run_depend>
+  <run_depend>turtlebot_arm_ikfast_plugin</run_depend>
+  <run_depend>turtlebot_arm_kinect_calibration</run_depend>
+  <run_depend>turtlebot_arm_moveit_config</run_depend>
+  <run_depend>turtlebot_arm_moveit_demos</run_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>
