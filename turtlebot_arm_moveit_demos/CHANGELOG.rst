@@ -2,6 +2,9 @@
 Changelog for package turtlebot_arm_moveit_demos
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.1 (2014-08-22)
+------------------
+
 0.3.0 (2014-08-16)
 ------------------
 * First indigo release
