@@ -8,17 +8,16 @@
     <!-- Included URDF Files -->
     <xacro:include filename="$(find turtlebot_arm_description)/urdf/arm.xacro" />
 
-    <!-- As we don't have here a turtlebot, add a base_footprint link as its location reference -->
-    <link name="base_footprint"/>
+    <!-- As we don't have here a turtlebot, add a base_link link as its location reference -->
+    <link name="base_link"/>
 
     <!-- Turtlebot arm macro: we can configure joints velocity limit and lower/upper limits
          for the first joint (arm_shoulder_pan) to allow accessing to different operational 
          areas, e.g. left handed vs. right handed robot -->
-    <turtlebot_arm parent="base_footprint" color="white" gripper_color="green"
+    <turtlebot_arm parent="base_link" color="white" gripper_color="green"
                    joints_vlimit="1.571" pan_llimit="-2.617" pan_ulimit="2.617">
       <!-- Place the "floating" arm at the location it should be if mounted on a turtlebot,
            as pick and place and other demos assume this location -->
       <origin xyz="0.1 0.03 0.435"/>
     </turtlebot_arm>
-
 </robot>

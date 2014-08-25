@@ -49,7 +49,7 @@ GRIPPER_JOINT_NAMES = ['gripper_joint']
 
 GRIPPER_EFFORT = [1.0]
 
-REFERENCE_FRAME = '/base_footprint'
+REFERENCE_FRAME = '/base_link'
 
 class MoveItDemo:
     def __init__(self):
