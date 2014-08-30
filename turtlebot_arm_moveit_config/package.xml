@@ -1,6 +1,6 @@
 <package>
   <name>turtlebot_arm_moveit_config</name>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
   <description>
      An automatically generated package with all the configuration and launch files for using the turtlebot_arm with the MoveIt Motion Planning Framework
   </description>

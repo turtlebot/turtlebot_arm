@@ -1,6 +1,6 @@
 <package>
   <name>turtlebot_arm_kinect_calibration</name>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
   <description>
     turtlebot_arm_kinect_calibration allows calibration of a kinect to a TurtleBot arm,
     including a kinect on-board and off-board the TurtleBot for more precise manipulation.

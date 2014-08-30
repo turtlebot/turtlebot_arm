@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='ASCII'?>
 <package>
   <name>turtlebot_arm_ikfast_plugin</name>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
   <description>The turtlebot_arm_ikfast_plugin package</description>
   <maintainer email="jsantossimon@gmail.com">Jorge Santos</maintainer>
   <license>BSD</license>
