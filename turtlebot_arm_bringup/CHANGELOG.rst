@@ -2,8 +2,8 @@
 Changelog for package turtlebot_arm_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.2 (2014-08-30)
+------------------
 * Use gripper_controller instead of gripper_controller.py, as the later doesn't get installed
 
 0.3.1 (2014-08-22)

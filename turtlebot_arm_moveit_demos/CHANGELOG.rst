@@ -2,8 +2,8 @@
 Changelog for package turtlebot_arm_moveit_demos
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.2 (2014-08-30)
+------------------
 * Use base_link instead of base_footprint as the reference "fixed" frame
 
 0.3.1 (2014-08-22)
