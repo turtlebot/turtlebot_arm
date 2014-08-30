@@ -2,6 +2,9 @@
 Changelog for package turtlebot_arm_ikfast_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.1 (2014-08-22)
 ------------------
 * Set separated URLs for website, repository and bugtracker

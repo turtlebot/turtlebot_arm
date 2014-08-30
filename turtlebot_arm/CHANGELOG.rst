@@ -2,6 +2,9 @@
 Changelog for package turtlebot_arm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.1 (2014-08-22)
 ------------------
 * Add a metapackage

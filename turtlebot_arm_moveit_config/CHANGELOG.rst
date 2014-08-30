@@ -2,6 +2,10 @@
 Changelog for package turtlebot_arm_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add turtlebot_arm_moveit.launch: a version of demo.launch with simulation on/off
+
 0.3.1 (2014-08-22)
 ------------------
 * Set separated URLs for website, repository and bugtracker
