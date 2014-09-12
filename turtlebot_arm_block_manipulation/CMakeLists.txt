@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(turtlebot_arm_block_manipulation)
 
 # setup
-find_package(catkin REQUIRED actionlib actionlib_msgs interactive_markers pcl_ros roscpp visualization_msgs arbotix_msgs)
+find_package(catkin REQUIRED actionlib actionlib_msgs interactive_markers pcl_ros roscpp visualization_msgs arbotix_msgs moveit_core moveit_ros_planning_interface)
 find_package(Boost REQUIRED system filesystem)
 find_package(PCL REQUIRED)
 link_directories(${catkin_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS} ${PCL_LIBRARY_DIRS})
@@ -20,16 +20,25 @@ add_action_files(FILES
                  )
 
 generate_messages(DEPENDENCIES actionlib_msgs geometry_msgs)
-catkin_package(DEPENDS actionlib actionlib_msgs interactive_markers pcl_ros roscpp visualization_msgs arbotix_msgs)
+catkin_package(DEPENDS actionlib actionlib_msgs interactive_markers pcl_ros roscpp visualization_msgs arbotix_msgs moveit_core moveit_ros_planning_interface)
 
 
-# node
-add_executable(block_detection_action_server src/block_detection_action_server.cpp
-                                             src/interactive_manipulation_action_server.cpp
-                                             src/pick_and_place_action_server.cpp)
-target_link_libraries(block_detection_action_server ${catkin_LIBRARIES}
-                                                    ${PCL_LIBRARIES})
+# nodes
+add_executable(block_detection_action_server src/block_detection_action_server.cpp)
+target_link_libraries(block_detection_action_server ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(block_detection_action_server turtlebot_arm_block_manipulation_gencpp)
+
+add_executable(interactive_manipulation_action_server src/interactive_manipulation_action_server.cpp)
+target_link_libraries(interactive_manipulation_action_server ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(interactive_manipulation_action_server turtlebot_arm_block_manipulation_gencpp)
+
+add_executable(pick_and_place_action_server src/pick_and_place_action_server.cpp)
+target_link_libraries(pick_and_place_action_server ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(pick_and_place_action_server turtlebot_arm_block_manipulation_gencpp)
+
+#rosbuild_add_executable(block_manipulation test/block_manipulation.cpp)
+#rosbuild_add_executable(block_manipulation_actions test/block_manipulation_actions.cpp)
+
 
 # demo
 add_executable(block_manipulation_demo demo/block_manipulation_demo.cpp)

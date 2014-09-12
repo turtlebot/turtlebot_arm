@@ -181,8 +181,8 @@ public:
       }
     }
 
-    moveit_msgs::MoveItErrorCodes result = arm_.move();
-    if (result == moveit_msgs::MoveItErrorCodes::SUCCESS)
+    moveit::planning_interface::MoveItErrorCode result = arm_.move();
+    if (bool(result) == true)
     {
       as_.setSucceeded(result_);
       return true;
@@ -204,8 +204,8 @@ public:
       return false;
     }
 
-    moveit_msgs::MoveItErrorCodes result = gripper_.move();
-    if (result == moveit_msgs::MoveItErrorCodes::SUCCESS)
+    moveit::planning_interface::MoveItErrorCode result = gripper_.move();
+    if (bool(result) == true)
     {
       as_.setSucceeded(result_);
       return true;

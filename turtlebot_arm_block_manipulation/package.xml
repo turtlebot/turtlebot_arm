@@ -1,6 +1,6 @@
 <package>
   <name>turtlebot_arm_block_manipulation</name>
-  <version>0.2.0</version>
+  <version>0.3.2</version>
   <description>
     turtlebot_arm_block_manipulation contains a demo allowing the TurtleBot arm
     to manipulate small blocks on a level surface using interactive markers.
@@ -8,27 +8,32 @@
 
   <author>Michael Ferguson</author>
   <author>Helen Oleynikova</author>
-  <maintainer email="mike@vanadiumlabs.com">Michael Ferguson</maintainer>
-
+  <maintainer email="jsantossimon@gmail.com">Jorge Santos</maintainer>
   <license>BSD</license>
 
-  <url>http://ros.org/wiki/turtlebot_arm_block_manipulation</url>
+  <url type="website">http://ros.org/wiki/turtlebot_arm_block_manipulation</url>
+  <url type="repository">https://github.com/turtlebot/turtlebot_arm</url>
+  <url type="bugtracker">https://github.com/turtlebot/turtlebot_arm/issues</url>
   
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>roscpp</build_depend>
   <build_depend>actionlib</build_depend>
   <build_depend>actionlib_msgs</build_depend>
   <build_depend>interactive_markers</build_depend>
-  <build_depend>pcl_ros</build_depend>
-  <build_depend>roscpp</build_depend>
   <build_depend>visualization_msgs</build_depend>
   <build_depend>arbotix_msgs</build_depend>
+  <build_depend>pcl_ros</build_depend>
+  <build_depend>moveit_core</build_depend>
+  <build_depend>moveit_ros_planning_interface</build_depend>
 
+  <run_depend>roscpp</run_depend>
   <run_depend>actionlib</run_depend>
   <run_depend>actionlib_msgs</run_depend>
   <run_depend>interactive_markers</run_depend>
-  <run_depend>pcl_ros</run_depend>
-  <run_depend>roscpp</run_depend>
   <run_depend>visualization_msgs</run_depend>
   <run_depend>arbotix_msgs</run_depend>
+  <run_depend>pcl_ros</run_depend>
+  <run_depend>moveit_core</run_depend>
+  <run_depend>moveit_ros_planning_interface</run_depend>
 </package>
