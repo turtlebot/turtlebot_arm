@@ -56,6 +56,7 @@ private:
   moveit::planning_interface::MoveGroup arm_;
   moveit::planning_interface::MoveGroup gripper_;
 
+  ros::Publisher target_pose_pub_;
   ros::Subscriber pick_and_place_sub_;
   
   // Parameters from goal
@@ -63,15 +64,18 @@ private:
   double gripper_open;
   double gripper_closed;
   double z_up;
+
 public:
   PickAndPlaceServer(const std::string name) : 
     nh_("~"), as_(name, false), action_name_(name), arm_("arm"), gripper_("gripper")
   {
-    //register the goal and feeback callbacks
+    // Register the goal and feedback callbacks
     as_.registerGoalCallback(boost::bind(&PickAndPlaceServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&PickAndPlaceServer::preemptCB, this));
     
     as_.start();
+
+    target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/target_pose", 1, true);
   }
 
   void goalCB()
@@ -83,6 +87,15 @@ public:
     gripper_closed = goal_->gripper_closed;
     z_up = goal_->z_up;
     
+    arm_.setPoseReferenceFrame(arm_link);
+
+    // Allow some leeway in position (meters) and orientation (radians)
+    arm_.setGoalOrientationTolerance(0.001);
+    arm_.setGoalOrientationTolerance(0.1);
+
+    // Allow replanning to increase the odds of a solution
+    arm_.allowReplanning(true);
+
     if (goal_->topic.length() < 1)
       pickAndPlace(goal_->pickup_pose, goal_->place_pose);
     else
@@ -112,10 +125,6 @@ public:
     /* open gripper */
     if (setGripper(gripper_open) == false)
       return;
-    
-    /* arm straight up */
-    if (moveArmTo(target, "right_up") == false)
-      return;
 
     /* hover over */
     target = start_pose;
@@ -131,6 +140,7 @@ public:
     /* close gripper */
     if (setGripper(gripper_closed) == false)
       return;
+    ros::Duration(0.5).sleep(); // ensure that gripper properly grasp the cube before lifting the arm
 
     /* go up */
     target.position.z = z_up;
@@ -151,40 +161,29 @@ public:
     /* open gripper */
     if (setGripper(gripper_open) == false)
       return;
+    ros::Duration(0.5).sleep(); // ensure that gripper properly release the cube before lifting the arm
 
     /* go up */
     target.position.z = z_up;
     if (moveArmTo(target) == false)
       return;
+
+    as_.setSucceeded(result_);
   }
 
-  bool moveArmTo(const geometry_msgs::Pose& target, const std::string& named_target = "")
+
+  bool moveArmTo(const std::string& target)
   {
-    if (named_target.length() == 0)
+    ROS_DEBUG("[pick and place] Move arm to '%s' position", target.c_str());
+    if (arm_.setNamedTarget(target) == false)
     {
-      ROS_DEBUG("[pick and place] Move arm to [%.2f, %.2f, %.2f]",
-               target.position.x, target.position.y, target.position.z);
-      if (arm_.setPoseTarget(target) == false)
-      {
-        ROS_ERROR("Set pose target [%.2f, %.2f, %.2f] failed",
-                  target.position.x, target.position.y, target.position.z);
-        return false;
-      }
-    }
-    else
-    {
-      ROS_DEBUG("[pick and place] Move arm to %s", named_target.c_str());
-      if (arm_.setNamedTarget(named_target) == false)
-      {
-        ROS_ERROR("[pick and place] Set named target '%s' failed", named_target.c_str());
-        return false;
-      }
+      ROS_ERROR("[pick and place] Set named target '%s' failed", target.c_str());
+      return false;
     }
 
     moveit::planning_interface::MoveItErrorCode result = arm_.move();
     if (bool(result) == true)
     {
-      as_.setSucceeded(result_);
       return true;
     }
     else
@@ -193,6 +192,54 @@ public:
       as_.setAborted(result_);
       return false;
     }
+  }
+
+  bool moveArmTo(const geometry_msgs::Pose& target)
+  {
+    int attempts = 0;
+    ROS_DEBUG("[pick and place] Move arm to [%.2f, %.2f, %.2f, %.2f]",
+             target.position.x, target.position.y, target.position.z, tf::getYaw(target.orientation));
+    while (attempts < 5)
+    {
+      geometry_msgs::PoseStamped modiff_target;
+      modiff_target.header.frame_id = arm_link;
+      modiff_target.pose = target;
+
+      double x = modiff_target.pose.position.x;
+      double y = modiff_target.pose.position.y;
+      double z = modiff_target.pose.position.z;
+      double d = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+      tf::Quaternion q = tf::createQuaternionFromRPY(0.0,
+                                                     fRand(-0.2, +0.2) + (M_PI_2 - sin(x-0.1)/d),
+                                                     fRand(-0.2, +0.2) + sin(y)/d);
+      tf::quaternionTFToMsg(q, modiff_target.pose.orientation);
+
+      target_pose_pub_.publish(modiff_target);
+
+      if (arm_.setPoseTarget(modiff_target) == false)
+      {
+        ROS_ERROR("Set pose target [%.2f, %.2f, %.2f, %.2f] failed",
+                  target.position.x, target.position.y, target.position.z, tf::getYaw(target.orientation));
+        as_.setAborted(result_);
+        return false;
+      }
+
+      moveit::planning_interface::MoveItErrorCode result = arm_.move();
+      if (bool(result) == true)
+      {
+        return true;
+      }
+      else
+      {
+        ROS_ERROR("[pick and place] Move to target failed (error %d) at attempt %d",
+                  result.val, attempts + 1);
+      }
+      attempts++;
+    }
+
+    ROS_ERROR("[pick and place] Move to target failed after %d attempts", attempts);
+    as_.setAborted(result_);
+    return false;
   }
 
   bool setGripper(float opening)
@@ -207,7 +254,6 @@ public:
     moveit::planning_interface::MoveItErrorCode result = gripper_.move();
     if (bool(result) == true)
     {
-      as_.setSucceeded(result_);
       return true;
     }
     else
@@ -217,6 +263,12 @@ public:
       return false;
     }
   }
+
+
+  float fRand(float min, float max)
+  {
+    return ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+  }
 };
 
 };
@@ -225,6 +277,9 @@ public:
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "pick_and_place_action_server");
+
+  ros::AsyncSpinner spinner(2);
+  spinner.start();
 
   turtlebot_arm_block_manipulation::PickAndPlaceServer server("pick_and_place");
   ros::spin();

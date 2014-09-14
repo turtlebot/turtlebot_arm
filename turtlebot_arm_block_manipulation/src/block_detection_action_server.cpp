@@ -113,7 +113,7 @@ public:
     block_size = goal_->block_size;
     table_height = goal_->table_height;
     arm_link = goal_->frame;
-    
+
     result_.blocks.header.frame_id = arm_link;
   }
 

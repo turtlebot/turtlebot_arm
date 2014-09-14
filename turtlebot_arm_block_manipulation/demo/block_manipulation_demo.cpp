@@ -57,8 +57,6 @@ private:
   BlockDetectionGoal block_detection_goal_;
   InteractiveBlockManipulationGoal interactive_manipulation_goal_;
   PickAndPlaceGoal pick_and_place_goal_;
-  
-  ros::ServiceClient relax_arm_service_;
 
   // Parameters
   std::string arm_link;
@@ -71,22 +69,20 @@ private:
   
 public:
 
-  BlockManipulationAction() : 
+  BlockManipulationAction() : nh_("~"),
     block_detection_action_("block_detection", true),
     interactive_manipulation_action_("interactive_manipulation", true),
     pick_and_place_action_("pick_and_place", true)
   {
     // Load parameters
-    nh_.param<std::string>("arm_link", arm_link, "/arm_base_link");
-    nh_.param<double>("gripper_open", gripper_open, 0.042);  // 053
+    nh_.param<std::string>("arm_link", arm_link, "/arm_link");
+    nh_.param<double>("gripper_open", gripper_open, 0.042);
     nh_.param<double>("gripper_closed", gripper_closed, 0.024);
     nh_.param<double>("z_up", z_up, 0.12);
     nh_.param<double>("table_height", z_down, 0.01);
     nh_.param<double>("block_size", block_size, 0.03);
     
     nh_.param<bool>("once", once, false);
-  
-    relax_arm_service_ = nh_.serviceClient<arbotix_msgs::Relax>("/arbotix/arm/relax");
 
     // Initialize goals
     block_detection_goal_.frame = arm_link;
@@ -114,13 +110,7 @@ public:
     ROS_INFO("Found pick and place server.");
     
     ROS_INFO("Found servers.");
-    
-    arbotix_msgs::Relax srv;
-    if (! relax_arm_service_.call(srv))
-    {
-      ROS_WARN("Failed to call service relax_arm");
-    }
-    
+
     detectBlocks();
   }
   
@@ -165,9 +155,7 @@ public:
       ROS_INFO("Succeeded!");
     else
       ROS_INFO("Did not succeed! %s",  state.toString().c_str());
-      
-////    reset_arm_action_.sendGoal(simple_arm_actions::ResetArmGoal());
-    
+
     if (once)
       ros::shutdown();
     else
@@ -182,10 +170,8 @@ int main(int argc, char** argv)
   // initialize node
   ros::init(argc, argv, "block_manipulation");
 
-
   turtlebot_arm_block_manipulation::BlockManipulationAction manip;
 
   // everything is done in cloud callback, just spin
   ros::spin();
 }
-

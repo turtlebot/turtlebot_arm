@@ -58,7 +58,7 @@ private:
   
   ros::Subscriber block_sub_;
   ros::Publisher  pick_and_place_pub_;
-  
+
   geometry_msgs::Pose old_pose_;
   
   geometry_msgs::PoseArrayConstPtr msg_;
@@ -160,19 +160,19 @@ public:
   
   void moveBlock(const geometry_msgs::Pose& start_pose, const geometry_msgs::Pose& end_pose)
   {
-    /*
-     * TODO: this needs to be updated to MoveIt before we can make it work
-     */
+    // Return pickup and place poses as the result of the action
     geometry_msgs::Pose start_pose_bumped, end_pose_bumped;
     start_pose_bumped = start_pose;
-    start_pose_bumped.position.y -= bump_size;
+    //  start_pose_bumped.position.y -= bump_size;  TODO/WARN: this was in the original version, but destroys piss off indigo/moveit operation!
     start_pose_bumped.position.z -= block_size/2.0 - bump_size;
+
     result_.pickup_pose = start_pose_bumped;
     
     end_pose_bumped = end_pose;
     end_pose_bumped.position.z -= block_size/2.0 - bump_size;
     result_.place_pose = end_pose_bumped;
     
+    // Publish pickup and place poses for visualizing on RViz
     geometry_msgs::PoseArray msg;
     msg.header.frame_id = arm_link;
     msg.header.stamp = ros::Time::now();
