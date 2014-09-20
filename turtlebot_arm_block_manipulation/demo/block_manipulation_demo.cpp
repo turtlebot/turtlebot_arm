@@ -110,8 +110,6 @@ public:
     ROS_INFO("Found pick and place server.");
     
     ROS_INFO("Found servers.");
-
-    detectBlocks();
   }
   
   void detectBlocks()
@@ -173,5 +171,17 @@ int main(int argc, char** argv)
   turtlebot_arm_block_manipulation::BlockManipulationAction manip;
 
   // everything is done in cloud callback, just spin
-  ros::spin();
+  ros::AsyncSpinner spinner(2);
+  spinner.start();
+
+  while (ros::ok())
+  {
+    manip.detectBlocks();
+
+    // Allow user restarting, for the case that the block detection fails
+    std::cout << "Press Enter for restarting block detection" << std::endl;
+    std::cin.ignore();
+  }
+
+  spinner.stop();
 }
