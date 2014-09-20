@@ -1,5 +1,0 @@
-<launch>
-  <include file="$(find openni_launch)/launch/openni.launch" />
-  
-  <include file="$(find turtlebot_arm_kinect_calibration)/launch/calibrate.launch" />
-</launch>
