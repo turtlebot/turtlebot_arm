@@ -1,6 +1,6 @@
 <package>
   <name>turtlebot_arm_description</name>
-  <version>0.3.2</version>
+  <version>0.3.3</version>
   <description>
    turtlebot_arm_description contains URDF files and meshes for the TurtleBot arm.
   </description>

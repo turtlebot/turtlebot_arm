@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>turtlebot_arm_moveit_demos</name>
-  <version>0.3.2</version>
+  <version>0.3.3</version>
   <description>
    The turtlebot_arm_moveit_demos package contains scripts to start playing with a turtlebot arm and MoveIt.
   </description>

@@ -1,6 +1,6 @@
 <package>
   <name>turtlebot_arm_block_manipulation</name>
-  <version>0.3.2</version>
+  <version>0.3.3</version>
   <description>
     turtlebot_arm_block_manipulation contains a demo allowing the TurtleBot arm
     to manipulate small blocks on a level surface using interactive markers.
