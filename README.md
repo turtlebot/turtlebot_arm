@@ -1,7 +1,7 @@
 TurtleBot Arm
 =============
 
-Indigo version of turtlebot arm code. It should easily work on Hydro, too. Package turtlebot_block_manipulation has been temporally removed, as it is not compatible with Hydro and Indigo. I will try to make an up-to-date version, if I ever find time. Meanwhile, the turtlebot_arm_moveit_demos provides use examples to start playing with the arm on MoveIt!
+Indigo version of turtlebot arm code. It should easily work on Hydro, too. Package turtlebot_arm_moveit_demos provides use examples to start playing with the arm on MoveIt!, while the recovered on indigo turtlebot_arm_block_manipulation provides a more complete and interesting demo.
 
 ## Attaching the Arm to a Robot
 Open your xacro-macro-magic URDF, and add something like:
