@@ -1,0 +1,9 @@
+#goal definition
+string frame
+float32 block_size
+---
+#result definition
+geometry_msgs/Pose pickup_pose
+geometry_msgs/Pose place_pose
+---
+#feedback

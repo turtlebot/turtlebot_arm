@@ -1,0 +1,12 @@
+<launch>
+
+  <node name="block_detection_action_server" pkg="turtlebot_arm_block_manipulation" type="block_detection_action_server" output="screen">
+  </node>
+
+  <node name="pick_and_place_action_server" pkg="turtlebot_arm_block_manipulation" type="pick_and_place_action_server" output="screen">
+  </node>
+  
+  <node name="interactive_manipulation_action_server" pkg="turtlebot_arm_block_manipulation" type="interactive_manipulation_action_server" output="screen">
+  </node>
+
+</launch>
