@@ -36,8 +36,9 @@ add_executable(pick_and_place_action_server src/pick_and_place_action_server.cpp
 target_link_libraries(pick_and_place_action_server ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(pick_and_place_action_server turtlebot_arm_block_manipulation_gencpp)
 
-#rosbuild_add_executable(block_manipulation test/block_manipulation.cpp)
-#rosbuild_add_executable(block_manipulation_actions test/block_manipulation_actions.cpp)
+# TODO need review
+# rosbuild_add_executable(block_manipulation test/block_manipulation.cpp)
+# rosbuild_add_executable(block_manipulation_actions test/block_manipulation_actions.cpp)
 
 
 # demo
@@ -45,3 +46,22 @@ add_executable(block_manipulation_demo demo/block_manipulation_demo.cpp)
 target_link_libraries(block_manipulation_demo ${catkin_LIBRARIES})
 
 add_dependencies(block_manipulation_demo turtlebot_arm_block_manipulation_gencpp arbotix_msgs_gencpp)
+
+
+# install
+
+install(TARGETS block_detection_action_server interactive_manipulation_action_server pick_and_place_action_server
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(TARGETS block_manipulation_demo
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY demo
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(DIRECTORY launch
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
