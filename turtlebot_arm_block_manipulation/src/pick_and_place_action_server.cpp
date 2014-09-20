@@ -52,12 +52,13 @@ private:
   turtlebot_arm_block_manipulation::PickAndPlaceFeedback     feedback_;
   turtlebot_arm_block_manipulation::PickAndPlaceResult       result_;
   turtlebot_arm_block_manipulation::PickAndPlaceGoalConstPtr goal_;
-  
-  moveit::planning_interface::MoveGroup arm_;
-  moveit::planning_interface::MoveGroup gripper_;
 
   ros::Publisher target_pose_pub_;
   ros::Subscriber pick_and_place_sub_;
+
+  // Move groups to control arm and gripper with MoveIt!
+  moveit::planning_interface::MoveGroup arm_;
+  moveit::planning_interface::MoveGroup gripper_;
   
   // Parameters from goal
   std::string arm_link;
@@ -140,7 +141,7 @@ public:
     /* close gripper */
     if (setGripper(gripper_closed) == false)
       return;
-    ros::Duration(0.5).sleep(); // ensure that gripper properly grasp the cube before lifting the arm
+    ros::Duration(0.8).sleep(); // ensure that gripper properly grasp the cube before lifting the arm
 
     /* go up */
     target.position.z = z_up;
@@ -161,7 +162,7 @@ public:
     /* open gripper */
     if (setGripper(gripper_open) == false)
       return;
-    ros::Duration(0.5).sleep(); // ensure that gripper properly release the cube before lifting the arm
+    ros::Duration(0.6).sleep(); // ensure that gripper properly release the cube before lifting the arm
 
     /* go up */
     target.position.z = z_up;
@@ -172,6 +173,11 @@ public:
   }
 
 
+  /**
+   * Move arm to a named configuration, normally described in the robot semantic description SRDF file.
+   * @param target Named target to achieve
+   * @return True of success, false otherwise
+   */
   bool moveArmTo(const std::string& target)
   {
     ROS_DEBUG("[pick and place] Move arm to '%s' position", target.c_str());
@@ -194,6 +200,12 @@ public:
     }
   }
 
+  /**
+   * Move arm to a target pose. Only position coordinates are taken into account; the
+   * orientation is calculated according to the direction and distance to the target.
+   * @param target Pose target to achieve
+   * @return True of success, false otherwise
+   */
   bool moveArmTo(const geometry_msgs::Pose& target)
   {
     int attempts = 0;
@@ -208,10 +220,23 @@ public:
       double x = modiff_target.pose.position.x;
       double y = modiff_target.pose.position.y;
       double z = modiff_target.pose.position.z;
-      double d = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+      double d = sqrt(x*x + y*y);
+      if (d > 0.3)
+      {
+        // Maximum reachable distance by the turtlebot arm is 30 cm
+        ROS_ERROR("Target pose out of reach [%f > %f]", d, 0.3);
+        as_.setAborted(result_);
+        return false;
+      }
+      // Pitch is 90 (vertical) at 10 cm, the more horizontal the farer the target is. Yaw is the direction
+      // to the target. We tried randomly variations of both to increase the chances of successful planning
+      double rp = M_PI_2 - asin((d - 0.1)/0.205);
+      double ry = asin(y/d);
+
       tf::Quaternion q = tf::createQuaternionFromRPY(0.0,
-                                                     fRand(-0.2, +0.2) + (M_PI_2 - sin(x-0.1)/d),
-                                                     fRand(-0.2, +0.2) + sin(y)/d);
+                                                     attempts*fRand(-0.05, +0.05) + rp,
+                                                     attempts*fRand(-0.05, +0.05) + ry);
+      ROS_DEBUG("Set pose target [%.2f, %.2f, %.2f] [d: %.2f, p: %.2f, y: %.2f]", x, y, z, d, rp, ry);
       tf::quaternionTFToMsg(q, modiff_target.pose.orientation);
 
       target_pose_pub_.publish(modiff_target);
@@ -219,7 +244,8 @@ public:
       if (arm_.setPoseTarget(modiff_target) == false)
       {
         ROS_ERROR("Set pose target [%.2f, %.2f, %.2f, %.2f] failed",
-                  target.position.x, target.position.y, target.position.z, tf::getYaw(target.orientation));
+                  modiff_target.pose.position.x, modiff_target.pose.position.y, modiff_target.pose.position.z,
+                  tf::getYaw(modiff_target.pose.orientation));
         as_.setAborted(result_);
         return false;
       }
@@ -242,6 +268,11 @@ public:
     return false;
   }
 
+  /**
+   * Set gripper opening.
+   * @param opening Physical opening of the gripper, in meters
+   * @return True of success, false otherwise
+   */
   bool setGripper(float opening)
   {
     ROS_DEBUG("[pick and place] Set gripper opening to %f", opening);
@@ -278,12 +309,13 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "pick_and_place_action_server");
 
+  // Setup an asynchronous spinner as the move groups operations need continuous spinning
   ros::AsyncSpinner spinner(2);
   spinner.start();
 
   turtlebot_arm_block_manipulation::PickAndPlaceServer server("pick_and_place");
   ros::spin();
 
+  spinner.stop();
   return 0;
 }
-
