@@ -172,7 +172,7 @@ public:
     as_.setSucceeded(result_);
   }
 
-
+private:
   /**
    * Move arm to a named configuration, normally described in the robot semantic description SRDF file.
    * @param target Named target to achieve
@@ -294,7 +294,6 @@ public:
       return false;
     }
   }
-
 
   float fRand(float min, float max)
   {
