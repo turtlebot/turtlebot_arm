@@ -51,6 +51,11 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 
+// MoveIt!
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
+/////////////////////////////////#include <moveit/move_group_interface/move_group.h>
+#include <shape_tools/solid_primitive_dims.h>
+
 #include <cmath>
 #include <algorithm>
 
@@ -78,6 +83,7 @@ private:
   double table_height;
   
   ros::Publisher block_pub_;
+  ros::Publisher c_obj_pub_;
   
   // Parameters from node
   
@@ -100,6 +106,8 @@ public:
     pub_ = nh_.advertise< pcl::PointCloud<pcl::PointXYZRGB> >("block_output", 1);
     
     block_pub_ = nh_.advertise< geometry_msgs::PoseArray >("/turtlebot_blocks", 1, true);
+
+    c_obj_pub_ = nh_.advertise<moveit_msgs::CollisionObject>("/collision_object", 10, true);
   }
 
   void goalCB()
@@ -115,6 +123,8 @@ public:
     arm_link = goal_->frame;
 
     result_.blocks.header.frame_id = arm_link;
+
+    addTable();
   }
 
   void preemptCB()
@@ -124,93 +134,98 @@ public:
     as_.setPreempted();
   }
 
-  void cloudCb ( const sensor_msgs::PointCloud2ConstPtr& msg )
+  void cloudCb(const sensor_msgs::PointCloud2ConstPtr& msg)
   {
     // Only do this if we're actually actively working on a goal.
-    if (!as_.isActive()) return;
-    
+    if (!as_.isActive())
+      return;
+
     result_.blocks.header.stamp = msg->header.stamp;
-    
+
     // convert to PCL
-    pcl::PointCloud<pcl::PointXYZRGB> cloud;
-    pcl::fromROSMsg (*msg, cloud);
-    
+    pcl::PointCloud < pcl::PointXYZRGB > cloud;
+    pcl::fromROSMsg(*msg, cloud);
+
     // transform to whatever frame we're working in, probably the arm frame.
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_transformed (new pcl::PointCloud<pcl::PointXYZRGB>);
-    
-    tf_listener_.waitForTransform(std::string(arm_link), cloud.header.frame_id, ros::Time(cloud.header.stamp), ros::Duration(1.0));
-    if (!pcl_ros::transformPointCloud (std::string(arm_link), cloud, *cloud_transformed, tf_listener_))
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_transformed(new pcl::PointCloud<pcl::PointXYZRGB>);
+
+    tf_listener_.waitForTransform(std::string(arm_link), cloud.header.frame_id,
+                                  ros::Time(cloud.header.stamp), ros::Duration(1.0));
+    if (!pcl_ros::transformPointCloud(std::string(arm_link), cloud, *cloud_transformed, tf_listener_))
     {
-      ROS_ERROR ("Error converting to desired frame");
+      ROS_ERROR("Error converting to desired frame");
       return;
     }
 
     // Create the segmentation object for the planar model and set all the parameters
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::SACSegmentation<pcl::PointXYZRGB> seg;
-    pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
-    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_plane (new pcl::PointCloud<pcl::PointXYZRGB> ());
-    seg.setOptimizeCoefficients (true);
-    seg.setModelType (pcl::SACMODEL_PLANE);
-    seg.setMethodType (pcl::SAC_RANSAC);
-    seg.setMaxIterations (200);
-    seg.setDistanceThreshold (0.005);
-    
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::SACSegmentation < pcl::PointXYZRGB > seg;
+    pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
+    pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_plane(new pcl::PointCloud<pcl::PointXYZRGB>());
+    seg.setOptimizeCoefficients(true);
+    seg.setModelType(pcl::SACMODEL_PLANE);
+    seg.setMethodType(pcl::SAC_RANSAC);
+    seg.setMaxIterations(200);
+    seg.setDistanceThreshold(0.005);
+
     // Limit to things we think are roughly at the table height.
-    pcl::PassThrough<pcl::PointXYZRGB> pass;
-    pass.setInputCloud(cloud_transformed); 
+    pcl::PassThrough < pcl::PointXYZRGB > pass;
+    pass.setInputCloud(cloud_transformed);
     pass.setFilterFieldName("z");
-    
+
     pass.setFilterLimits(table_height - 0.05, table_height + block_size + 0.05);
     pass.filter(*cloud_filtered);
-    if( cloud_filtered->points.size() == 0 ){
+    if (cloud_filtered->points.size() == 0)
+    {
       ROS_ERROR("0 points left");
       return;
-    }else
-      ROS_INFO("Filtered, %d points left", (int) cloud_filtered->points.size());
+    }
+    else
+      ROS_INFO("Filtered, %d points left", (int ) cloud_filtered->points.size());
 
     int nr_points = cloud_filtered->points.size ();
-    while (cloud_filtered->points.size () > 0.3 * nr_points)
+    while (cloud_filtered->points.size() > 0.3 * nr_points)
     {
       // Segment the largest planar component from the remaining cloud
       seg.setInputCloud(cloud_filtered);
-      seg.segment (*inliers, *coefficients);
-      if (inliers->indices.size () == 0)
+      seg.segment(*inliers, *coefficients);
+      if (inliers->indices.size() == 0)
       {
         std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
         return;
       }
-      
-      std::cout << "Inliers: " << (inliers->indices.size ()) << std::endl;
+
+      std::cout << "Inliers: " << (inliers->indices.size()) << std::endl;
 
       // Extract the planar inliers from the input cloud
-      pcl::ExtractIndices<pcl::PointXYZRGB> extract;
-      extract.setInputCloud (cloud_filtered);
-      extract.setIndices (inliers);
-      extract.setNegative (false);
+      pcl::ExtractIndices < pcl::PointXYZRGB > extract;
+      extract.setInputCloud(cloud_filtered);
+      extract.setIndices(inliers);
+      extract.setNegative(false);
 
       // Write the planar inliers to disk
-      extract.filter (*cloud_plane);
-      std::cout << "PointCloud representing the planar component: " << cloud_plane->points.size () << " data points." << std::endl;
+      extract.filter(*cloud_plane);
+      std::cout << "PointCloud representing the planar component: "
+                << cloud_plane->points.size() << " data points." << std::endl;
 
       // Remove the planar inliers, extract the rest
-      extract.setNegative (true);
-      extract.filter (*cloud_filtered);
+      extract.setNegative(true);
+      extract.filter(*cloud_filtered);
     }
 
     // Creating the KdTree object for the search method of the extraction
-    pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
-    tree->setInputCloud (cloud_filtered);
+    pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>);
+    tree->setInputCloud(cloud_filtered);
 
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
-    ec.setClusterTolerance (0.005);
-    ec.setMinClusterSize (100);
-    ec.setMaxClusterSize (25000);
-    ec.setSearchMethod (tree);
-    ec.setInputCloud( cloud_filtered);
-    ec.extract (cluster_indices);
+    ec.setClusterTolerance(0.005);
+    ec.setMinClusterSize(100);
+    ec.setMaxClusterSize(25000);
+    ec.setSearchMethod(tree);
+    ec.setInputCloud(cloud_filtered);
+    ec.extract(cluster_indices);
 
     pub_.publish(cloud_filtered);
 
@@ -218,8 +233,10 @@ public:
     for (size_t c = 0; c < cluster_indices.size (); ++c)
     {  
       // find the outer dimensions of the cluster
-      float xmin = 0; float xmax = 0; float ymin = 0; float ymax = 0;
+      float xmin = 0; float xmax = 0;
+      float ymin = 0; float ymax = 0;
       float zmin = 0; float zmax = 0;
+
       for (size_t i = 0; i < cluster_indices[c].indices.size(); i++)
       {
           int j = cluster_indices[c].indices[i];
@@ -252,12 +269,12 @@ public:
       // In order to be part of the block, xside and yside must be between
       // blocksize and blocksize*sqrt(2)
       // z must be equal to or smaller than blocksize
-      if (xside > block_size-tol && xside < block_size*sqrt(2)+tol &&
-          yside > block_size-tol && yside < block_size*sqrt(2)+tol &&
-          zside > tol && zside < block_size+tol)
+      if (xside > block_size - tol && xside < block_size*sqrt(2) + tol &&
+          yside > block_size - tol && yside < block_size*sqrt(2) + tol &&
+          zside > tol && zside < block_size + tol)
       {
         // If so, then figure out the position and the orientation of the block
-        float angle = atan(block_size/((xside+yside)/2));
+        float angle = atan(block_size/((xside + yside)/2));
         
         if (yside < block_size)
           angle = 0.0;
@@ -265,7 +282,7 @@ public:
         ROS_INFO_STREAM("xside: " << xside << " yside: " << yside << " zside " << zside << " angle: " << angle);
         // Then add it to our set
         ROS_INFO("Adding a new block!");
-        addBlock( xmin+(xside)/2.0, ymin+(yside)/2.0, zmax - block_size/2.0, angle);
+        addBlock(xmin + xside/2.0, ymin + yside/2.0, zmax - block_size/2.0, angle);
       }
     }
     
@@ -279,7 +296,10 @@ public:
       ROS_INFO("[block detection] Couldn't find any blocks this iteration!");
     //  as_.setAborted(result_);
   }
-    
+
+
+private:
+
   void addBlock(float x, float y, float z, float angle)
   {
     geometry_msgs::Pose block_pose;
@@ -297,6 +317,34 @@ public:
     result_.blocks.poses.push_back(block_pose);
   }
 
+  void addTable()
+  {
+    double table_size_x = 0.5;
+    double table_size_y = 1.0;
+    double table_size_z = 0.435;
+
+    moveit_msgs::CollisionObject co;
+    co.header.stamp = ros::Time::now();
+    co.header.frame_id = arm_link;
+
+    co.id = "table";
+    co.operation = moveit_msgs::CollisionObject::REMOVE;
+    c_obj_pub_.publish(co);
+
+    co.operation = moveit_msgs::CollisionObject::ADD;
+    co.primitives.resize(1);
+    co.primitives[0].type = shape_msgs::SolidPrimitive::BOX;
+    co.primitives[0].dimensions.resize(shape_tools::SolidPrimitiveDimCount<shape_msgs::SolidPrimitive::BOX>::value);
+    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_X] = table_size_x;
+    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = table_size_y;
+    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = table_size_z;
+    co.primitive_poses.resize(1);
+    co.primitive_poses[0].position.x = 0.09 + table_size_x/2.0;
+    co.primitive_poses[0].position.y = 0.0;
+    co.primitive_poses[0].position.z = table_height - 0.01 - table_size_z/2.0;
+    c_obj_pub_.publish(co);
+  }
+
 };
 
 };
@@ -310,4 +358,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-
