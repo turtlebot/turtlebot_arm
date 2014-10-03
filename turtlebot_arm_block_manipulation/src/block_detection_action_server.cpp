@@ -53,7 +53,6 @@
 
 // MoveIt!
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
-/////////////////////////////////#include <moveit/move_group_interface/move_group.h>
 #include <shape_tools/solid_primitive_dims.h>
 
 #include <cmath>
@@ -78,22 +77,26 @@ private:
   tf::TransformListener tf_listener_;
   
   // Parameters from goal
-  std::string arm_link;
-  double block_size;
-  double table_height;
+  std::string arm_link_;
+  double block_size_;
+  double table_height_;
   
   ros::Publisher block_pub_;
   ros::Publisher c_obj_pub_;
   
   // Parameters from node
+  std::vector<double> table_pose_;
   
 public:
   BlockDetectionServer(const std::string name) : 
     nh_("~"), as_(name, false), action_name_(name)
   {
     // Load parameters from the server.
-    
-    
+    if ((nh_.getParam("table_pose", table_pose_) == true) && (table_pose_.size() != 3))
+    {
+      ROS_ERROR("Invalid table_pose vector size; must contain 3 values (x, y, z); ignoring");
+      table_pose_.clear();
+    }
     
     // Register the goal and feeback callbacks.
     as_.registerGoalCallback(boost::bind(&BlockDetectionServer::goalCB, this));
@@ -105,7 +108,7 @@ public:
     sub_ = nh_.subscribe("/camera/depth_registered/points", 1, &BlockDetectionServer::cloudCb, this);
     pub_ = nh_.advertise< pcl::PointCloud<pcl::PointXYZRGB> >("block_output", 1);
     
-    block_pub_ = nh_.advertise< geometry_msgs::PoseArray >("/turtlebot_blocks", 1, true);
+    block_pub_ = nh_.advertise<geometry_msgs::PoseArray>("/turtlebot_blocks", 1, true);
 
     c_obj_pub_ = nh_.advertise<moveit_msgs::CollisionObject>("/collision_object", 10, true);
   }
@@ -118,13 +121,21 @@ public:
     
     goal_ = as_.acceptNewGoal();
     
-    block_size = goal_->block_size;
-    table_height = goal_->table_height;
-    arm_link = goal_->frame;
+    block_size_ = goal_->block_size;
+    table_height_ = goal_->table_height;
+    arm_link_ = goal_->frame;
 
-    result_.blocks.header.frame_id = arm_link;
+    result_.blocks.header.frame_id = arm_link_;
 
-    addTable();
+    // Add the table as a collision object, so it gets filtered out from MoveIt! octomap
+    // I let it optional, as I don't know if this will work in most cases, honesty speaking
+    if (table_pose_.size() > 0)
+    {
+      if (std::abs(table_height_ - table_pose_[2]) > 0.05)
+        ROS_WARN("The table height (%f) passed with goal and table_pose[2] parameter (%f) " \
+                 "should be very similar", table_height_, table_pose_[2]);
+      addTable();
+    }
   }
 
   void preemptCB()
@@ -149,9 +160,9 @@ public:
     // transform to whatever frame we're working in, probably the arm frame.
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_transformed(new pcl::PointCloud<pcl::PointXYZRGB>);
 
-    tf_listener_.waitForTransform(std::string(arm_link), cloud.header.frame_id,
+    tf_listener_.waitForTransform(std::string(arm_link_), cloud.header.frame_id,
                                   ros::Time(cloud.header.stamp), ros::Duration(1.0));
-    if (!pcl_ros::transformPointCloud(std::string(arm_link), cloud, *cloud_transformed, tf_listener_))
+    if (!pcl_ros::transformPointCloud(std::string(arm_link_), cloud, *cloud_transformed, tf_listener_))
     {
       ROS_ERROR("Error converting to desired frame");
       return;
@@ -159,7 +170,7 @@ public:
 
     // Create the segmentation object for the planar model and set all the parameters
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::SACSegmentation < pcl::PointXYZRGB > seg;
+    pcl::SACSegmentation<pcl::PointXYZRGB> seg;
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
     pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_plane(new pcl::PointCloud<pcl::PointXYZRGB>());
@@ -170,11 +181,11 @@ public:
     seg.setDistanceThreshold(0.005);
 
     // Limit to things we think are roughly at the table height.
-    pcl::PassThrough < pcl::PointXYZRGB > pass;
+    pcl::PassThrough<pcl::PointXYZRGB> pass;
     pass.setInputCloud(cloud_transformed);
     pass.setFilterFieldName("z");
 
-    pass.setFilterLimits(table_height - 0.05, table_height + block_size + 0.05);
+    pass.setFilterLimits(table_height_ - 0.05, table_height_ + block_size_ + 0.05);
     pass.filter(*cloud_filtered);
     if (cloud_filtered->points.size() == 0)
     {
@@ -199,7 +210,7 @@ public:
       std::cout << "Inliers: " << (inliers->indices.size()) << std::endl;
 
       // Extract the planar inliers from the input cloud
-      pcl::ExtractIndices < pcl::PointXYZRGB > extract;
+      pcl::ExtractIndices<pcl::PointXYZRGB> extract;
       extract.setInputCloud(cloud_filtered);
       extract.setIndices(inliers);
       extract.setNegative(false);
@@ -269,20 +280,20 @@ public:
       // In order to be part of the block, xside and yside must be between
       // blocksize and blocksize*sqrt(2)
       // z must be equal to or smaller than blocksize
-      if (xside > block_size - tol && xside < block_size*sqrt(2) + tol &&
-          yside > block_size - tol && yside < block_size*sqrt(2) + tol &&
-          zside > tol && zside < block_size + tol)
+      if (xside > block_size_ - tol && xside < block_size_*sqrt(2) + tol &&
+          yside > block_size_ - tol && yside < block_size_*sqrt(2) + tol &&
+          zside > tol && zside < block_size_ + tol)
       {
         // If so, then figure out the position and the orientation of the block
-        float angle = atan(block_size/((xside + yside)/2));
+        float angle = atan(block_size_/((xside + yside)/2));
         
-        if (yside < block_size)
+        if (yside < block_size_)
           angle = 0.0;
         
         ROS_INFO_STREAM("xside: " << xside << " yside: " << yside << " zside " << zside << " angle: " << angle);
         // Then add it to our set
         ROS_INFO("Adding a new block!");
-        addBlock(xmin + xside/2.0, ymin + yside/2.0, zmax - block_size/2.0, angle);
+        addBlock(xmin + xside/2.0, ymin + yside/2.0, zmax - block_size_/2.0, angle);
       }
     }
     
@@ -321,11 +332,11 @@ private:
   {
     double table_size_x = 0.5;
     double table_size_y = 1.0;
-    double table_size_z = 0.435;
+    double table_size_z = 0.05;
 
     moveit_msgs::CollisionObject co;
     co.header.stamp = ros::Time::now();
-    co.header.frame_id = arm_link;
+    co.header.frame_id = arm_link_;
 
     co.id = "table";
     co.operation = moveit_msgs::CollisionObject::REMOVE;
@@ -339,9 +350,9 @@ private:
     co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = table_size_y;
     co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = table_size_z;
     co.primitive_poses.resize(1);
-    co.primitive_poses[0].position.x = 0.09 + table_size_x/2.0;
-    co.primitive_poses[0].position.y = 0.0;
-    co.primitive_poses[0].position.z = table_height - 0.01 - table_size_z/2.0;
+    co.primitive_poses[0].position.x = table_pose_[0] + table_size_x/2.0;
+    co.primitive_poses[0].position.y = table_pose_[1];
+    co.primitive_poses[0].position.z = table_pose_[2] - table_size_z/2.0;
     c_obj_pub_.publish(co);
   }
 
