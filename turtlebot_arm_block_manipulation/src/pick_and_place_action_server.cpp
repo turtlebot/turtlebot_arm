@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright (c) 2011, Vanadium Labs LLC
  * All Rights Reserved
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
@@ -10,10 +10,10 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of Vanadium Labs LLC nor the names of its 
- *       contributors may be used to endorse or promote products derived 
+ *     * Neither the name of Vanadium Labs LLC nor the names of its
+ *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -24,7 +24,7 @@
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Author: Michael Ferguson, Helen Oleynikova
  */
 
@@ -44,11 +44,11 @@ namespace turtlebot_arm_block_manipulation
 class PickAndPlaceServer
 {
 private:
-    
+
   ros::NodeHandle nh_;
   actionlib::SimpleActionServer<turtlebot_arm_block_manipulation::PickAndPlaceAction> as_;
   std::string action_name_;
-  
+
   turtlebot_arm_block_manipulation::PickAndPlaceFeedback     feedback_;
   turtlebot_arm_block_manipulation::PickAndPlaceResult       result_;
   turtlebot_arm_block_manipulation::PickAndPlaceGoalConstPtr goal_;
@@ -59,7 +59,7 @@ private:
   // Move groups to control arm and gripper with MoveIt!
   moveit::planning_interface::MoveGroup arm_;
   moveit::planning_interface::MoveGroup gripper_;
-  
+
   // Parameters from goal
   std::string arm_link;
   double gripper_open;
@@ -67,13 +67,13 @@ private:
   double z_up;
 
 public:
-  PickAndPlaceServer(const std::string name) : 
+  PickAndPlaceServer(const std::string name) :
     nh_("~"), as_(name, false), action_name_(name), arm_("arm"), gripper_("gripper")
   {
     // Register the goal and feedback callbacks
     as_.registerGoalCallback(boost::bind(&PickAndPlaceServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&PickAndPlaceServer::preemptCB, this));
-    
+
     as_.start();
 
     target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/target_pose", 1, true);
@@ -87,7 +87,7 @@ public:
     gripper_open = goal_->gripper_open;
     gripper_closed = goal_->gripper_closed;
     z_up = goal_->z_up;
-    
+
     arm_.setPoseReferenceFrame(arm_link);
 
     // Allow some leeway in position (meters) and orientation (radians)
@@ -116,11 +116,11 @@ public:
     // set the action state to preempted
     as_.setPreempted();
   }
-  
+
   void pickAndPlace(const geometry_msgs::Pose& start_pose, const geometry_msgs::Pose& end_pose)
   {
     ROS_INFO("[pick and place] Picking. Also placing.");
-  
+
     geometry_msgs::Pose target;
 
     /* open gripper */
@@ -230,15 +230,19 @@ private:
       }
       // Pitch is 90 (vertical) at 10 cm, the more horizontal the farer the target is. Yaw is the direction
       // to the target. We tried randomly variations of both to increase the chances of successful planning
-      double rp = M_PI_2 - asin((d - 0.1)/0.205);
-      double ry = asin(y/d);
+      double rp = M_PI_2 - std::asin((d - 0.1)/0.205);
+      double ry = std::asin(y/d);
 
       tf::Quaternion q = tf::createQuaternionFromRPY(0.0,
                                                      attempts*fRand(-0.05, +0.05) + rp,
                                                      attempts*fRand(-0.05, +0.05) + ry);
-      ROS_DEBUG("Set pose target [%.2f, %.2f, %.2f] [d: %.2f, p: %.2f, y: %.2f]", x, y, z, d, rp, ry);
       tf::quaternionTFToMsg(q, modiff_target.pose.orientation);
 
+      // Slightly increase z proportionally to pitch to avoid hitting the table with the lower gripper corner
+      ROS_DEBUG("z increase:  %f  +  %f", modiff_target.pose.position.z, std::abs(std::cos(rp))/50.0);
+      modiff_target.pose.position.z += std::abs(std::cos(rp))/50.0;
+
+      ROS_DEBUG("Set pose target [%.2f, %.2f, %.2f] [d: %.2f, p: %.2f, y: %.2f]", x, y, z, d, rp, ry);
       target_pose_pub_.publish(modiff_target);
 
       if (arm_.setPoseTarget(modiff_target) == false)
