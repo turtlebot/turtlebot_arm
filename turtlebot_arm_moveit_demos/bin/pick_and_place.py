@@ -24,8 +24,9 @@
     http://www.gnu.org/licenses/gpl.html
 """
 
-import rospy, sys
+import rospy, sys, tf
 import moveit_commander
+from math import *
 from geometry_msgs.msg import PoseStamped
 from moveit_commander import MoveGroupCommander, PlanningSceneInterface
 from moveit_msgs.msg import PlanningScene, ObjectColor
@@ -50,6 +51,7 @@ GRIPPER_JOINT_NAMES = ['gripper_joint']
 GRIPPER_EFFORT = [1.0]
 
 REFERENCE_FRAME = '/base_link'
+ARM_BASE_FRAME = '/arm_base_link'
 
 class MoveItDemo:
     def __init__(self):
@@ -58,6 +60,9 @@ class MoveItDemo:
 
         rospy.init_node('moveit_demo')
 
+        # We need a tf listener to convert poses into arm reference base
+        self.tf_listener = tf.TransformListener()
+        
         # Use the planning scene object to add or remove objects
         scene = PlanningSceneInterface()
 
@@ -65,7 +70,7 @@ class MoveItDemo:
         self.scene_pub = rospy.Publisher('planning_scene', PlanningScene)
 
         # Create a publisher for displaying gripper poses
-        self.gripper_pose_pub = rospy.Publisher('gripper_pose', PoseStamped)
+        self.gripper_pose_pub = rospy.Publisher('target_pose', PoseStamped)
 
         # Create a dictionary to hold object colors
         self.colors = dict()
@@ -93,10 +98,10 @@ class MoveItDemo:
         arm.set_planning_time(5)
 
         # Set a limit on the number of pick attempts before bailing
-        max_pick_attempts = 5
+        max_pick_attempts = 3
 
         # Set a limit on the number of place attempts
-        max_place_attempts = 5
+        max_place_attempts = 3
 
         # Give the scene a chance to catch up
         rospy.sleep(2)
@@ -140,12 +145,12 @@ class MoveItDemo:
         box2_size = [0.05, 0.05, 0.15]
 
         # Set the target size [l, w, h]
-        target_size = [0.02, 0.01, 0.12]
+        target_size = [0.02, 0.005, 0.12]
 
         # Add a table top and two boxes to the scene
         table_pose = PoseStamped()
         table_pose.header.frame_id = REFERENCE_FRAME
-        table_pose.pose.position.x = 0.4
+        table_pose.pose.position.x = 0.36
         table_pose.pose.position.y = 0.0
         table_pose.pose.position.z = table_ground + table_size[2] / 2.0
         table_pose.pose.orientation.w = 1.0
@@ -154,7 +159,7 @@ class MoveItDemo:
         box1_pose = PoseStamped()
         box1_pose.header.frame_id = REFERENCE_FRAME
         box1_pose.pose.position.x = table_pose.pose.position.x - 0.04
-        box1_pose.pose.position.y = -0.15
+        box1_pose.pose.position.y = 0.0
         box1_pose.pose.position.z = table_ground + table_size[2] + box1_size[2] / 2.0
         box1_pose.pose.orientation.w = 1.0
         scene.add_box(box1_id, box1_pose, box1_size)
@@ -162,7 +167,7 @@ class MoveItDemo:
         box2_pose = PoseStamped()
         box2_pose.header.frame_id = REFERENCE_FRAME
         box2_pose.pose.position.x = table_pose.pose.position.x - 0.06
-        box2_pose.pose.position.y = 0.13
+        box2_pose.pose.position.y = 0.2
         box2_pose.pose.position.z = table_ground + table_size[2] + box2_size[2] / 2.0
         box2_pose.pose.orientation.w = 1.0
         scene.add_box(box2_id, box2_pose, box2_size)
@@ -171,7 +176,7 @@ class MoveItDemo:
         target_pose = PoseStamped()
         target_pose.header.frame_id = REFERENCE_FRAME
         target_pose.pose.position.x = table_pose.pose.position.x - 0.03
-        target_pose.pose.position.y = 0.02
+        target_pose.pose.position.y = 0.1
         target_pose.pose.position.z = table_ground + table_size[2] + target_size[2] / 2.0
         target_pose.pose.orientation.w = 1.0
 
@@ -195,8 +200,8 @@ class MoveItDemo:
         # Specify a pose to place the target after being picked up
         place_pose = PoseStamped()
         place_pose.header.frame_id = REFERENCE_FRAME
-        place_pose.pose.position.x = table_pose.pose.position.x - 0.07
-        place_pose.pose.position.y = -0.06
+        place_pose.pose.position.x = table_pose.pose.position.x - 0.03
+        place_pose.pose.position.y = -0.15
         place_pose.pose.position.z = table_ground + table_size[2] + target_size[2] / 2.0
         place_pose.pose.orientation.w = 1.0
 
@@ -209,29 +214,32 @@ class MoveItDemo:
         # Generate a list of grasps
         grasps = self.make_grasps(grasp_pose, [target_id], [target_size[1] - GRASP_OVERTIGHTEN])
 
-        # Publish the grasp poses so they can be viewed in RViz
-        for grasp in grasps:
-            self.gripper_pose_pub.publish(grasp.grasp_pose)
-            rospy.sleep(0.2)
-
         # Track success/failure and number of attempts for pick operation
         result = MoveItErrorCodes.FAILURE
         n_attempts = 0
 
         # Repeat until we succeed or run out of attempts
         while result != MoveItErrorCodes.SUCCESS and n_attempts < max_pick_attempts:
-            result = arm.pick(target_id, grasps)
+            for grasp in grasps:
+                # Publish the grasp poses so they can be viewed in RViz
+                self.gripper_pose_pub.publish(grasp.grasp_pose)
+                rospy.sleep(0.2)
+
+                result = arm.pick(target_id, grasps)
+                if result == MoveItErrorCodes.SUCCESS:
+                    break
+
             n_attempts += 1
             rospy.loginfo("Pick attempt: " + str(n_attempts))
             rospy.sleep(0.2)
 
         # If the pick was successful, attempt the place operation
         if result == MoveItErrorCodes.SUCCESS:
-            success = False
-            n_attempts = 0
-
             # Generate valid place poses
             places = self.make_places(place_pose)
+
+            success = False
+            n_attempts = 0
 
             # Repeat until we succeed or run out of attempts
             while not success and n_attempts < max_place_attempts:
@@ -243,14 +251,15 @@ class MoveItDemo:
                     success = arm.place(target_id, place)
                     if success:
                         break
+                
                 n_attempts += 1
                 rospy.loginfo("Place attempt: " + str(n_attempts))
                 rospy.sleep(0.2)
 
             if not success:
-                rospy.loginfo("Place operation failed after " + str(n_attempts) + " attempts.")
+                rospy.logerr("Place operation failed after " + str(n_attempts) + " attempts.")
         else:
-            rospy.loginfo("Pick operation failed after " + str(n_attempts) + " attempts.")
+            rospy.logerr("Pick operation failed after " + str(n_attempts) + " attempts.")
 
         # Return the arm to the "resting" pose stored in the SRDF file (passing through right_up)
         arm.set_named_target('right_up')
@@ -334,17 +343,24 @@ class MoveItDemo:
         # Pitch angles to try
         pitch_vals = [0, 0.1, -0.1, 0.2, -0.2, 0.4, -0.4]
 
-        # Yaw angles to try
-        yaw_vals = [0]
+        # Yaw angles to try; given the limited dofs of turtlebot_arm, we must calculate the heading
+        # from arm base to the object to pick (first we must transform its pose to arm base frame)
+        target_pose_arm_ref = self.tf_listener.transformPose(ARM_BASE_FRAME, initial_pose_stamped)
+        x = target_pose_arm_ref.pose.position.x
+        y = target_pose_arm_ref.pose.position.y
+        d = sqrt(x*x + y*y)
+
+        self.pick_yaw = asin(y/d)   # check in make_places method why we store the calculated yaw
+        yaw_vals = [self.pick_yaw]
 
         # A list to hold the grasps
         grasps = []
 
         # Generate a grasp for each pitch and yaw angle
-        for y in yaw_vals:
-            for p in pitch_vals:
+        for yaw in yaw_vals:
+            for pitch in pitch_vals:
                 # Create a quaternion from the Euler angles
-                q = quaternion_from_euler(0, p, y)
+                q = quaternion_from_euler(0, pitch, yaw)
 
                 # Set the grasp pose orientation accordingly
                 g.grasp_pose.pose.orientation.x = q[0]
@@ -362,7 +378,7 @@ class MoveItDemo:
                 g.max_contact_force = 0
 
                 # Degrade grasp quality for increasing pitch angles
-                g.grasp_quality = 1.0 - abs(p)
+                g.grasp_quality = 1.0 - abs(pitch)
 
                 # Append the grasp to the list
                 grasps.append(deepcopy(g))
@@ -379,41 +395,46 @@ class MoveItDemo:
         place = init_pose
 
         # A list of x shifts (meters) to try
-        x_vals = [0, 0.005, 0.01, 0.015, -0.005, -0.01, -0.015]
+        x_vals = [0, 0.005, -0.005] #, 0.01, -0.01, 0.015, -0.015]
 
         # A list of y shifts (meters) to try
-        y_vals = [0, 0.005, 0.01, 0.015, -0.005, -0.01, -0.015]
+        y_vals = [0, 0.005, -0.005, 0.01, -0.01] #, 0.015, -0.015]
 
         # A list of pitch angles to try
-        # pitch_vals = [0, 0.005, -0.005, 0.01, -0.01, 0.02, -0.02]
-
-        pitch_vals = [0]
-
-        # A list of yaw angles to try
-        yaw_vals = [0]
+        pitch_vals = [0] #, 0.005, -0.005, 0.01, -0.01, 0.02, -0.02]
 
         # A list to hold the places
         places = []
 
         # Generate a place pose for each angle and translation
-        for y in yaw_vals:
-            for p in pitch_vals:
-                for y in y_vals:
-                    for x in x_vals:
-                        place.pose.position.x = init_pose.pose.position.x + x
-                        place.pose.position.y = init_pose.pose.position.y + y
-
-                        # Create a quaternion from the Euler angles
-                        q = quaternion_from_euler(0, p, y)
-
-                        # Set the place pose orientation accordingly
-                        place.pose.orientation.x = q[0]
-                        place.pose.orientation.y = q[1]
-                        place.pose.orientation.z = q[2]
-                        place.pose.orientation.w = q[3]
-
-                        # Append this place pose to the list
-                        places.append(deepcopy(place))
+        for pitch in pitch_vals:
+            for dy in y_vals:
+                for dx in x_vals:
+                    place.pose.position.x = init_pose.pose.position.x + dx
+                    place.pose.position.y = init_pose.pose.position.y + dy
+    
+                    # Yaw angle: given the limited dofs of turtlebot_arm, we must calculate the heading from
+                    # arm base to the place location (first we must transform its pose to arm base frame)
+                    target_pose_arm_ref = self.tf_listener.transformPose(ARM_BASE_FRAME, place)
+                    x = target_pose_arm_ref.pose.position.x
+                    y = target_pose_arm_ref.pose.position.y
+                    d = sqrt(x*x + y*y)
+                    yaw = asin(y/d) - self.pick_yaw;
+                    # Note that we subtract the yaw we calculated for pick, as the picked object "carries"
+                    # with him the orientation of the arm at pickup time. More details in this moveit-users
+                    # group thread:  https://groups.google.com/forum/#!topic/moveit-users/-Eie-wLDbu0 
+    
+                    # Create a quaternion from the Euler angles
+                    q = quaternion_from_euler(0, pitch, yaw)
+    
+                    # Set the place pose orientation accordingly
+                    place.pose.orientation.x = q[0]
+                    place.pose.orientation.y = q[1]
+                    place.pose.orientation.z = q[2]
+                    place.pose.orientation.w = q[3]
+    
+                    # Append this place pose to the list
+                    places.append(deepcopy(place))
 
         # Return the list
         return places
