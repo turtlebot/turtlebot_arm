@@ -348,9 +348,8 @@ class MoveItDemo:
         target_pose_arm_ref = self.tf_listener.transformPose(ARM_BASE_FRAME, initial_pose_stamped)
         x = target_pose_arm_ref.pose.position.x
         y = target_pose_arm_ref.pose.position.y
-        d = sqrt(x*x + y*y)
 
-        self.pick_yaw = asin(y/d)   # check in make_places method why we store the calculated yaw
+        self.pick_yaw = atan2(y, x)   # check in make_places method why we store the calculated yaw
         yaw_vals = [self.pick_yaw]
 
         # A list to hold the grasps
@@ -418,8 +417,7 @@ class MoveItDemo:
                     target_pose_arm_ref = self.tf_listener.transformPose(ARM_BASE_FRAME, place)
                     x = target_pose_arm_ref.pose.position.x
                     y = target_pose_arm_ref.pose.position.y
-                    d = sqrt(x*x + y*y)
-                    yaw = asin(y/d) - self.pick_yaw;
+                    yaw = atan2(y, x) - self.pick_yaw;
                     # Note that we subtract the yaw we calculated for pick, as the picked object "carries"
                     # with him the orientation of the arm at pickup time. More details in this moveit-users
                     # group thread:  https://groups.google.com/forum/#!topic/moveit-users/-Eie-wLDbu0 

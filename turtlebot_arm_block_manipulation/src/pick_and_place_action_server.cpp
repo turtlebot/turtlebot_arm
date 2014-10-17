@@ -228,10 +228,11 @@ private:
         as_.setAborted(result_);
         return false;
       }
-      // Pitch is 90 (vertical) at 10 cm, the more horizontal the farer the target is. Yaw is the direction
-      // to the target. We tried randomly variations of both to increase the chances of successful planning
-      double rp = M_PI_2 - std::asin((d - 0.1)/0.205);
-      double ry = std::asin(y/d);
+      // Pitch is 90 (vertical) at 10 cm from the arm base; the farther the target is, the closer to horizontal
+      // we point the gripper. Yaw is the direction to the target. We also try some random variations of both to
+      // increase the chances of successful planning.
+      double rp = M_PI_2 - std::asin((d - 0.1)/0.205); // 0.205 = arm's max reach - vertical pitch distance + ε
+      double ry = std::atan2(y, x);
 
       tf::Quaternion q = tf::createQuaternionFromRPY(0.0,
                                                      attempts*fRand(-0.05, +0.05) + rp,
