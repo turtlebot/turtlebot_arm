@@ -4,8 +4,6 @@
 
   <include file="$(find turtlebot_arm_bringup)/launch/arm.launch" />
 
-  <node name="robot_state_pub" pkg="robot_state_publisher" type="robot_state_publisher"/>
-
   <node name="arbotix_gui" pkg="arbotix_python" type="arbotix_gui" output="screen"/>
 
 
