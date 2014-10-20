@@ -1,5 +1,13 @@
 <launch>
+  <!--  *********** Bringup turtlebot arm *********** -->
+  <include file="$(find turtlebot_arm_bringup)/launch/arm.launch" />
 
+  <!--  ************ Bringup the camera ************* -->
+  <include file="$(find openni_launch)/launch/openni.launch">
+  	<arg name="depth_registration" value="true" />
+  </include>
+
+  <!--  ************* Calibration stuff ************* -->
   <node name="calibrate_kinect_checkerboard" pkg="turtlebot_arm_kinect_calibration" type="calibrate_kinect_checkerboard" output="screen">
     <param name="gripper_tip_x" value="-0.002" />
     <param name="gripper_tip_y" value="0.020" />
