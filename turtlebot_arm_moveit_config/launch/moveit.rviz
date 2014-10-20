@@ -4,7 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /PointCloud21/Status1
+        - /MotionPlanning1/Scene Geometry1
         - /DepthCloud1/Auto Size1
       Splitter Ratio: 0.408316
     Tree Height: 411
@@ -201,7 +201,7 @@ Visualization Manager:
         Show Workspace: false
         Start State Alpha: 1
         Start State Color: 0; 255; 0
-      Planning Scene Topic: planning_scene
+      Planning Scene Topic: /move_group/monitored_planning_scene
       Robot Description: robot_description
       Scene Geometry:
         Scene Alpha: 0.9
@@ -345,8 +345,8 @@ Visualization Manager:
         Show Robot Visual: true
       Value: true
     - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.1
+      Axes Length: 0.1
+      Axes Radius: 0.01
       Class: rviz/Pose
       Color: 220; 220; 220
       Enabled: true
@@ -355,8 +355,8 @@ Visualization Manager:
       Name: Pick/Place Pose
       Shaft Length: 0.08
       Shaft Radius: 0.01
-      Shape: Arrow
-      Topic: /gripper_pose
+      Shape: Axes
+      Topic: /target_pose
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -452,10 +452,10 @@ Visualization Manager:
         Z: 2.23518e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.205204
+      Pitch: 0.0052029
       Target Frame: base_link
       Value: XYOrbit (rviz)
-      Yaw: 0.581764
+      Yaw: 4.66496
     Saved: ~
 Window Geometry:
   Displays:
