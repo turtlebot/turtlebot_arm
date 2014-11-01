@@ -52,7 +52,7 @@
 #include <pcl_ros/transforms.h>
 
 // MoveIt!
-#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <shape_tools/solid_primitive_dims.h>
 
 #include <cmath>
@@ -73,7 +73,10 @@ private:
   turtlebot_arm_block_manipulation::BlockDetectionGoalConstPtr goal_;
   ros::Subscriber sub_;
   ros::Publisher pub_;
-  
+
+  // We use the planning_scene_interface::PlanningSceneInterface to manipulate the world
+  moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
+
   tf::TransformListener tf_listener_;
   
   // Parameters from goal
@@ -106,11 +109,12 @@ public:
     
     // Subscribe to point cloud
     sub_ = nh_.subscribe("/camera/depth_registered/points", 1, &BlockDetectionServer::cloudCb, this);
-    pub_ = nh_.advertise< pcl::PointCloud<pcl::PointXYZRGB> >("block_output", 1);
-    
-    block_pub_ = nh_.advertise<geometry_msgs::PoseArray>("/turtlebot_blocks", 1, true);
 
-    c_obj_pub_ = nh_.advertise<moveit_msgs::CollisionObject>("/collision_object", 10, true);
+    // Publish the filtered point cloud for debug purposes
+    pub_ = nh_.advertise< pcl::PointCloud<pcl::PointXYZRGB> >("block_output", 1);
+
+    // Public detected blocks poses
+    block_pub_ = nh_.advertise<geometry_msgs::PoseArray>("/turtlebot_blocks", 1, true);
   }
 
   void goalCB()
@@ -330,6 +334,9 @@ private:
 
   void addTable()
   {
+    // Add the table as a collision object into the world, so it gets excluded from the collision map
+    // As the blocks are small, they should also be excluded (assuming that padding_offset parameter on
+    // octomap sensor configuration is equal or bigger than block size)
     double table_size_x = 0.5;
     double table_size_y = 1.0;
     double table_size_z = 0.05;
@@ -339,8 +346,7 @@ private:
     co.header.frame_id = arm_link_;
 
     co.id = "table";
-    co.operation = moveit_msgs::CollisionObject::REMOVE;
-    c_obj_pub_.publish(co);
+    planning_scene_interface_.removeCollisionObjects(std::vector<std::string>(1, co.id));
 
     co.operation = moveit_msgs::CollisionObject::ADD;
     co.primitives.resize(1);
@@ -353,7 +359,10 @@ private:
     co.primitive_poses[0].position.x = table_pose_[0] + table_size_x/2.0;
     co.primitive_poses[0].position.y = table_pose_[1];
     co.primitive_poses[0].position.z = table_pose_[2] - table_size_z/2.0;
-    c_obj_pub_.publish(co);
+
+    ROS_INFO("Add the table as a collision object into the world");
+    std::vector<moveit_msgs::CollisionObject> collision_objects(1, co);
+    planning_scene_interface_.addCollisionObjects(collision_objects);
   }
 
 };
