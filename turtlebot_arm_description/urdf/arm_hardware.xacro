@@ -20,9 +20,9 @@
       <inertial>
         <mass value="0.018"/>
         <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-                 iyy="1.0" iyz="0.0"
-                 izz="1.0"/>
+        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+                 iyy="0.000001" iyz="0.0"
+                 izz="0.000001"/>
       </inertial>
 
       <visual>
@@ -59,9 +59,9 @@
       <inertial>
         <mass value="0.015"/>
         <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-                 iyy="1.0" iyz="0.0"
-                 izz="1.0"/>
+        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+                 iyy="0.000001" iyz="0.0"
+                 izz="0.000001"/>
       </inertial>
 
       <visual>
@@ -98,9 +98,9 @@
       <inertial>
         <mass value="0.055"/>
         <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-                 iyy="1.0" iyz="0.0"
-                 izz="1.0"/>
+        <inertia ixx="0.000017012" ixy="0.0" ixz="0.0"
+                 iyy="0.000013258" iyz="0.0"
+                 izz="0.000009483"/>
       </inertial>
 
       <visual>
@@ -137,9 +137,9 @@
       <inertial>
         <mass value="0.004"/>
         <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-                 iyy="1.0" iyz="0.0"
-                 izz="1.0"/>
+        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+                 iyy="0.000001" iyz="0.0"
+                 izz="0.000001"/>
       </inertial>
 
       <visual>
@@ -176,9 +176,9 @@
       <inertial>
         <mass value="0.005"/>
         <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-                 iyy="1.0" iyz="0.0"
-                 izz="1.0"/>
+        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+                 iyy="0.000001" iyz="0.0"
+                 izz="0.000001"/>
       </inertial>
 
       <visual>
@@ -209,6 +209,7 @@
       <insert_block name="origin"/>
       <axis xyz="0 0 -1"/>
       <limit effort="30" velocity="${vlimit}" lower="${llimit}" upper="${ulimit}"/>
+      <dynamics friction="0.13"/>
       <parent link="${parent}"/>
       <child link="${name}_link"/>
     </joint>
@@ -217,9 +218,9 @@
       <inertial>
         <mass value="0.008"/>
         <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-                 iyy="1.0" iyz="0.0"
-                 izz="1.0"/>
+        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+                 iyy="0.000001" iyz="0.0"
+                 izz="0.000001"/>
       </inertial>
 
       <visual>
@@ -250,6 +251,7 @@
       <insert_block name="origin"/>
       <axis xyz="0 1 0"/>
       <limit effort="30" velocity="${vlimit}" lower="${llimit}" upper="${ulimit}"/>
+      <dynamics friction="0.13"/>
       <parent link="${parent}"/>
       <child link="${name}_link"/>
     </joint>
@@ -258,9 +260,9 @@
       <inertial>
         <mass value="0.010"/>
         <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-                 iyy="1.0" iyz="0.0"
-                 izz="1.0"/>
+        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+                 iyy="0.000001" iyz="0.0"
+                 izz="0.000001"/>
       </inertial>
 
       <visual>
@@ -291,6 +293,7 @@
       <insert_block name="origin"/>
       <axis xyz="0 1 0"/>
       <limit effort="30" velocity="${vlimit}" lower="${llimit}" upper="${ulimit}"/>
+      <dynamics friction="0.13"/>
       <parent link="${parent}"/>
       <child link="${name}_link"/>
     </joint>
@@ -299,9 +302,9 @@
       <inertial>
         <mass value="0.016"/>
         <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-                 iyy="1.0" iyz="0.0"
-                 izz="1.0"/>
+        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+                 iyy="0.000001" iyz="0.0"
+                 izz="0.000001"/>
       </inertial>
 
       <visual>
