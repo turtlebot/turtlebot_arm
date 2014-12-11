@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+    <!-- gripper joint -->
+    <dynamixel_AX12_fixed parent="arm_wrist_F3_0_link" name="gripper_servo">
+      <origin xyz="-0.02275 0 ${-AX12_WIDTH/2}" rpy="${M_PI} ${M_PI/2} 0"/>
+    </dynamixel_AX12_fixed>
+
+    <!-- finger 1 -->
+    <joint name="gripper_joint" type="prismatic">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="30" velocity="0.5" lower="0.002" upper="0.031"/>
+      <parent link="gripper_servo_link"/>
+      <child link="gripper_active_link"/>
+    </joint>  
+    
+    <link name="gripper_active_link">
+      <inertial>
+        <mass value="0.00001"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+          iyy="1.0" iyz="0.0"
+          izz="1.0"/>
+      </inertial>
+      <visual>
+        <origin xyz="0.035 0 -0.03 " rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
+        </geometry>
+        <material name="${color}"/>
+      </visual>
+      <collision>
+        <origin xyz="0.035 0 -0.03" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.025 0.038 0.004"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- finger 2 -->
+    <bioloid_F10_fixed parent="gripper_servo_link" name="gripper_static" color="${gripper_color}">
+      <origin xyz="0.035 0 ${-AX12_HEIGHT-F10_HEIGHT+0.01}" rpy="0 ${M_PI} 0"/>
+    </bioloid_F10_fixed>
+</robot>

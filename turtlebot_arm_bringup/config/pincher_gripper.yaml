@@ -1,0 +1,7 @@
+source: pincher_gripper.yaml
+model:  parallel
+invert: false
+pad_width: 0.002
+min_opening: 0.002
+max_opening: 0.032
+center: 0
