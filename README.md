@@ -3,10 +3,13 @@ TurtleBot Arm
 
 Indigo version of turtlebot arm code. It should easily work on Hydro, too. Package turtlebot_arm_moveit_demos provides use examples to start playing with the arm on MoveIt!, while the recovered on indigo turtlebot_arm_block_manipulation provides a more complete and interesting demo.
 
+## Selecting Arm Type
+By default this will work with the original white/green TurtleBot arm.  To use the PhantomX Pincher, set environment variable "TURTLEBOT_ARM1" to pincher. You will need arbotix_ros version 0.11.0 or higher for PhantomX Pincher.
+
 ## Attaching the Arm to a Robot
 Open your xacro-macro-magic URDF, and add something like:
 
-       <include filename="$(find turtlebot_arm_description)/urdf/arm.xacro" />
+       <include filename="$(find turtlebot_arm_description)/urdf/$(optenv TURTLEBOT_ARM1 turtlebot)_arm.xacro" />
        <turtlebot_arm parent="base_link" color="white" gripper_color="green"
                  joints_vlimit="1.571" pan_llimit="-2.617" pan_ulimit="2.617">
           <origin xyz="0 0 1"/>

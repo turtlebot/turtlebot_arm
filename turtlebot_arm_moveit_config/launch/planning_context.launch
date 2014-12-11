@@ -7,10 +7,10 @@
 
   <!-- Load universal robot description format (URDF) -->
   <param if="$(arg load_robot_description)" name="$(arg robot_description)"
-    command="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/arm.urdf.xacro'"/>
+    command="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/$(optenv TURTLEBOT_ARM1 turtlebot)_arm.urdf.xacro'"/>
 
   <!-- The semantic description that corresponds to the URDF -->
-  <param name="$(arg robot_description)_semantic" textfile="$(find turtlebot_arm_moveit_config)/config/turtlebot_arm.srdf"/>
+  <param name="$(arg robot_description)_semantic" textfile="$(find turtlebot_arm_moveit_config)/config/$(optenv TURTLEBOT_ARM1 turtlebot)_arm.srdf"/>
   
   <!-- Load updated joint limits (override information from URDF) -->
   <group ns="$(arg robot_description)_planning">
