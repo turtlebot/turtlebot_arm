@@ -1,5 +1,5 @@
 source: pincher_arm.yaml
-port: /dev/ttyUSB0
+port: /dev/ttyUSB1
 read_rate: 15
 write_rate: 25
 joints: {

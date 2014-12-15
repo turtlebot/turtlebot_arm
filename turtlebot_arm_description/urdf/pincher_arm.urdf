@@ -6,10 +6,13 @@
 <robot name="turtlebot_arm" xmlns:xacro="http://ros.org/wiki/xacro">
   <!-- Included URDF Files -->
   <material name="White">
-    <color rgba="0.87 0.90 0.87 1.0"/>
+    <color rgba="0.8 0.8 0.78 1.0"/>
   </material>
   <material name="Black">
-    <color rgba="0.0 0.0 0.0 1.0"/>
+    <color rgba="0.08 0.08 0.08 1.0"/>
+  </material>
+  <material name="Gray">
+    <color rgba="0.2 0.2 0.21 1.0"/>
   </material>
   <material name="Green">
     <color rgba="0.22 0.32 0.14 1.0"/>
@@ -49,7 +52,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/ax12_box.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="black"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.01241"/>
@@ -82,7 +85,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F3.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.0045"/>
@@ -92,7 +95,7 @@
     </collision>
   </link>
   <gazebo reference="arm_shoulder_pan_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -112,7 +115,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/ax12_box.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="black"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.01241"/>
@@ -145,7 +148,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F4.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0215"/>
@@ -155,7 +158,7 @@
     </collision>
   </link>
   <gazebo reference="arm_shoulder_lift_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -175,7 +178,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
@@ -185,7 +188,7 @@
     </collision>
   </link>
   <gazebo reference="arm_shoulder_F10_0_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -205,7 +208,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
@@ -215,7 +218,7 @@
     </collision>
   </link>
   <gazebo reference="arm_shoulder_F10_1_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -235,7 +238,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
@@ -245,7 +248,7 @@
     </collision>
   </link>
   <gazebo reference="arm_shoulder_F10_2_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -265,7 +268,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F3.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.0045"/>
@@ -275,7 +278,7 @@
     </collision>
   </link>
   <gazebo reference="arm_shoulder_F3_0_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -295,7 +298,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/ax12_box.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="black"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.01241"/>
@@ -328,7 +331,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F4.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0215"/>
@@ -338,7 +341,7 @@
     </collision>
   </link>
   <gazebo reference="arm_elbow_flex_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -358,7 +361,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
@@ -368,7 +371,7 @@
     </collision>
   </link>
   <gazebo reference="arm_elbow_F10_0_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -388,7 +391,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
@@ -398,7 +401,7 @@
     </collision>
   </link>
   <gazebo reference="arm_elbow_F10_1_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -418,7 +421,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
@@ -428,7 +431,7 @@
     </collision>
   </link>
   <gazebo reference="arm_elbow_F10_2_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -448,7 +451,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F3.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.0045"/>
@@ -458,7 +461,7 @@
     </collision>
   </link>
   <gazebo reference="arm_elbow_F3_0_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -478,7 +481,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/ax12_box.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="black"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.01241"/>
@@ -511,7 +514,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F2.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.00775"/>
@@ -521,7 +524,7 @@
     </collision>
   </link>
   <gazebo reference="arm_wrist_flex_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -541,7 +544,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/F3.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.0045"/>
@@ -551,7 +554,37 @@
     </collision>
   </link>
   <gazebo reference="arm_wrist_F3_0_link">
-    <material>Gazebo/White</material>
+    <material>Gazebo/Gray</material>
+    <selfCollide>true</selfCollide>
+    <gravity>true</gravity>
+  </gazebo>
+  <joint name="gripper_finger_base_joint" type="fixed">
+    <origin rpy="3.14159 -1.570795 3.14159" xyz="-0.025 0 -.05 "/>
+    <parent link="arm_wrist_F3_0_link"/>
+    <child link="gripper_finger_base_link"/>
+  </joint>
+  <link name="gripper_finger_base_link">
+    <inertial>
+      <mass value="0.00001"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="3.14159 -1.570795 1.570795" xyz="0.016 0 -.015 "/>
+      <geometry>
+        <mesh filename="package://turtlebot_arm_description/meshes/finger_base_px.stl" scale=".01 .01 .01"/>
+      </geometry>
+      <material name="Gray"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0.015 0 -0.0135"/>
+      <geometry>
+        <box size="0.002 0.040 0.075"/>
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="gripper_finger_base_link">
+    <material>Gazebo/Gray</material>
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
@@ -571,7 +604,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/ax12_box.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="black"/>
+      <material name="Gray"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.01241"/>
@@ -599,48 +632,42 @@
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0.035 0 -0.03 "/>
+      <origin rpy="3.14159 -1.570795 1.570795" xyz="0.016 0 -.015 "/>
       <geometry>
-        <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://turtlebot_arm_description/meshes/finger_px.stl" scale=".01 .01 .01"/>
       </geometry>
-      <material name="White"/>
+      <material name="Gray"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0.035 0 -0.03"/>
+      <origin rpy="0 0 0" xyz="0.035 0 -0.0135"/>
       <geometry>
-        <box size="0.025 0.038 0.004"/>
+        <box size="0.036 0.028 0.004"/>
       </geometry>
     </collision>
   </link>
-  <joint name="gripper_static_joint" type="fixed">
-    <origin rpy="0 3.14159 0" xyz="0.035 0 -0.0325"/>
+  <joint name="gripper2_joint" type="fixed">
     <parent link="gripper_servo_link"/>
-    <child link="gripper_static_link"/>
+    <child link="gripper_active2_link"/>
   </joint>
-  <link name="gripper_static_link">
+  <link name="gripper_active2_link">
     <inertial>
-      <mass value="0.004"/>
+      <mass value="0.00001"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz=" 0 0 0 "/>
+      <origin rpy="3.14159 1.570795 1.570795" xyz="0.016 0 -.015 "/>
       <geometry>
-        <mesh filename="package://turtlebot_arm_description/meshes/F10.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://turtlebot_arm_description/meshes/finger_px.stl" scale=".01 .01 .01"/>
       </geometry>
-      <material name="Green"/>
+      <material name="Gray"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+      <origin rpy="0 0 0" xyz="0.035 0 -0.018"/>
       <geometry>
-        <box size="0.025 0.038 0.004"/>
+        <box size="0.036 0.028 0.004"/>
       </geometry>
     </collision>
   </link>
-  <gazebo reference="gripper_static_link">
-    <material>Gazebo/Green</material>
-    <selfCollide>true</selfCollide>
-    <gravity>true</gravity>
-  </gazebo>
 </robot>
 
