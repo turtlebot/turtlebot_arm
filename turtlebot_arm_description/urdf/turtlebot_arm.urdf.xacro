@@ -12,7 +12,7 @@
          for the first joint (arm_shoulder_pan) to allow accessing to different operational 
          areas, e.g. left handed vs. right handed robot -->
     <turtlebot_arm parent="base_link" color="White" gripper_color="Green"
-                   joints_vlimit="1.571" pan_llimit="-2.617" pan_ulimit="2.617">
+                   joints_vlimit="1.571" pan_llimit="-2.617" pan_ulimit="2.617" pincher_gripper="false">
       <!-- Place the "floating" arm at the location it should be if mounted on a turtlebot,
            as pick and place and other demos assume this location -->
       <origin xyz="0.1 0.03 0.435"/>

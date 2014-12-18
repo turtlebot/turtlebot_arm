@@ -3,8 +3,9 @@
    turtlebot or pincher (for Trossen PhantomX Pincher) -->
    
   <arg name="simulation" default="false"/>
-
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/$(optenv TURTLEBOT_ARM1 turtlebot)_arm.urdf.xacro'"/>
+  
+  <param name="robot_description" textfile="$(find turtlebot_arm_description)/urdf/$(optenv TURTLEBOT_ARM1 turtlebot)_arm.urdf"/>
+  
   <node name="robot_state_pub" pkg="robot_state_publisher" type="robot_state_publisher"/>
   <node name="fake_joint_pub" pkg="turtlebot_arm_bringup" type="fake_joint_pub.py"/>
 
