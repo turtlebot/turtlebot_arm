@@ -1,55 +1,47 @@
 <?xml version="1.0"?>
+<!-- PhantomX Pincher Arm gripper URDF-->
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-
-    <!-- finger base -->
-     <gripper_finger_base parent="arm_wrist_F3_0_link" name="gripper_finger_base" color="${color}">
-      <origin xyz="-0.025 0 -.05 " rpy="${M_PI} ${-M_PI/2} ${M_PI}"/>
-    </gripper_finger_base>
-
-    <!-- finger 1 -->
-    <dynamixel_AX12_fixed parent="arm_wrist_F3_0_link" name="gripper_servo" >
-      <origin xyz="-0.02275 0 ${-AX12_WIDTH/2}" rpy="${M_PI} ${M_PI/2} 0"/>
-      <!--origin xyz="-0.02275 0 ${-AX12_WIDTH/2}" rpy="${-M_PI/2} ${M_PI/2} ${M_PI}"/-->
-    </dynamixel_AX12_fixed>
+    <bioloid_F3_fixed parent="arm_wrist_flex_link" name="arm_wrist_F3_0" color="${color}">
+      <origin xyz="0 0 ${F2_HEIGHT}" rpy="0 ${M_PI} ${-M_PI}"/>
+    </bioloid_F3_fixed>
     
     <!-- gripper joint -->
+    <dynamixel_AX12_fixed parent="arm_wrist_F3_0_link" name="gripper_servo" >
+      <origin xyz="0 0 ${-AX12_WIDTH/2}" rpy="${M_PI/2} ${M_PI} ${M_PI/2}"/>
+    </dynamixel_AX12_fixed>
+    
+     <gripper_finger_base parent="gripper_servo_link" name="gripper_finger_base" color="${color}">
+      <origin xyz="0.01  ${AX12_WIDTH} 0" rpy="${M_PI/2} ${-M_PI} ${M_PI/2}"/>
+    </gripper_finger_base>
+  
+     <!-- Finger 1 --> 
     <joint name="gripper_joint" type="prismatic">
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <axis xyz="0 0 1"/>
+      <axis xyz="1 0 0"/>
       <limit effort="30" velocity="0.5" lower="0.002" upper="0.031"/>
       <parent link="gripper_servo_link"/>
       <child link="gripper_active_link"/>
+    </joint> 
+    
+    <pincher_gripper name="gripper_active" color="${color}" >
+      <origin xyz="-0.02 0.023 0" rpy="${-M_PI/2} 0 0"/>
+    </pincher_gripper>
+     
+    <!-- Finger 2 --> 
+    <!-- Note: currently static but should be a Mimic of Finger 1 -->
+    <joint name="gripper2_joint" type="fixed">
+      <parent link="gripper_servo_link"/>
+      <child link="gripper_active2_link"/>
     </joint>  
     
-    
-    
-    <link name="gripper_active_link">
-      <inertial>
-        <mass value="0.00001"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-          iyy="1.0" iyz="0.0"
-          izz="1.0"/>
-      </inertial>
-      <visual>
-        <origin xyz="0.016 0 -.015 " rpy="${M_PI} ${-M_PI/2} ${M_PI/2}"/>
-        <geometry>
-          <mesh filename="package://turtlebot_arm_description/meshes/finger_px.stl" scale=".01 .01 .01"/>
-        </geometry>
-        <material name="${gripper_color}"/>
-      </visual>
-      <collision>
-        <origin xyz="0.035 0 -0.0135" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.036 0.028 0.004"/>
-        </geometry>
-      </collision>
-    </link>
-    
-    <!-- finger2 -->
-    <!-- gripper joint -->
-    <!--  Mimic Causes Missing Joint error in Moveit 
-      <joint name="gripper_joint2" type="prismatic">
+    <pincher_gripper name="gripper_active2" color="${color}" >
+      <origin xyz="-0.02 0.023 0" rpy="${-M_PI/2} ${M_PI} 0"/>
+    </pincher_gripper>
+      
+    <!-- Using Mimic -->
+    <!-- gripper 2 joint -->
+    <!--  ### Mimic would be better but causes Missing Joint error in Moveit 
+      <joint name="gripper2_joint" type="prismatic">
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
       <limit effort="30" velocity="0.5" lower="0.002" upper="0.031"/>
@@ -57,41 +49,4 @@
       <child link="gripper_active2_link"/>
       <mimic joint="gripper_joint" multiplier="-.5"  offset = "0"/>
     </joint-->  
-    
-     
-      <!-- gripper joint -->
-    <joint name="gripper2_joint" type="fixed">
-      <parent link="gripper_servo_link"/>
-      <child link="gripper_active2_link"/>
-    </joint>  
-    
-       <link name="gripper_active2_link">
-      <inertial>
-        <mass value="0.00001"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-          iyy="1.0" iyz="0.0"
-          izz="1.0"/>
-      </inertial>
-      <visual>
-        <origin xyz="0.016 0 -.015 " rpy="${M_PI} ${M_PI/2} ${M_PI/2}"/>
-        <geometry>
-          <mesh filename="package://turtlebot_arm_description/meshes/finger_px.stl" scale=".01 .01 .01"/>
-        </geometry>
-        <material name="${gripper_color}"/>
-      </visual>
-      <collision>
-        <origin xyz="0.035 0 -0.018" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.036 0.028 0.004"/>
-        </geometry>
-      </collision>
-    </link>
-   
-
-    <!-- finger 2 >
-    <bioloid_F10_fixed parent="gripper_servo_link" name="gripper_static" color="${gripper_color}">
-      <origin xyz="0.035 0 ${-AX12_HEIGHT-F10_HEIGHT+0.01}" rpy="0 ${M_PI} ${M_PI/2}"/>
-    </bioloid_F10_fixed -->
-    
 </robot>

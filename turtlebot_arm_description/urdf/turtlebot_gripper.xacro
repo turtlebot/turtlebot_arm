@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
+<!-- Turtlebot Arm gripper URDF-->
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
+    <bioloid_F3_fixed parent="arm_wrist_flex_link" name="arm_wrist_F3_0" color="${color}">
+      <origin xyz="0 0.016 ${F2_HEIGHT}" rpy="0 ${M_PI} ${-M_PI/2}"/>
+    </bioloid_F3_fixed>
     <!-- gripper joint -->
     <dynamixel_AX12_fixed parent="arm_wrist_F3_0_link" name="gripper_servo">
       <origin xyz="-0.02275 0 ${-AX12_WIDTH/2}" rpy="${M_PI} ${M_PI/2} 0"/>

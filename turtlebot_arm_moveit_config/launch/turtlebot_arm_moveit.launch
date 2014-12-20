@@ -8,10 +8,14 @@
 
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
+  
+  <!-- Arm_type from environ.  NOTE: setting from arg not yet supported -->
+  <arg name="arm_type" default="$(optenv TURTLEBOT_ARM1 turtlebot)"/>
 
   <!-- Load the URDF, SRDF and other .yaml configuration files on the param server -->
   <include file="$(find turtlebot_arm_moveit_config)/launch/planning_context.launch">
     <arg name="load_robot_description" value="true"/>
+    <arg name="arm_type" value="$(arg arm_type)"/>
   </include>
 
   <!-- If needed, broadcast static tf for robot root -->

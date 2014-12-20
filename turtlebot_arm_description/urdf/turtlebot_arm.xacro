@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-
+<!-- Arm description for Turtlebot Arm and PhantomX Pincher arm -->
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:include filename="$(find turtlebot_arm_description)/urdf/arm_hardware.xacro"/>
 
@@ -16,8 +16,7 @@
     <color rgba="0.22 0.32 0.14 1.0"/>
   </material>
 
-  <xacro:macro name="turtlebot_arm" params="parent color pincher_gripper gripper_color *origin
-                                            joints_vlimit pan_llimit pan_ulimit">
+  <xacro:macro name="turtlebot_arm" params="parent color pincher_gripper gripper_color *origin">
     <link name="arm_base_link"/>
     <joint name="arm_base_joint" type="fixed">
       <insert_block name="origin"/>
@@ -42,7 +41,7 @@
       <origin xyz="0 0 0" rpy="${M_PI/2} 0 ${M_PI/2}"/>
     </dynamixel_AX12_fixed>
     <bioloid_F3_revolute parent="arm_shoulder_pan_servo_link" name="arm_shoulder_pan" color="${color}"
-                         vlimit="${joints_vlimit}" llimit="-2.62" ulimit="2.62">
+                         vlimit="${joints_vlimit}" llimit="${pan_llimit}" ulimit="${pan_ulimit}">
       <origin xyz="0 ${AX12_WIDTH/2} 0" rpy="${-M_PI/2} ${M_PI/2} ${M_PI}"/>
     </bioloid_F3_revolute>
 
@@ -51,7 +50,7 @@
       <origin xyz="0 0 ${-AX12_HEIGHT-F10_HEIGHT+0.001}" rpy="0 ${M_PI} 0"/>
     </dynamixel_AX12_fixed>
     <bioloid_F4_revolute parent="arm_shoulder_lift_servo_link" name="arm_shoulder_lift" color="${color}"
-                         vlimit="${joints_vlimit}" llimit="-2.21" ulimit="2.16">
+                         vlimit="${joints_vlimit}" llimit="${shoulder_llimit}" ulimit="${shoulder_ulimit}">
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </bioloid_F4_revolute>
     <bioloid_F10_fixed parent="arm_shoulder_lift_link" name="arm_shoulder_F10_0" color="${color}">
@@ -72,7 +71,7 @@
       <origin xyz="0 0 ${-AX12_HEIGHT-F10_HEIGHT+0.001}" rpy="0 ${M_PI} 0"/>
     </dynamixel_AX12_fixed>
     <bioloid_F4_revolute parent="arm_elbow_flex_servo_link" name="arm_elbow_flex" color="${color}"
-                         vlimit="${joints_vlimit}" llimit="-2.42" ulimit="2.38">
+                         vlimit="${joints_vlimit}" llimit="${elbow_llimit}" ulimit="${elbow_ulimit}">
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </bioloid_F4_revolute>
     <bioloid_F10_fixed parent="arm_elbow_flex_link" name="arm_elbow_F10_0" color="${color}">
@@ -93,14 +92,12 @@
       <origin xyz="0 0 ${-AX12_HEIGHT-F10_HEIGHT+0.001}" rpy="0 ${M_PI} 0"/>
     </dynamixel_AX12_fixed>
     <bioloid_F2_revolute parent="arm_wrist_flex_servo_link" name="arm_wrist_flex" color="${color}"
-                         vlimit="${joints_vlimit}" llimit="-1.72" ulimit="1.68">
+                         vlimit="${joints_vlimit}" llimit="${wrist_llimit}" ulimit="${wrist_ulimit}">
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </bioloid_F2_revolute>
-    <bioloid_F3_fixed parent="arm_wrist_flex_link" name="arm_wrist_F3_0" color="${color}">
-      <origin xyz="0 0.016 ${F2_HEIGHT}" rpy="0 ${M_PI} ${-M_PI/2}"/>
-    </bioloid_F3_fixed>
 
-  <!-- Gripper -->
+
+  <!-- gripper - Load either Turtlebot gripper or Pincher Gripper -->
   <xacro:if value="${pincher_gripper}">
   <xacro:include filename="$(find turtlebot_arm_description)/urdf/pincher_gripper.xacro"/>
   </xacro:if>
