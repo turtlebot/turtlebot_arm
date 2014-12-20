@@ -4,12 +4,10 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /MotionPlanning1
-        - /MotionPlanning1/Scene Robot1
-        - /Axes1
-      Splitter Ratio: 0.74256
-    Tree Height: 370
+        - /MotionPlanning1/Scene Geometry1
+        - /DepthCloud1/Auto Size1
+      Splitter Ratio: 0.408316
+    Tree Height: 411
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -148,17 +146,12 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          gripper_active2_link:
+          gripper_active_finger_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
           gripper_active_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          gripper_finger_base_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -172,7 +165,17 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-        Loop Animation: true
+          gripper_static_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          gripper_static_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+        Loop Animation: false
         Robot Alpha: 0.5
         Show Robot Collision: false
         Show Robot Visual: true
@@ -193,15 +196,15 @@ Visualization Manager:
         Interactive Marker Size: 0
         Joint Violation Color: 255; 0; 255
         Planning Group: arm
-        Query Goal State: false
-        Query Start State: false
+        Query Goal State: true
+        Query Start State: true
         Show Workspace: false
         Start State Alpha: 1
         Start State Color: 0; 255; 0
       Planning Scene Topic: /move_group/monitored_planning_scene
       Robot Description: robot_description
       Scene Geometry:
-        Scene Alpha: 1
+        Scene Alpha: 0.9
         Scene Color: 50; 230; 50
         Scene Display Time: 0.2
         Show Scene Geometry: true
@@ -308,17 +311,12 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          gripper_active2_link:
+          gripper_active_finger_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
           gripper_active_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          gripper_finger_base_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -332,20 +330,104 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          gripper_static_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          gripper_static_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
         Robot Alpha: 0.5
         Show Robot Collision: false
         Show Robot Visual: true
       Value: true
-    - Class: rviz/Axes
+    - Alpha: 1
+      Axes Length: 0.1
+      Axes Radius: 0.01
+      Class: rviz/Pose
+      Color: 220; 220; 220
       Enabled: true
-      Length: 1
-      Name: Axes
-      Radius: 0.01
-      Reference Frame: <Fixed Frame>
+      Head Length: 0.02
+      Head Radius: 0.02
+      Name: Pick/Place Pose
+      Shaft Length: 0.08
+      Shaft Radius: 0.01
+      Shape: Axes
+      Topic: /target_pose
       Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 71; 255; 15
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.005
+      Style: Flat Squares
+      Topic: /camera/depth_registered/points
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Auto Size:
+        Auto Size Factor: 1
+        Value: true
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/DepthCloud
+      Color: 255; 255; 255
+      Color Image Topic: /camera/rgb/image_color
+      Color Transformer: RGB8
+      Color Transport Hint: raw
+      Decay Time: 0
+      Depth Map Topic: /camera/depth_registered/image_raw
+      Depth Map Transport Hint: raw
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: DepthCloud
+      Occlusion Compensation:
+        Occlusion Time-Out: 30
+        Value: false
+      Position Transformer: XYZ
+      Queue Size: 5
+      Selectable: true
+      Size (Pixels): 3
+      Style: Flat Squares
+      Topic Filter: true
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
   Enabled: true
   Global Options:
-    Background Color: 130; 145; 158
+    Background Color: 48; 48; 48
     Fixed Frame: base_link
     Frame Rate: 30
   Name: root
@@ -357,148 +439,37 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/FPS
+      Class: rviz/XYOrbit
+      Distance: 2.9965
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: 0.113567
+        Y: 0.10592
+        Z: 2.23518e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: -0.00519946
-      Position:
-        X: 0.692843
-        Y: 0.180305
-        Z: 0.5812
+      Pitch: 0.0052029
       Target Frame: base_link
-      Value: FPS (rviz)
-      Yaw: 3.55838
-    Saved:
-      - Class: rviz/FPS
-        Enable Stereo Rendering:
-          Stereo Eye Separation: 0.06
-          Stereo Focal Distance: 1
-          Swap Stereo Eyes: false
-          Value: false
-        Name: ortho
-        Near Clip Distance: 0.01
-        Pitch: 1.1148
-        Position:
-          X: 0.156042
-          Y: 0.107013
-          Z: 0.917143
-        Target Frame: base_link
-        Value: FPS (rviz)
-        Yaw: 3.59836
-      - Class: rviz/FPS
-        Enable Stereo Rendering:
-          Stereo Eye Separation: 0.06
-          Stereo Focal Distance: 1
-          Swap Stereo Eyes: false
-          Value: false
-        Name: close
-        Near Clip Distance: 0.01
-        Pitch: 0.224801
-        Position:
-          X: 0.198339
-          Y: 0.00439326
-          Z: 0.796516
-        Target Frame: base_link
-        Value: FPS (rviz)
-        Yaw: 2.87836
-      - Class: rviz/FPS
-        Enable Stereo Rendering:
-          Stereo Eye Separation: 0.06
-          Stereo Focal Distance: 1
-          Swap Stereo Eyes: false
-          Value: false
-        Name: top
-        Near Clip Distance: 0.01
-        Pitch: 0.649797
-        Position:
-          X: 0.291463
-          Y: -0.147689
-          Z: 0.893905
-        Target Frame: base_link
-        Value: FPS (rviz)
-        Yaw: 2.40839
-      - Class: rviz/FPS
-        Enable Stereo Rendering:
-          Stereo Eye Separation: 0.06
-          Stereo Focal Distance: 1
-          Swap Stereo Eyes: false
-          Value: false
-        Name: greeny
-        Near Clip Distance: 0.01
-        Pitch: 0.874797
-        Position:
-          X: 0.220832
-          Y: 0.0549378
-          Z: 0.904243
-        Target Frame: base_link
-        Value: FPS (rviz)
-        Yaw: 3.14339
-      - Class: rviz/FPS
-        Enable Stereo Rendering:
-          Stereo Eye Separation: 0.06
-          Stereo Focal Distance: 1
-          Swap Stereo Eyes: false
-          Value: false
-        Name: side
-        Near Clip Distance: 0.01
-        Pitch: 0.249801
-        Position:
-          X: 0.0889033
-          Y: 0.195682
-          Z: 0.773869
-        Target Frame: base_link
-        Value: FPS (rviz)
-        Yaw: 4.7584
-      - Class: rviz/FPS
-        Enable Stereo Rendering:
-          Stereo Eye Separation: 0.06
-          Stereo Focal Distance: 1
-          Swap Stereo Eyes: false
-          Value: false
-        Name: side2
-        Near Clip Distance: 0.01
-        Pitch: 0.234801
-        Position:
-          X: 0.0179381
-          Y: 0.125227
-          Z: 0.773889
-        Target Frame: base_link
-        Value: FPS (rviz)
-        Yaw: 5.38339
-      - Class: rviz/FPS
-        Enable Stereo Rendering:
-          Stereo Eye Separation: 0.06
-          Stereo Focal Distance: 1
-          Swap Stereo Eyes: false
-          Value: false
-        Name: FPS
-        Near Clip Distance: 0.01
-        Pitch: 1.0648
-        Position:
-          X: -0.00126341
-          Y: 0.0265128
-          Z: 0.943512
-        Target Frame: base_link
-        Value: FPS (rviz)
-        Yaw: 6.18154
+      Value: XYOrbit (rviz)
+      Yaw: 4.66496
+    Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 962
+  Height: 990
   Help:
     collapsed: false
   Hide Left Dock: false
   Hide Right Dock: false
   Motion Planning:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000002a20000037cfc0200000005fb000000100044006900730070006c006100790073010000002800000207000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a0056006900650077007301000002350000016f000000b000fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e006700000001f1000001f50000018a00ffffff000003b10000037c00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000002300000038efc0200000005fb000000100044006900730070006c00610079007301000000330000022c000000d801000005fb0000000800480065006c00700000000342000000bb0000007101000005fb0000000a0056006900650077007300000003b0000000b0000000ab01000005fb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e006701000002620000015f00000156010000050000054d0000038e00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
-  Width: 1625
-  X: 159
-  Y: 14
+  Width: 1920
+  X: 0
+  Y: 35
