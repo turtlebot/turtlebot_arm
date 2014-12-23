@@ -16,7 +16,7 @@
     <color rgba="0.22 0.32 0.14 1.0"/>
   </material>
 
-  <xacro:macro name="turtlebot_arm" params="parent color pincher_gripper gripper_color *origin">
+  <xacro:macro name="turtlebot_arm" params="parent color pincher_gripper turtlebot_gripper gripper_color *origin">
     <link name="arm_base_link"/>
     <joint name="arm_base_joint" type="fixed">
       <insert_block name="origin"/>
@@ -96,14 +96,13 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </bioloid_F2_revolute>
 
-
   <!-- gripper - Load either Turtlebot gripper or Pincher Gripper -->
   <xacro:if value="${pincher_gripper}">
   <xacro:include filename="$(find turtlebot_arm_description)/urdf/pincher_gripper.xacro"/>
   </xacro:if>
-  <xacro:unless value="${pincher_gripper}">
+  <xacro:if value="${turtlebot_gripper}">
   <xacro:include filename="$(find turtlebot_arm_description)/urdf/turtlebot_gripper.xacro"/>
-  </xacro:unless>
+  </xacro:if>
 
   </xacro:macro>
 

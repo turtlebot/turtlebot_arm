@@ -23,7 +23,7 @@
     <link name="base_link"/>
 
     <!-- Turtlebot arm macro -->
-    <turtlebot_arm parent="base_link" color="Gray" gripper_color="Gray"   pincher_gripper="true">
+    <turtlebot_arm parent="base_link" color="Gray" gripper_color="Gray"   pincher_gripper="true" turtlebot_gripper="false">
       <!-- Place the "floating" arm at the location it should be if mounted on a turtlebot,
            as pick and place and other demos assume this location -->
       <origin xyz="0.1 0.03 0.435"/>

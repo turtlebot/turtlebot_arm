@@ -39,36 +39,30 @@ from moveit_msgs.msg import MoveItErrorCodes
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from tf.transformations import quaternion_from_euler
 from copy import deepcopy
-from os import getenv
 
 GROUP_NAME_ARM = 'arm'
 GROUP_NAME_GRIPPER = 'gripper'
 
 GRIPPER_FRAME = 'gripper_link'
-
-# Define measurements for open gripper, etc.
-# Original Turtlebot Arm: turtlebot_,  PhantomX Pincher Arm: pincher_
-grips = {'turtlebot_gripper_opened' : [0.040],'turtlebot_gripper_closed' : [0.001],
-'turtlebot_gripper_neutral' : [0.028], 'turtlebot_gripper_overtighten' : 0.002,
-'pincher_gripper_opened' : [0.031],'pincher_gripper_closed' : [0.002],
-'pincher_gripper_neutral' : [0.015],'pincher_gripper_overtighten' : 0.001}
-
 GRIPPER_JOINT_NAMES = ['gripper_joint']
-
 GRIPPER_EFFORT = [1.0]
+GRIPPER_PARAM = '/gripper_controller'
 
 REFERENCE_FRAME = '/base_link'
 ARM_BASE_FRAME = '/arm_base_link'
 
 class MoveItDemo:
-    def __init__(self, arm_type):
+    def __init__(self):
         # Initialize the move_group API
         moveit_commander.roscpp_initialize(sys.argv)
 
         rospy.init_node('moveit_demo')
-        arm_full = arm_type + "_gripper_"     # Full format: turtlebot_gripper_
-        self.arm_type = arm_type
-        rospy.loginfo("Arm:" + arm_type)
+               
+        self.gripper_opened = [rospy.get_param(GRIPPER_PARAM + "/max_opening") ]
+        self.gripper_closed = [rospy.get_param(GRIPPER_PARAM + "/min_opening") ]
+        self.gripper_neutral = [rospy.get_param(GRIPPER_PARAM + "/neutral") ]
+        
+        self.gripper_tighten = rospy.get_param(GRIPPER_PARAM + "/tighten") 
 
         # We need a tf listener to convert poses into arm reference base
         self.tf_listener = tf.TransformListener()
@@ -145,22 +139,22 @@ class MoveItDemo:
         rospy.sleep(2)
 
         # Move the gripper to the closed position
-        rospy.loginfo("Set Gripper: Close " + str(grips[arm_full+"closed"]) )
-        gripper.set_joint_value_target(grips[arm_full+"closed"])   
+        rospy.loginfo("Set Gripper: Close " + str(self.gripper_closed ) )
+        gripper.set_joint_value_target(self.gripper_closed)   
         if gripper.go() != True:
             rospy.logwarn("  Go failed")
         rospy.sleep(2)
         
         # Move the gripper to the neutral position
-        rospy.loginfo("Set Gripper: Neutral " + str(grips[arm_full+"neutral"]))
-        gripper.set_joint_value_target(grips[arm_full+"neutral"])
+        rospy.loginfo("Set Gripper: Neutral " + str(self.gripper_neutral) )
+        gripper.set_joint_value_target(self.gripper_neutral)
         if gripper.go() != True:
             rospy.logwarn("  Go failed")
         rospy.sleep(2)
 
         # Move the gripper to the open position
-        rospy.loginfo("Set Gripper: Open " +  str(grips[arm_full+"opened"]))
-        gripper.set_joint_value_target(grips[arm_full+"opened"])
+        rospy.loginfo("Set Gripper: Open " +  str(self.gripper_opened))
+        gripper.set_joint_value_target(self.gripper_opened)
         if gripper.go() != True:
             rospy.logwarn("  Go failed")
         rospy.sleep(2)
@@ -241,7 +235,7 @@ class MoveItDemo:
         grasp_pose.pose.position.y -= target_size[1] / 2.0
 
         # Generate a list of grasps
-        grasps = self.make_grasps(grasp_pose, [target_id], [target_size[1] - grips[arm_full+"overtighten"]])
+        grasps = self.make_grasps(grasp_pose, [target_id], [target_size[1] - self.gripper_tighten])
 
         # Track success/failure and number of attempts for pick operation
         result = MoveItErrorCodes.FAILURE
@@ -249,7 +243,7 @@ class MoveItDemo:
 
         # Repeat until we succeed or run out of attempts
         while result != MoveItErrorCodes.SUCCESS and n_attempts < max_pick_attempts:
-            rospy.loginfo("Pick attempt: " + str(n_attempts))
+            rospy.loginfo("Pick attempt #" + str(n_attempts))
             for grasp in grasps:
                 # Publish the grasp poses so they can be viewed in RViz
                 self.gripper_pose_pub.publish(grasp.grasp_pose)
@@ -264,7 +258,7 @@ class MoveItDemo:
 
         # If the pick was successful, attempt the place operation
         if result == MoveItErrorCodes.SUCCESS:
-            rospy.loginfo("  Pick: Done.")
+            rospy.loginfo("  Pick: Done!")
             # Generate valid place poses
             places = self.make_places(place_pose)
 
@@ -273,7 +267,7 @@ class MoveItDemo:
 
             # Repeat until we succeed or run out of attempts
             while not success and n_attempts < max_place_attempts:
-                rospy.loginfo("Place attempt: " + str(n_attempts))
+                rospy.loginfo("Place attempt #" + str(n_attempts))
                 for place in places:
                     # Publish the place poses so they can be viewed in RViz
                     self.gripper_pose_pub.publish(place)
@@ -289,18 +283,19 @@ class MoveItDemo:
             if not success:
                 rospy.logerr("Place operation failed after " + str(n_attempts) + " attempts.")
             else:
-                rospy.loginfo("   Place: Done.")
+                rospy.loginfo("  Place: Done!")
         else:
             rospy.logerr("Pick operation failed after " + str(n_attempts) + " attempts.")
 
         # Return the arm to the "resting" pose stored in the SRDF file (passing through right_up)
         arm.set_named_target('right_up')
         arm.go()
+        
         arm.set_named_target('resting')
         arm.go()
 
         # Open the gripper to the neutral position
-        gripper.set_joint_value_target(grips[arm_full+"neutral"])
+        gripper.set_joint_value_target(self.gripper_neutral)
         gripper.go()
 
         rospy.sleep(1)
@@ -362,7 +357,7 @@ class MoveItDemo:
 
         # Set the pre-grasp and grasp postures appropriately;
         # grasp_opening should be a bit smaller than target width
-        g.pre_grasp_posture = self.make_gripper_posture(grips[self.arm_type+"_gripper_opened"])
+        g.pre_grasp_posture = self.make_gripper_posture(self.gripper_opened)
         g.grasp_posture = self.make_gripper_posture(grasp_opening)
 
         # Set the approach and retreat parameters as desired
@@ -502,5 +497,4 @@ class MoveItDemo:
         self.scene_pub.publish(p)
 
 if __name__ == "__main__":
-    MoveItDemo(getenv('TURTLEBOT_ARM1', "turtlebot") )
-
+    MoveItDemo()
