@@ -1,5 +1,12 @@
 <launch>
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/arm.urdf.xacro'"/>
+  <!-- To use, first set Environment variable TURTLEBOT_ARM1 to either:
+   turtlebot or pincher (for Trossen PhantomX Pincher)  
+   NOTE: passing arm_type as argument NOT yet fully supported! -->
+  
+  <arg name="simulation" default="false"/>
+  <arg name="arm_type" default="$(optenv TURTLEBOT_ARM1 turtlebot)"/>
+
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/$(arg arm_type)_arm.urdf.xacro'"/>
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
     <param name="use_gui" value="True"/>
