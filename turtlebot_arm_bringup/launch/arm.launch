@@ -1,27 +1,21 @@
 <launch>
+  <!-- To use, first set Environment variable TURTLEBOT_ARM1 to either:
+   turtlebot or pincher (for Trossen PhantomX Pincher)  
+   NOTE: passing arm_type as argument NOT yet fully supported! -->
+   
   <arg name="simulation" default="false"/>
+  <arg name="arm_type" default="$(optenv TURTLEBOT_ARM1 turtlebot)"/>
 
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/arm.urdf.xacro'"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/$(arg arm_type)_arm.urdf.xacro'"/>
   <node name="robot_state_pub" pkg="robot_state_publisher" type="robot_state_publisher"/>
   <node name="fake_joint_pub" pkg="turtlebot_arm_bringup" type="fake_joint_pub.py"/>
 
   <node name="arbotix" pkg="arbotix_python" type="arbotix_driver" output="screen">
-    <rosparam file="$(find turtlebot_arm_bringup)/config/arm.yaml" command="load"/>
+    <rosparam file="$(find turtlebot_arm_bringup)/config/$(arg arm_type)_arm.yaml" command="load"/>
     <param name="sim" value="$(arg simulation)"/>
   </node>
 
-  <node name="gripper_controller" pkg="arbotix_controllers" type="gripper_controller">
-    <!--
-     Gripper controller parameters:
-     more than the physical properties of the gripper, these values are an ad-hoc configuration
-     that works with arbotix_ros/gripper_controller/OneSideGripperModel
-      -->
-    <param name="model" value="singlesided"/>
-    <param name="invert" value="true"/>
-    <param name="center" value="0.07"/>
-    <param name="pad_width" value="0.025"/>
-    <param name="finger_length" value="0.03"/>
-    <param name="min_opening" value="0.0"/>
-    <param name="max_opening" value="0.054"/>
+ <node name="gripper_controller" pkg="arbotix_controllers" type="gripper_controller" output="screen">
+       <rosparam file="$(find turtlebot_arm_bringup)/config/$(arg arm_type)_gripper.yaml" command="load" />
   </node>
 </launch>

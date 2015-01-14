@@ -1,0 +1,10 @@
+source: turtlebot_gripper.yaml
+model:  singlesided
+invert: true
+pad_width: 0.0025
+min_opening: 0.0
+max_opening: 0.054
+neutral: 0.028
+tighten: 0.002
+center : 0.07
+finger_length : 0.03
