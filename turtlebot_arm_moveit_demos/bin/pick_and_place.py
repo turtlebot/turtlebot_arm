@@ -57,12 +57,13 @@ class MoveItDemo:
         moveit_commander.roscpp_initialize(sys.argv)
 
         rospy.init_node('moveit_demo')
-               
-        self.gripper_opened = [rospy.get_param(GRIPPER_PARAM + "/max_opening") ]
-        self.gripper_closed = [rospy.get_param(GRIPPER_PARAM + "/min_opening") ]
-        self.gripper_neutral = [rospy.get_param(GRIPPER_PARAM + "/neutral") ]
+
+        self.gripper_opened = [rospy.get_param(GRIPPER_PARAM + "/max_opening") - 0.001]
+        self.gripper_closed = [rospy.get_param(GRIPPER_PARAM + "/min_opening") + 0.001 ]
+        self.gripper_neutral = [rospy.get_param(GRIPPER_PARAM + "/neutral",
+                                                (self.gripper_opened[0] + self.gripper_closed[0])/2.0) ]
         
-        self.gripper_tighten = rospy.get_param(GRIPPER_PARAM + "/tighten") 
+        self.gripper_tighten = rospy.get_param(GRIPPER_PARAM + "/tighten", 0.0) 
 
         # We need a tf listener to convert poses into arm reference base
         self.tf_listener = tf.TransformListener()
