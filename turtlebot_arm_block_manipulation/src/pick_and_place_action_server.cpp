@@ -91,7 +91,7 @@ public:
     arm_.setPoseReferenceFrame(arm_link);
 
     // Allow some leeway in position (meters) and orientation (radians)
-    arm_.setGoalOrientationTolerance(0.001);
+    arm_.setGoalPositionTolerance(0.001);
     arm_.setGoalOrientationTolerance(0.1);
 
     // Allow replanning to increase the odds of a solution
