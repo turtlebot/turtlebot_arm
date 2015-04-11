@@ -60,16 +60,22 @@ private:
   moveit::planning_interface::MoveGroup arm_;
   moveit::planning_interface::MoveGroup gripper_;
 
-  // Parameters from goal
+  // Pick and place parameters
   std::string arm_link;
   double gripper_open;
   double gripper_closed;
+  double attach_time;
+  double detach_time;
   double z_up;
 
 public:
   PickAndPlaceServer(const std::string name) :
     nh_("~"), as_(name, false), action_name_(name), arm_("arm"), gripper_("gripper")
   {
+    // Read specific pick and place parameters
+    nh_.param("grasp_attach_time", attach_time, 0.8);
+    nh_.param("grasp_detach_time", detach_time, 0.6);
+
     // Register the goal and feedback callbacks
     as_.registerGoalCallback(boost::bind(&PickAndPlaceServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&PickAndPlaceServer::preemptCB, this));
@@ -141,7 +147,7 @@ public:
     /* close gripper */
     if (setGripper(gripper_closed) == false)
       return;
-    ros::Duration(0.8).sleep(); // ensure that gripper properly grasp the cube before lifting the arm
+    ros::Duration(attach_time).sleep(); // ensure that gripper properly grasp the cube before lifting the arm
 
     /* go up */
     target.position.z = z_up;
@@ -162,7 +168,7 @@ public:
     /* open gripper */
     if (setGripper(gripper_open) == false)
       return;
-    ros::Duration(0.6).sleep(); // ensure that gripper properly release the cube before lifting the arm
+    ros::Duration(detach_time).sleep(); // ensure that gripper properly release the cube before lifting the arm
 
     /* go up */
     target.position.z = z_up;
