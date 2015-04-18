@@ -90,6 +90,8 @@ class MoveItDemo:
         end_effector_link = arm.get_end_effector_link()
 
         # Allow some leeway in position (meters) and orientation (radians)
+        # USELESS; do not work on pick and place! Explained on this issue:
+        # https://github.com/ros-planning/moveit_ros/issues/577
         arm.set_goal_position_tolerance(0.04)
         arm.set_goal_orientation_tolerance(0.1)
 
@@ -449,6 +451,8 @@ class MoveItDemo:
                     # Note that we subtract the yaw we calculated for pick, as the picked object "carries"
                     # with him the orientation of the arm at pickup time. More details in this moveit-users
                     # group thread:  https://groups.google.com/forum/#!topic/moveit-users/-Eie-wLDbu0 
+                    # EDIT: I hacked moveit_core/kinematic_constraints/src/utils.cpp line 178 to remove this limitation
+                    # but is horrible trick!
     
                     # Create a quaternion from the Euler angles
                     q = quaternion_from_euler(0, pitch, yaw)
