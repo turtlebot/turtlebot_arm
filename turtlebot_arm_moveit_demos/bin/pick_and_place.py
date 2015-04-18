@@ -58,8 +58,8 @@ class MoveItDemo:
 
         rospy.init_node('moveit_demo')
 
-        self.gripper_opened = [rospy.get_param(GRIPPER_PARAM + "/max_opening", 0.05) - 0.001]
-        self.gripper_closed = [rospy.get_param(GRIPPER_PARAM + "/min_opening", 0.0) + 0.01]
+        self.gripper_opened = [rospy.get_param(GRIPPER_PARAM + "/max_opening") - 0.001]
+        self.gripper_closed = [rospy.get_param(GRIPPER_PARAM + "/min_opening") + 0.001]
         self.gripper_neutral = [rospy.get_param(GRIPPER_PARAM + "/neutral",
                                                 (self.gripper_opened[0] + self.gripper_closed[0])/2.0) ]
         
@@ -380,7 +380,7 @@ class MoveItDemo:
         y = target_pose_arm_ref.pose.position.y
 
         self.pick_yaw = atan2(y, x)   # check in make_places method why we store the calculated yaw
-        yaw_vals = [self.pick_yaw]
+        yaw_vals = [0, 0.1,-0.1, self.pick_yaw]
 
         # A list to hold the grasps
         grasps = []
