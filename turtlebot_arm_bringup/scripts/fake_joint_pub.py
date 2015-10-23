@@ -14,5 +14,5 @@ msg.velocity = [0.0 for name in msg.name]
 while not rospy.is_shutdown():
     msg.header.stamp = rospy.Time.now()
     p.publish(msg)
-    rospy.sleep(0.1)
+    rospy.sleep(0.05)
 
