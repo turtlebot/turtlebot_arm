@@ -1,0 +1,14 @@
+uint8 JOINT_STATE  = 1
+uint8 POSE_TARGET  = 2
+uint8 NAMED_TARGET = 3
+
+# target definition
+uint8 target_type
+
+# TODO  sensor_msgs/JointState joint_state
+# TODO  geometry_msgs/PoseStamped pose_target
+string named_target
+---
+#result definition
+---
+#feedback

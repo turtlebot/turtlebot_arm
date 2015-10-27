@@ -1,0 +1,12 @@
+#goal definition
+string frame
+float32 obj_size
+geometry_msgs/PoseArray obj_poses
+string[] obj_names
+---
+#result definition
+string obj_name
+geometry_msgs/Pose pick_pose
+geometry_msgs/Pose place_pose
+---
+#feedback

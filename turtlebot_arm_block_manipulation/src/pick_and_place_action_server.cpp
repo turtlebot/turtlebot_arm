@@ -235,21 +235,22 @@ private:
         return false;
       }
       // Pitch is 90 (vertical) at 10 cm from the arm base; the farther the target is, the closer to horizontal
-      // we point the gripper. Yaw is the direction to the target. We also try some random variations of both to
-      // increase the chances of successful planning.
-      double rp = M_PI_2 - std::asin((d - 0.1)/0.205); // 0.205 = arm's max reach - vertical pitch distance + ε
-      double ry = std::atan2(y, x);
+      // we point the gripper (0.205 = arm's max reach - vertical pitch distance + ε). Yaw is the direction to
+      // the target. We also try some random variations of both to increase the chances of successful planning.
+      // Roll is inverted with negative yaws so the arms doesn't make full turns when acting in different halfs
+      // of the working space.
+      double rp = M_PI_2 - std::asin((d - 0.1)/0.205) + attempts*fRand(-0.05, +0.05);
+      double ry = std::atan2(y, x) + attempts*fRand(-0.05, +0.05);
+      double rr = ry < 0.0 ? M_PI : 0.0;
 
-      tf::Quaternion q = tf::createQuaternionFromRPY(0.0,
-                                                     attempts*fRand(-0.05, +0.05) + rp,
-                                                     attempts*fRand(-0.05, +0.05) + ry);
+      tf::Quaternion q = tf::createQuaternionFromRPY(rr, rp, ry);
       tf::quaternionTFToMsg(q, modiff_target.pose.orientation);
 
       // Slightly increase z proportionally to pitch to avoid hitting the table with the lower gripper corner
       ROS_DEBUG("z increase:  %f  +  %f", modiff_target.pose.position.z, std::abs(std::cos(rp))/50.0);
       modiff_target.pose.position.z += std::abs(std::cos(rp))/50.0;
 
-      ROS_DEBUG("Set pose target [%.2f, %.2f, %.2f] [d: %.2f, p: %.2f, y: %.2f]", x, y, z, d, rp, ry);
+      ROS_DEBUG("Set pose target [%.2f, %.2f, %.2f] [d: %.2f, r: %.2f, p: %.2f, y: %.2f]", x, y, z, d, rr, rp, ry);
       target_pose_pub_.publish(modiff_target);
 
       if (arm_.setPoseTarget(modiff_target) == false)
