@@ -132,15 +132,15 @@ class MoveItDemo:
         scene.remove_attached_object(GRIPPER_FRAME, target_id)
 
         # Give the scene a chance to catch up
-#         rospy.sleep(1)
-# 
-#         # Start the arm in the "arm_up" pose stored in the SRDF file
-#         rospy.loginfo("Set Arm: right_up")
-#         arm.set_named_target('right_up')
-#         if arm.go() != True:
-#             rospy.logwarn("  Go failed")
-#         rospy.sleep(2)
-# 
+        rospy.sleep(1)
+ 
+        # Start the arm in the "arm_up" pose stored in the SRDF file
+        rospy.loginfo("Set Arm: right_up")
+        arm.set_named_target('right_up')
+        if arm.go() != True:
+            rospy.logwarn("  Go failed")
+        rospy.sleep(2)
+
         # Move the gripper to the closed position
         rospy.loginfo("Set Gripper: Close " + str(self.gripper_closed ) )
         gripper.set_joint_value_target(self.gripper_closed)   
@@ -328,21 +328,9 @@ class MoveItDemo:
         tp.effort = GRIPPER_EFFORT
 
         tp.time_from_start = rospy.Duration(0.0)
-        
-        #tp = copy.deepcopy(tp)
-#         tpf = JointTrajectoryPoint()
-# 
-#         # Assign the trajectory joint positions to the input positions
-#         tpf.positions = joint_positions
-# 
-#         # Set the gripper effort
-#         tpf.effort = GRIPPER_EFFORT
-# 
-#         tpf.time_from_start = rospy.Duration(3.0)
-#         
+
         # Append the goal point to the trajectory points
         t.points.append(tp)
-#         t.points.append(tpf)
 
         # Return the joint trajectory
         return t
