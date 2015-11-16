@@ -31,11 +31,14 @@
 #include <ros/ros.h>
 #include <tf/tf.h>
 
+#include <yocs_math_toolkit/common.hpp>
+
 #include <actionlib/server/simple_action_server.h>
 #include <turtlebot_arm_object_manipulation/PickAndPlaceAction.h>
 #include <turtlebot_arm_object_manipulation/MoveToTargetAction.h>
 
 #include <moveit_msgs/Grasp.h>
+#include <moveit_msgs/PlanningScene.h>
 #include <moveit/move_group_interface/move_group.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
@@ -57,7 +60,7 @@ private:
   turtlebot_arm_object_manipulation::PickAndPlaceGoalConstPtr goal_;
 
   ros::Publisher target_pose_pub_;
-  ros::Subscriber pick_and_place_sub_;
+  ros::Subscriber planning_scene_sub_;
 
   // Move groups to control arm and gripper with MoveIt!
   moveit::planning_interface::MoveGroup arm_;
@@ -65,6 +68,7 @@ private:
 
   // We use the planning_scene_interface::PlanningSceneInterface to manipulate the world
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
+  std::vector<moveit_msgs::AttachedCollisionObject> attached_collision_objs_;
 
   // Pick and place parameters
   std::string arm_link;
@@ -93,6 +97,8 @@ public:
     as_.registerPreemptCallback(boost::bind(&PickAndPlaceServer::preemptCB, this));
 
     as_.start();
+
+    planning_scene_sub_ = nh_.subscribe("/move_group/monitored_planning_scene", 1, &PickAndPlaceServer::sceneCB, this);
 
     target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/target_pose", 1, true);
   }
@@ -128,84 +134,26 @@ public:
     as_.setPreempted();
   }
 
-
-  std::string pose2str3D(const geometry_msgs::Pose& pose)
+  void sceneCB(const moveit_msgs::PlanningScene& scene)
   {
-    tf::Transform tf;
-    tf::poseMsgToTF(pose, tf);
-    double roll, pitch, yaw;
-    tf::Matrix3x3(tf.getRotation()).getRPY(roll, pitch, yaw);
-
-    char ___buffer___[100];
-    sprintf(___buffer___, "%.2f, %.2f, %.2f,  %.2f, %.2f, %.2f",
-            pose.position.x, pose.position.y, pose.position.z,
-            roll, pitch, yaw);
-    return std::string(___buffer___);
+    // Keep attached collision objects so we can subtract its pose from the place location poses
+    attached_collision_objs_ = scene.robot_state.attached_collision_objects;
   }
-
-//  0.17, -0.01, 0.04,  0.67, 0.84, 0.74
-//  0.17, -0.01, 0.04,  1.30, -1.16, 1.75
-//
-//
-//  0.18, -0.12, 0.05,  0.13,  1.00, -2.61
-//  0.18, -0.12, 0.05, -0.98, -0.29,  1.76
-//  0.18, -0.12, 0.05,  0.59, -0.88, -0.33
-//  0.18, -0.12, 0.05,  0.93, -0.47, -0.89
-//  0.18, -0.12, 0.05, -1.01, -0.12,  1.85
-//  0.18, -0.12, 0.05, -0.52,  0.92,  2.89
-
-
 
   bool pickAndPlace(const std::string& obj_name, const geometry_msgs::Pose& pick_pose,
                                                  const geometry_msgs::Pose& place_pose)
   {
-//    planning_scene_interface_. remove(std::vector<std::string>(1, co.id));
-//    scene.remove_attached_object(GRIPPER_FRAME, "block_1")
-    ROS_ERROR_STREAM(obj_name   << " object     " << arm_.getEndEffectorLink() << "   "<<arm_.getEndEffector() << "   " << planning_scene_interface_.getKnownObjectNames(false).size());
-
-    std::map<std::string, geometry_msgs::Pose> ao_poses = planning_scene_interface_.getObjectPoses(std::vector<std::string>(1, obj_name));
-    for (std::pair<std::string, geometry_msgs::Pose> ao_pose: ao_poses)
+    if (pick(obj_name, pick_pose) && place(obj_name, place_pose))
     {
-      ROS_ERROR_STREAM("BEFORE PICK   " << ao_pose.first << " object at " << pose2str3D(ao_pose.second) << "        "<< arm_.getEndEffectorLink() << "   "<<arm_.getEndEffector());
+      as_.setSucceeded(result_);
+      return true;
     }
 
+    // Ensure we don't retain any object attached to the gripper
+    arm_.detachObject(obj_name);
 
-    if ((pick(obj_name, pick_pose)))////////////////////// && (place(obj_name, place_pose)))
-    {
-      std::map<std::string, geometry_msgs::Pose> ao_poses = planning_scene_interface_.getObjectPoses(std::vector<std::string>(1, obj_name));
-      for (std::pair<std::string, geometry_msgs::Pose> ao_pose: ao_poses)
-      {
-        ROS_ERROR_STREAM("AFTER PICK    " << ao_pose.first << " object at " << pose2str3D(ao_pose.second) << "        "<< arm_.getEndEffectorLink() << "   "<<arm_.getEndEffector());
-      }
-      arm_.attachObject(obj_name, arm_.getEndEffectorLink());
-      ao_poses = planning_scene_interface_.getObjectPoses(std::vector<std::string>(1, obj_name));
-      for (std::pair<std::string, geometry_msgs::Pose> ao_pose: ao_poses)
-      {
-        ROS_ERROR_STREAM("AFTER ATTACH    " << ao_pose.first << " object at " << pose2str3D(ao_pose.second) << "        "<< arm_.getEndEffectorLink() << "   "<<arm_.getEndEffector());
-      }
-
-
-      if  (place(obj_name, place_pose))
-      {
-        std::map<std::string, geometry_msgs::Pose> ao_poses = planning_scene_interface_.getObjectPoses(std::vector<std::string>(1, obj_name));
-        for (std::pair<std::string, geometry_msgs::Pose> ao_pose: ao_poses)
-        {
-          ROS_ERROR_STREAM("AFTER PLACE    " << ao_pose.first << " object at " << pose2str3D(ao_pose.second) << "        "<< arm_.getEndEffectorLink() << "   "<<arm_.getEndEffector());
-        }
-        as_.setSucceeded(result_);
-        return true;
-      }
-    }
-//    else
-//    {
-//      std::map<std::string, geometry_msgs::Pose> ao_poses = planning_scene_interface_.getObjectPoses(std::vector<std::string>(1, obj_name));
-//      for (std::pair<std::string, geometry_msgs::Pose> ao_pose: ao_poses)
-//      {
-//        ROS_ERROR_STREAM(ao_pose.first << " object at " << pose2str3D(ao_pose.second));
-//      }
-      as_.setAborted(result_);
-      return false;
-//    }
+    as_.setAborted(result_);
+    return false;
   }
 
   bool pick(const std::string& obj_name, const geometry_msgs::Pose& pose)
@@ -242,14 +190,12 @@ public:
       g.grasp_pose = p;
 
       g.pre_grasp_approach.direction.vector.x = 0.5;
-      //g.pre_grasp_approach.direction.vector.z = -0.5;
       g.pre_grasp_approach.direction.header.frame_id = arm_.getEndEffectorLink();
       g.pre_grasp_approach.min_distance = 0.005;
       g.pre_grasp_approach.desired_distance = 0.1;
 
       g.post_grasp_retreat.direction.header.frame_id = arm_.getEndEffectorLink();
       g.post_grasp_retreat.direction.vector.x = -0.5;
-//      g.post_grasp_retreat.direction.vector.z = 0.5;
       g.post_grasp_retreat.min_distance = 0.005;
       g.post_grasp_retreat.desired_distance = 0.1;
 
@@ -297,18 +243,34 @@ public:
         return false;
       }
 
+      if (attached_collision_objs_.size() > 0)
+      {
+        // MoveGroup::place will transform the provided place pose with the attached body pose, so the object retains
+        // the orientation it had when picked. However, with our 4-dofs arm this is infeasible (and also we don't care
+        // about the objects orientation), so we cancel this transformation. It is applied here:
+        // https://github.com/ros-planning/moveit_ros/blob/jade-devel/manipulation/pick_place/src/place.cpp#L64
+        // More details on this issue: https://github.com/ros-planning/moveit_ros/issues/577
+        geometry_msgs::Pose aco_pose = attached_collision_objs_[0].object.primitive_poses[0];
+
+        tf::Transform place_tf, aco_tf;
+        tf::poseMsgToTF(p.pose, place_tf);
+        tf::poseMsgToTF(aco_pose, aco_tf);
+        tf::poseTFToMsg(place_tf * aco_tf, p.pose);
+
+        ROS_DEBUG("Compensate place pose with the attached object pose [%s]. Results: [%s]",
+                  mtk::pose2str3D(aco_pose).c_str(), mtk::pose2str3D(p.pose).c_str());
+      }
+
       std::vector<moveit_msgs::PlaceLocation> loc;
       moveit_msgs::PlaceLocation l;
       l.place_pose = p;
 
       l.pre_place_approach.direction.vector.x = 0.5;
-//      l.pre_place_approach.direction.vector.z = -0.1;
       l.pre_place_approach.direction.header.frame_id = arm_.getEndEffectorLink();
       l.pre_place_approach.min_distance = 0.005;
       l.pre_place_approach.desired_distance = 0.1;
 
       l.post_place_retreat.direction.vector.x = -0.5;
-//      l.post_place_retreat.direction.vector.z = 0.1;
       l.post_place_retreat.direction.header.frame_id = arm_.getEndEffectorLink();
       l.post_place_retreat.min_distance = 0.005;
       l.post_place_retreat.desired_distance = 0.1;
@@ -357,9 +319,11 @@ public:
 private:
 
   /**
-   * Move arm to a target pose. Only position coordinates are taken into account; the
-   * orientation is calculated according to the direction and distance to the target.
-   * @param target Pose target to achieve
+   * Convert a simple 3D point into a valid pick/place pose. The orientation Euler angles
+   * are calculated as a function of the x and y coordinates, plus some random variations
+   * Increasing with the number of attempts to improve our chances of successful planning.
+   * @param target Pose target to validate
+   * @param attempt The actual attempts number
    * @return True of success, false otherwise
    */
   bool validateTargetPose(geometry_msgs::PoseStamped& target, int attempt = 0)
@@ -410,11 +374,11 @@ private:
     // the target. We also try some random variations of both to increase the chances of successful planning.
     // Roll is inverted with negative yaws so the arms doesn't make full turns when acting in different halfs
     // of the working space.
-    // XXX: We don't need to try different values of yaw as long as this issue is implemented (or hacked) :
-    //      https://github.com/ros-planning/moveit_ros/issues/577
     double rp = M_PI_2 - std::asin((d - 0.1)/0.205) + ((attempt%2)*2 - 1)*(std::ceil(attempt/2.0)*0.05);
     double ry = std::atan2(y, x);
-    double rr = ry < 0.0 ? M_PI : 0.0;
+    double rr = 0.0;///ry < 0.0 ? M_PI : 0.0;  NO!!!  IT IS IGNORED!!!
+//    if ((ry < 0.0 && ry >= -M_PI/2.0) || (ry >= M_PI/2.0))
+//      rr = M_PI;
     target.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(rr, rp, ry);
 
     // Slightly increase z proportionally to pitch to avoid hitting the table with the lower gripper corner and
@@ -425,8 +389,7 @@ private:
     target.pose.position.z += z_delta1;
     target.pose.position.z += z_delta2;
 
-    ROS_DEBUG("[pick and place] Set pose target [%.2f, %.2f, %.2f] [d: %.2f, r: %.2f, p: %.2f, y: %.2f]",
-              x, y, z, d, rr, rp, ry);
+    ROS_DEBUG("[pick and place] Set pose target [%s] [d: %.2f]", mtk::pose2str3D(target.pose).c_str(), d);
     target_pose_pub_.publish(target);
 
     return true;
