@@ -160,6 +160,8 @@ public:
   {
     ROS_INFO("[pick and place] Picking...");
 
+    // Create up to PICK_ATTEMPTS grasps with slightly different poses
+    std::vector<moveit_msgs::Grasp> grasps;
     for (int attempt = 0; attempt < PICK_ATTEMPTS; ++attempt)
     {
       geometry_msgs::PoseStamped p;
@@ -169,23 +171,7 @@ public:
       {
         return false;
       }
-///// TODO
-//        # Set and id for this grasp (simply needs to be uniq#ue)
-//        g.id = str(len(grasps))
-//
-//        # Set the allowed touch objects to the input list
-//        g.allowed_touch_objects = allowed_touch_objects
-//
-//        # Don't restrict contact force
-//        g.max_contact_force = 0
-//
-//        # Degrade grasp quality for increasing pitch angles
-//        g.grasp_quality = 1.0 - abs(pitch)
-//
-//        # Append the grasp to the list
-//        grasps.append(deepcopy(g))
 
-      std::vector<moveit_msgs::Grasp> grasps;
       moveit_msgs::Grasp g;
       g.grasp_pose = p;
 
@@ -211,6 +197,8 @@ public:
 
       g.allowed_touch_objects.push_back("table");
 
+      g.id = attempt;
+
       grasps.push_back(g);
 
       if (arm_.pick(obj_name, grasps))
@@ -232,7 +220,8 @@ public:
   {
     ROS_INFO("[pick and place] Placing...");
 
-    // place
+    // Create up to PLACE_ATTEMPTS place locations with slightly different poses
+    std::vector<moveit_msgs::PlaceLocation> locs;
     for (int attempt = 0; attempt < PLACE_ATTEMPTS; ++attempt)
     {
       geometry_msgs::PoseStamped p;
@@ -261,7 +250,6 @@ public:
                   mtk::pose2str3D(aco_pose).c_str(), mtk::pose2str3D(p.pose).c_str());
       }
 
-      std::vector<moveit_msgs::PlaceLocation> loc;
       moveit_msgs::PlaceLocation l;
       l.place_pose = p;
 
@@ -282,33 +270,15 @@ public:
 
       l.allowed_touch_objects.push_back("table");
 
-      loc.push_back(l);
+      l.id = attempt;
 
-      // add path constraints
-//      moveit_msgs::Constraints constr;
-//      constr.orientation_constraints.resize(1);
-//      moveit_msgs::OrientationConstraint &ocm = constr.orientation_constraints[0];
-//      ocm.link_name = "r_wrist_roll_link";
-//      ocm.header.frame_id = p.header.frame_id;
-//      ocm.orientation.x = 0.0;
-//      ocm.orientation.y = 0.0;
-//      ocm.orientation.z = 0.0;
-//      ocm.orientation.w = 1.0;
-//      ocm.absolute_x_axis_tolerance = 0.2;
-//      ocm.absolute_y_axis_tolerance = 0.2;
-//      ocm.absolute_z_axis_tolerance = M_PI;
-//      ocm.weight = 1.0;
-      //  group.setPathConstraints(constr);
-//      group.setPlannerId("RRTConnectkConfigDefault");
+      locs.push_back(l);
+    }
 
-
-      if (arm_.place(obj_name, loc))
-      {
-        ROS_INFO("[pick and place] Place successfully completed");
-        return true;
-      }
-      ros::Duration(2.0).sleep();
-      ros::spinOnce();
+    if (arm_.place(obj_name, locs))
+    {
+      ROS_INFO("[pick and place] Place successfully completed");
+      return true;
     }
 
     ROS_ERROR("[pick and place] Place failed after %d attempts", PLACE_ATTEMPTS);
@@ -359,10 +329,12 @@ private:
     double y = target.pose.position.y;
     double z = target.pose.position.z;
     double d = sqrt(x*x + y*y);
-    if (d > 0.3)
+    if (d > 0.24)
     {
-      // Maximum reachable distance by the turtlebot arm is 30 cm
-      ROS_ERROR("[pick and place] Target pose out of reach [%f > %f]", d, 0.3);
+      // Maximum reachable distance by the turtlebot arm is 30 cm, but above twenty something the arm makes
+      // strange and ugly contortions, and overcomes the reduced elbow lower limit we have to operate always
+      // with the same gripper orientation
+      ROS_ERROR("[pick and place] Target pose out of reach [%f > %f]", d, 0.24);
       return false;
     }
     // Pitch is 90 (vertical) at 10 cm from the arm base; the farther the target is, the closer to horizontal
@@ -372,13 +344,10 @@ private:
     // Pitch is 90 (vertical) at 10 cm from the arm base; the farther the target is, the closer to horizontal
     // we point the gripper (0.205 = arm's max reach - vertical pitch distance + ε). Yaw is the direction to
     // the target. We also try some random variations of both to increase the chances of successful planning.
-    // Roll is inverted with negative yaws so the arms doesn't make full turns when acting in different halfs
-    // of the working space.
+    // Roll is plainly ignored, as our arm lacks that dof.
     double rp = M_PI_2 - std::asin((d - 0.1)/0.205) + ((attempt%2)*2 - 1)*(std::ceil(attempt/2.0)*0.05);
-    double ry = std::atan2(y, x);
-    double rr = 0.0;///ry < 0.0 ? M_PI : 0.0;  NO!!!  IT IS IGNORED!!!
-//    if ((ry < 0.0 && ry >= -M_PI/2.0) || (ry >= M_PI/2.0))
-//      rr = M_PI;
+    double ry = std::atan2(y, x) + ((attempt%2)*2 - 1)*(std::ceil(attempt/2.0)*0.05);
+    double rr = 0.0;
     target.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(rr, rp, ry);
 
     // Slightly increase z proportionally to pitch to avoid hitting the table with the lower gripper corner and
