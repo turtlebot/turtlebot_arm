@@ -89,6 +89,8 @@ private:
   ros::Publisher block_pub_;
   ros::Publisher c_obj_pub_;
   ros::Publisher scene_pub_;
+  ros::Publisher clear_objs_pub_;
+  ros::Publisher clear_table_pub_;
 
   std::vector<geometry_msgs::Pose> table_poses_;
 
@@ -137,6 +139,11 @@ public:
 
     // Public planning scene changes
     scene_pub_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1, true);
+
+    clear_objs_pub_ =
+        nh_.advertise<object_recognition_msgs::RecognizedObjectArray>("/tabletop/recognized_object_array", 1, true);
+    clear_table_pub_ =
+        nh_.advertise<object_recognition_msgs::TableArray>("/tabletop/table_array", 1, true);
   }
 
   void goalCB()
@@ -235,6 +242,17 @@ public:
       addTable(table_poses_);
     else
       ROS_WARN("[object detection] No near-horizontal table detected!");
+
+    // Clear recognized objects and tables from RViz by publishing empty messages, so they don't
+    // mangle with interactive markers; shoddy... ORK visualizations should have expiration time
+    object_recognition_msgs::RecognizedObjectArray roa;
+    object_recognition_msgs::TableArray ta;
+
+    roa.header.frame_id = arm_link_;
+    ta.header.frame_id = arm_link_;
+
+    clear_objs_pub_.publish(roa);
+    clear_table_pub_.publish(ta);
 
     od_as_.setSucceeded(result_);
   }
