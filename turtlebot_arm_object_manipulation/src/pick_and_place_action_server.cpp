@@ -52,8 +52,6 @@ namespace turtlebot_arm_object_manipulation
 class PickAndPlaceServer
 {
 private:
-
-  ros::NodeHandle nh_;
   actionlib::SimpleActionServer<turtlebot_arm_object_manipulation::PickAndPlaceAction> as_;
   std::string action_name_;
 
@@ -87,34 +85,41 @@ private:
   const int PLACE_ATTEMPTS = PICK_ATTEMPTS;
 
 public:
-  PickAndPlaceServer(const std::string name,
-                     const moveit::planning_interface::MoveGroup& arm,
-                     const moveit::planning_interface::MoveGroup& gripper) :
-    nh_("~"), as_(name, false), action_name_(name), arm_(arm), gripper_(gripper)
+  PickAndPlaceServer(const std::string name) :
+    as_(name, false), action_name_(name), arm_("arm"), gripper_("gripper")
   {
+    ros::NodeHandle nh("~");
+
     // Read specific pick and place parameters
-    nh_.param("grasp_attach_time", attach_time, 0.8);
-    nh_.param("grasp_detach_time", detach_time, 0.6);
-    nh_.param("vertical_backlash", z_backlash, 0.01);
+    nh.param("grasp_attach_time", attach_time, 0.8);
+    nh.param("grasp_detach_time", detach_time, 0.6);
+    nh.param("vertical_backlash", z_backlash, 0.01);
 
     // Register the goal and feedback callbacks
     as_.registerGoalCallback(boost::bind(&PickAndPlaceServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&PickAndPlaceServer::preemptCB, this));
+
     as_.start();
 
     // We will clear the octomap and retry whenever a pick/place fails
-    clear_octomap_srv_ = nh_.serviceClient<std_srvs::Empty>("/clear_octomap");
+    clear_octomap_srv_ = nh.serviceClient<std_srvs::Empty>("/clear_octomap");
 
     // We subscribe to planning scene to keep track of attached/detached objects
-    planning_scene_sub_ = nh_.subscribe("/move_group/monitored_planning_scene", 1, &PickAndPlaceServer::sceneCB, this);
+    planning_scene_sub_ = nh.subscribe("/move_group/monitored_planning_scene", 1, &PickAndPlaceServer::sceneCB, this);
 
     // We publish the pick and place poses for debugging purposes
-    target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/target_pose", 1, true);
+    target_pose_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/target_pose", 1, true);
+  }
+
+  ~PickAndPlaceServer()
+  {
+    as_.shutdown();
   }
 
   void goalCB()
   {
     ROS_INFO("[pick and place] Received goal!");
+
     goal_ = as_.acceptNewGoal();
     arm_link = goal_->frame;
     gripper_open = goal_->gripper_open;
@@ -223,7 +228,6 @@ public:
       
       if (attempt == 1)
         clear_octomap_srv_.call(empty_srv_);
-      ros::spinOnce();
     }
 
     ROS_ERROR("[pick and place] Pick failed after %d attempts", PICK_ATTEMPTS);
@@ -295,16 +299,13 @@ public:
 
       if (attempt == 1)
         clear_octomap_srv_.call(empty_srv_);
-      ros::spinOnce();
     }
 
     ROS_ERROR("[pick and place] Place failed after %d attempts", PLACE_ATTEMPTS);
     return false;
   }
 
-
 private:
-
   /**
    * Convert a simple 3D point into a valid pick/place pose. The orientation Euler angles
    * are calculated as a function of the x and y coordinates, plus some random variations
@@ -395,8 +396,6 @@ private:
 class MoveToTargetServer
 {
 private:
-
-  ros::NodeHandle nh_;
   actionlib::SimpleActionServer<turtlebot_arm_object_manipulation::MoveToTargetAction> as_;
   std::string action_name_;
 
@@ -411,10 +410,8 @@ private:
   moveit::planning_interface::MoveGroup gripper_;
 
 public:
-  MoveToTargetServer(const std::string name,
-                     const moveit::planning_interface::MoveGroup& arm,
-                     const moveit::planning_interface::MoveGroup& gripper) :
-    nh_("~"), as_(name, false), action_name_(name), arm_(arm), gripper_(gripper)
+  MoveToTargetServer(const std::string name) :
+    as_(name, false), action_name_(name), arm_("arm"), gripper_("gripper")
   {
     // Register the goal and feedback callbacks
     as_.registerGoalCallback(boost::bind(&MoveToTargetServer::goalCB, this));
@@ -422,7 +419,13 @@ public:
 
     as_.start();
 
-    target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/target_pose", 1, true);
+    ros::NodeHandle nh("~");
+    target_pose_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/target_pose", 1, true);
+  }
+
+  ~MoveToTargetServer()
+  {
+    as_.shutdown();
   }
 
   void goalCB()
@@ -602,18 +605,16 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "pick_and_place_action_server");
 
+  // Create pick_and_place and move_to_target action servers
+  turtlebot_arm_object_manipulation::PickAndPlaceServer pnp_server("pick_and_place");
+  turtlebot_arm_object_manipulation::MoveToTargetServer mtt_server("move_to_target");
+
   // Setup an asynchronous spinner as the move groups operations need continuous spinning
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
-  // Move groups to control arm and gripper with MoveIt!
-  moveit::planning_interface::MoveGroup arm("arm");
-  moveit::planning_interface::MoveGroup gripper("gripper");
-
-  turtlebot_arm_object_manipulation::PickAndPlaceServer pnp_server("pick_and_place", arm, gripper);
-  turtlebot_arm_object_manipulation::MoveToTargetServer mtt_server("move_to_target", arm, gripper);
-  ros::spin();
-
+  ros::waitForShutdown();
   spinner.stop();
+
   return 0;
 }
