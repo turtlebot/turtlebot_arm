@@ -97,8 +97,7 @@ public:
     obj_poses_ = goal_->obj_poses;
     obj_names_ = goal_->obj_names;
     
-//    if (msg_)
-      addBlocks();
+    addBlocks();
   }
 
   void preemptCB()
@@ -178,7 +177,26 @@ public:
 
     return m;
   }
+  
+  // Make a label to show over the box
+  Marker makeLabel( InteractiveMarker &msg, float r, float g, float b )
+  {
+    Marker m;
 
+    m.type = Marker::TEXT_VIEW_FACING;
+    m.text = msg.name;
+    m.scale.x = msg.scale * 1.5;
+    m.scale.y = msg.scale * 1.5;
+    m.scale.z = msg.scale * 1.5;
+    m.color.r = r;
+    m.color.g = g;
+    m.color.b = b;
+    m.color.a = 0.8;
+
+    m.pose.position.z = msg.scale/2.0 + 0.025;
+
+    return m;
+  }
 
   void blocksCB(const geometry_msgs::PoseArrayConstPtr& msg)
   {
@@ -194,10 +212,10 @@ public:
     geometry_msgs::Pose block;
     bool active = as_.isActive();
 
-    for (unsigned int i=0; i < obj_poses_.poses.size(); i++)
+    for (unsigned int i = 0; i < obj_poses_.poses.size(); i++)
     {
       addBlock(obj_names_[i], obj_poses_.poses[i], i, active, obj_poses_.header.frame_id);
-      ROS_INFO("[interactive manipulation] Added %d blocks", i);
+      ROS_INFO("[interactive manipulation] Added block \"%s\"", obj_names_[i].c_str());
     }
 
     server_.applyChanges();
@@ -212,7 +230,6 @@ public:
     marker.scale = obj_size;
     marker.pose = pose;
     marker.name = name;
-    marker.description = name;
 
     InteractiveMarkerControl control;
     control.orientation.w = 1;
@@ -225,10 +242,10 @@ public:
       marker.controls.push_back( control );
     
     control.markers.push_back( makeBox(marker, .5, .5, .5) );
+    control.markers.push_back( makeLabel(marker, .5, .5, .5) );
     control.always_visible = true;
     marker.controls.push_back( control );
     
-
     server_.insert( marker );
     server_.setCallback( marker.name, boost::bind( &InteractiveManipulationServer::feedbackCb, this, _1 ));
   }

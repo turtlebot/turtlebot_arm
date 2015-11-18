@@ -95,11 +95,12 @@ public:
     // Register the goal and feedback callbacks
     as_.registerGoalCallback(boost::bind(&PickAndPlaceServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&PickAndPlaceServer::preemptCB, this));
-
     as_.start();
 
+    // We subscribe to planning scene to keep track of attached/detached objects
     planning_scene_sub_ = nh_.subscribe("/move_group/monitored_planning_scene", 1, &PickAndPlaceServer::sceneCB, this);
 
+    // We publish the pick and place poses for debugging purposes
     target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/target_pose", 1, true);
   }
 
@@ -200,16 +201,12 @@ public:
       g.id = attempt;
 
       grasps.push_back(g);
+    }
 
-      if (arm_.pick(obj_name, grasps))
-      {
-        ROS_INFO("[pick and place] Pick successfully completed");
-
-        ros::Duration(2.0).sleep();
-        return true;
-      }
-      ros::Duration(1.0).sleep();
-      ros::spinOnce();
+    if (arm_.pick(obj_name, grasps))
+    {
+      ROS_INFO("[pick and place] Pick successfully completed");
+      return true;
     }
 
     ROS_ERROR("[pick and place] Pick failed after %d attempts", PICK_ATTEMPTS);
@@ -298,31 +295,6 @@ private:
    */
   bool validateTargetPose(geometry_msgs::PoseStamped& target, int attempt = 0)
   {
-    // Pitch angles to try
-    // pitch_vals = [0, 0.1, -0.1, 0.2, -0.2, 0.4, -0.4]
-
-    // Yaw angles to try; given the limited dofs of turtlebot_arm, we must calculate the heading
-    // from arm base to the object to pick (first we must transform its pose to arm base frame)
-    // target_pose_arm_ref = self.tf_listener.transformPose(ARM_BASE_FRAME, initial_pose_stamped)
-//      double x = p.pose.position.x;
-//      double y = p.pose.position.y;
-//
-//      double yaw = atan2(y, x);   // check in make_places method why we store the calculated yaw
-//      p.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0.0, 1.0, atan2(y, x));
-//yaw_vals = [0, 0.1,-0.1, self.pick_yaw]
-//
-//# Generate a grasp for each pitch and yaw angle
-//for yaw in yaw_vals:
-//    for pitch in pitch_vals:
-//        # Create a quaternion from the Euler angles
-//        q = quaternion_from_euler(0, pitch, yaw)
-//
-//        # Set the grasp pose orientation accordingly
-//        g.grasp_pose.pose.orientation.x = q[0]
-//        g.grasp_pose.pose.orientation.y = q[1]
-//        g.grasp_pose.pose.orientation.z = q[2]
-//        g.grasp_pose.pose.orientation.w = q[3]
-
     target.header.frame_id = arm_link;
 
     double x = target.pose.position.x;
@@ -337,9 +309,6 @@ private:
       ROS_ERROR("[pick and place] Target pose out of reach [%f > %f]", d, 0.24);
       return false;
     }
-    // Pitch is 90 (vertical) at 10 cm from the arm base; the farther the target is, the closer to horizontal
-    // we point the gripper. Yaw is the direction to the target. We also try some random variations of both to
-    // increase the chances of successful planning.
 
     // Pitch is 90 (vertical) at 10 cm from the arm base; the farther the target is, the closer to horizontal
     // we point the gripper (0.205 = arm's max reach - vertical pitch distance + ε). Yaw is the direction to
@@ -397,8 +366,12 @@ private:
 };
 
 
-
-
+/**
+ * Action server providing more basic arm motions:
+ *  - move to a named target
+ *  - move to a joint state configuration
+ *  - move to a particular pose target
+ */
 class MoveToTargetServer
 {
 private:
@@ -458,16 +431,6 @@ public:
     {
       as_.setAborted(result_);
     }
-
-//    arm_.setNamedTarget(goal->named_target);
-//    arm_.setSupportSurfaceName("table");
-//
-//    // Allow some leeway in position (meters) and orientation (radians)
-//    arm_.setGoalPositionTolerance(0.001);
-//    arm_.setGoalOrientationTolerance(0.1);
-
-    // Allow replanning to increase the odds of a solution
-//    arm_.allowReplanning(true);
   }
 
   void preemptCB()
