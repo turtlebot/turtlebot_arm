@@ -33,6 +33,9 @@
 
 #include <yocs_math_toolkit/common.hpp>
 
+#include <std_srvs/Empty.h>
+#include <geometry_msgs/PoseArray.h>
+
 #include <actionlib/server/simple_action_server.h>
 #include <turtlebot_arm_object_manipulation/PickAndPlaceAction.h>
 #include <turtlebot_arm_object_manipulation/MoveToTargetAction.h>
@@ -42,7 +45,6 @@
 #include <moveit/move_group_interface/move_group.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
-#include <geometry_msgs/PoseArray.h>
 
 namespace turtlebot_arm_object_manipulation
 {
@@ -61,6 +63,9 @@ private:
 
   ros::Publisher target_pose_pub_;
   ros::Subscriber planning_scene_sub_;
+
+  std_srvs::Empty empty_srv_;
+  ros::ServiceClient clear_octomap_srv_;
 
   // Move groups to control arm and gripper with MoveIt!
   moveit::planning_interface::MoveGroup arm_;
@@ -96,6 +101,9 @@ public:
     as_.registerGoalCallback(boost::bind(&PickAndPlaceServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&PickAndPlaceServer::preemptCB, this));
     as_.start();
+
+    // We will clear the octomap and retry whenever a pick/place fails
+    clear_octomap_srv_ = nh_.serviceClient<std_srvs::Empty>("/clear_octomap");
 
     // We subscribe to planning scene to keep track of attached/detached objects
     planning_scene_sub_ = nh_.subscribe("/move_group/monitored_planning_scene", 1, &PickAndPlaceServer::sceneCB, this);
@@ -144,14 +152,20 @@ public:
   bool pickAndPlace(const std::string& obj_name, const geometry_msgs::Pose& pick_pose,
                                                  const geometry_msgs::Pose& place_pose)
   {
-    if (pick(obj_name, pick_pose) && place(obj_name, place_pose))
+    if (pick(obj_name, pick_pose))
     {
-      as_.setSucceeded(result_);
-      return true;
+      if (place(obj_name, place_pose))
+      {
+        as_.setSucceeded(result_);
+        return true;
+      }
+      else
+      {
+        // Ensure we don't retain any object attached to the gripper
+        arm_.detachObject(obj_name);
+        setGripper(gripper_open);
+      }
     }
-
-    // Ensure we don't retain any object attached to the gripper
-    arm_.detachObject(obj_name);
 
     as_.setAborted(result_);
     return false;
@@ -161,8 +175,7 @@ public:
   {
     ROS_INFO("[pick and place] Picking...");
 
-    // Create up to PICK_ATTEMPTS grasps with slightly different poses
-    std::vector<moveit_msgs::Grasp> grasps;
+    // Try up to PICK_ATTEMPTS grasps with slightly different poses
     for (int attempt = 0; attempt < PICK_ATTEMPTS; ++attempt)
     {
       geometry_msgs::PoseStamped p;
@@ -200,13 +213,17 @@ public:
 
       g.id = attempt;
 
-      grasps.push_back(g);
-    }
+      std::vector<moveit_msgs::Grasp> grasps(1, g);
 
-    if (arm_.pick(obj_name, grasps))
-    {
-      ROS_INFO("[pick and place] Pick successfully completed");
-      return true;
+      if (arm_.pick(obj_name, grasps))
+      {
+        ROS_INFO("[pick and place] Pick successfully completed");
+        return true;
+      }
+      
+      if (attempt == 1)
+        clear_octomap_srv_.call(empty_srv_);
+      ros::spinOnce();
     }
 
     ROS_ERROR("[pick and place] Pick failed after %d attempts", PICK_ATTEMPTS);
@@ -217,8 +234,7 @@ public:
   {
     ROS_INFO("[pick and place] Placing...");
 
-    // Create up to PLACE_ATTEMPTS place locations with slightly different poses
-    std::vector<moveit_msgs::PlaceLocation> locs;
+    // Try up to PLACE_ATTEMPTS place locations with slightly different poses
     for (int attempt = 0; attempt < PLACE_ATTEMPTS; ++attempt)
     {
       geometry_msgs::PoseStamped p;
@@ -269,13 +285,17 @@ public:
 
       l.id = attempt;
 
-      locs.push_back(l);
-    }
+      std::vector<moveit_msgs::PlaceLocation> locs(1, l);
 
-    if (arm_.place(obj_name, locs))
-    {
-      ROS_INFO("[pick and place] Place successfully completed");
-      return true;
+      if (arm_.place(obj_name, locs))
+      {
+        ROS_INFO("[pick and place] Place successfully completed");
+        return true;
+      }
+
+      if (attempt == 1)
+        clear_octomap_srv_.call(empty_srv_);
+      ros::spinOnce();
     }
 
     ROS_ERROR("[pick and place] Place failed after %d attempts", PLACE_ATTEMPTS);
@@ -301,12 +321,12 @@ private:
     double y = target.pose.position.y;
     double z = target.pose.position.z;
     double d = sqrt(x*x + y*y);
-    if (d > 0.24)
+    if (d > 0.26)
     {
       // Maximum reachable distance by the turtlebot arm is 30 cm, but above twenty something the arm makes
       // strange and ugly contortions, and overcomes the reduced elbow lower limit we have to operate always
       // with the same gripper orientation
-      ROS_ERROR("[pick and place] Target pose out of reach [%f > %f]", d, 0.24);
+      ROS_ERROR("[pick and place] Target pose out of reach [%f > %f]", d, 0.26);
       return false;
     }
 
