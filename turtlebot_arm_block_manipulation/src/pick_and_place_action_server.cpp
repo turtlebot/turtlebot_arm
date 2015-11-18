@@ -237,11 +237,10 @@ private:
       // Pitch is 90 (vertical) at 10 cm from the arm base; the farther the target is, the closer to horizontal
       // we point the gripper (0.205 = arm's max reach - vertical pitch distance + ε). Yaw is the direction to
       // the target. We also try some random variations of both to increase the chances of successful planning.
-      // Roll is inverted with negative yaws so the arms doesn't make full turns when acting in different halfs
-      // of the working space.
+      // Roll is simply ignored, as our arm lacks the proper dof.
       double rp = M_PI_2 - std::asin((d - 0.1)/0.205) + attempts*fRand(-0.05, +0.05);
       double ry = std::atan2(y, x) + attempts*fRand(-0.05, +0.05);
-      double rr = ry < 0.0 ? M_PI : 0.0;
+      double rr = 0.0;
 
       tf::Quaternion q = tf::createQuaternionFromRPY(rr, rp, ry);
       tf::quaternionTFToMsg(q, modiff_target.pose.orientation);
