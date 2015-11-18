@@ -40,6 +40,7 @@
 
 using namespace visualization_msgs;
 
+
 namespace turtlebot_arm_object_manipulation
 {
 
@@ -131,7 +132,8 @@ public:
     server_.applyChanges(); 
   }
   
-  void moveBlock(const std::string& marker_name, const geometry_msgs::Pose& start_pose, const geometry_msgs::Pose& end_pose)
+  void moveBlock(const std::string& marker_name, const geometry_msgs::Pose& start_pose,
+                                                 const geometry_msgs::Pose& end_pose)
   {
     result_.obj_name = marker_name;
 
@@ -162,7 +164,7 @@ public:
   }
 
   // Make a box
-  Marker makeBox( InteractiveMarker &msg, float r, float g, float b )
+  Marker makeBox(InteractiveMarker &msg, float r, float g, float b)
   {
     Marker m;
 
@@ -179,7 +181,7 @@ public:
   }
   
   // Make a label to show over the box
-  Marker makeLabel( InteractiveMarker &msg, float r, float g, float b )
+  Marker makeLabel(InteractiveMarker &msg, float r, float g, float b)
   {
     Marker m;
 
@@ -239,15 +241,15 @@ public:
     control.interaction_mode = InteractiveMarkerControl::MOVE_PLANE;
     
     if (active)
-      marker.controls.push_back( control );
+      marker.controls.push_back(control);
     
-    control.markers.push_back( makeBox(marker, .5, .5, .5) );
-    control.markers.push_back( makeLabel(marker, .5, .5, .5) );
+    control.markers.push_back(makeBox(marker, 0.5, 0.5, 0.5));
+    control.markers.push_back(makeLabel(marker, 0.5, 0.5, 0.5));
     control.always_visible = true;
-    marker.controls.push_back( control );
+    marker.controls.push_back(control);
     
-    server_.insert( marker );
-    server_.setCallback( marker.name, boost::bind( &InteractiveManipulationServer::feedbackCb, this, _1 ));
+    server_.insert(marker);
+    server_.setCallback(marker.name, boost::bind( &InteractiveManipulationServer::feedbackCb, this, _1));
   }
 
 };
@@ -262,5 +264,7 @@ int main(int argc, char** argv)
   turtlebot_arm_object_manipulation::InteractiveManipulationServer manip("interactive_manipulation");
 
   ros::spin();
+
+  return 0;
 }
 
