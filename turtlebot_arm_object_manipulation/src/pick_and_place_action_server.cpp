@@ -322,12 +322,13 @@ private:
     double y = target.pose.position.y;
     double z = target.pose.position.z;
     double d = sqrt(x*x + y*y);
-    if (d > 0.26)
+    if (d > 0.3)
     {
       // Maximum reachable distance by the turtlebot arm is 30 cm, but above twenty something the arm makes
       // strange and ugly contortions, and overcomes the reduced elbow lower limit we have to operate always
       // with the same gripper orientation
-      ROS_ERROR("[pick and place] Target pose out of reach [%f > %f]", d, 0.26);
+      // XXX solved constraining also both shoulder limits (180 deg. operation); we get back the 30 cm limit
+      ROS_ERROR("[pick and place] Target pose out of reach [%f > %f]", d, 0.3);
       return false;
     }
 
