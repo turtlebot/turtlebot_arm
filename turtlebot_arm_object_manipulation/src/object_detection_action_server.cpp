@@ -42,6 +42,8 @@
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
 #include <object_recognition_msgs/TableArray.h>
+#include <object_recognition_msgs/RecognizedObjectArray.h>
+#include <object_recognition_msgs/GetObjectInformation.h>
 #include <object_recognition_msgs/ObjectRecognitionAction.h>
 
 // action server: make things easier for interactive manipulation
@@ -121,9 +123,10 @@ public:
 
     ROS_INFO("[object detection] tabletop/recognize_objects action server started; ready for sending goals.");
 
-    // Wait for the get object information service
-    // CANNOT FIND IT!!! XXX obj_info_srv_ = nh_.serviceClient<beginner_tutorials::AddTwoInts>("add_two_ints");
-    // TODO: I must do it by myself...  based on object_search.py script
+    // Wait for the get object information service (optional)
+    obj_info_srv_ = nh_.serviceClient<object_recognition_msgs::GetObjectInformation>("get_object_info");
+    if (! obj_info_srv_.waitForExistence(ros::Duration(10.0)))
+      ROS_WARN("Get object information service not available; we cannot provide objects readable name");
 
     // Register the goal and feedback callbacks.
     od_as_.registerGoalCallback(boost::bind(&ObjectDetectionServer::goalCB, this));
@@ -134,10 +137,10 @@ public:
     // Subscribe to detected tables array
     table_sub_ = nh_.subscribe("tabletop/table_array", 1, &ObjectDetectionServer::tableCb, this);
 
-    // Public detected blocks poses
+    // Publish detected blocks poses
     block_pub_ = nh_.advertise<geometry_msgs::PoseArray>("turtlebot_blocks", 1, true);
 
-    // Public planning scene changes
+    // Publish planning scene changes
     scene_pub_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1, true);
 
     clear_objs_pub_ =
@@ -231,28 +234,28 @@ public:
     {
       block_pub_.publish(result_.obj_poses);
       ROS_INFO("[object detection] Succeeded! %d objects detected", added_objects);
+
+      // Add also the table as a collision object, so it gets filtered out from MoveIt! octomap
+      if (table_poses_.size() > 0)
+        addTable(table_poses_);
+      else
+        ROS_WARN("[object detection] No near-horizontal table detected!");
+
+      // Clear recognized objects and tables from RViz by publishing empty messages, so they don't
+      // mangle with interactive markers; shoddy... ORK visualizations should have expiration time
+      object_recognition_msgs::RecognizedObjectArray roa;
+      object_recognition_msgs::TableArray ta;
+
+      roa.header.frame_id = arm_link_;
+      ta.header.frame_id = arm_link_;
+
+      clear_objs_pub_.publish(roa);
+      clear_table_pub_.publish(ta);
     }
     else
     {
-      ROS_INFO("[object detection] Succeeded, but ouldn't find any blocks this iteration");
+      ROS_INFO("[object detection] Succeeded, but couldn't find any blocks this iteration");
     }
-
-    // Add also the table as a collision object, so it gets filtered out from MoveIt! octomap
-    if (table_poses_.size() > 0)
-      addTable(table_poses_);
-    else
-      ROS_WARN("[object detection] No near-horizontal table detected!");
-
-    // Clear recognized objects and tables from RViz by publishing empty messages, so they don't
-    // mangle with interactive markers; shoddy... ORK visualizations should have expiration time
-    object_recognition_msgs::RecognizedObjectArray roa;
-    object_recognition_msgs::TableArray ta;
-
-    roa.header.frame_id = arm_link_;
-    ta.header.frame_id = arm_link_;
-
-    clear_objs_pub_.publish(roa);
-    clear_table_pub_.publish(ta);
 
     od_as_.setSucceeded(result_);
   }
@@ -310,6 +313,7 @@ private:
 
   int addObjects(const std::vector<DetectionBin>& detection_bins)
   {
+    std::map<std::string, unsigned int> obj_name_occurences;
     std::vector<moveit_msgs::CollisionObject> collision_objects;
     moveit_msgs::PlanningScene ps;
     ps.is_diff = true;
@@ -325,10 +329,11 @@ private:
         continue;
       }
 
-      // TODO: invented name; get somehow from db using the key
-      std::string obj_name;
+      // Compose object name with the name provided by the database plus an index, starting with [1]
+      std::string obj_name = getObjName(bin.getType());
+      obj_name_occurences[obj_name]++;
       std::stringstream sstream;
-      sstream << "block_" << result_.obj_names.size() + 1;
+      sstream << obj_name << " [" << obj_name_occurences[obj_name] << "]";
       obj_name = sstream.str();
 
       ROS_DEBUG("Bin %d with centroid [%s] and %d objects added as object %s",
@@ -464,6 +469,21 @@ private:
     }
   }
 
+  std::string getObjName(const object_recognition_msgs::ObjectType& obj_type)
+  {
+    // Get a human readable name from db using object's type
+    if (obj_info_srv_.exists())
+    {
+      object_recognition_msgs::GetObjectInformation srv;
+      srv.request.type = obj_type;
+      if (obj_info_srv_.call(srv))
+        return srv.response.information.name;
+
+      ROS_ERROR("Call to object information service failed");
+    }
+    return obj_type.key;
+  }
+
   std_msgs::ColorRGBA getRandColor(float alpha = 1.0)
   {
     std_msgs::ColorRGBA color;
@@ -516,7 +536,7 @@ private:
       confidence = confidence_acc/(double)objects.size();
     }
 
-    std::string getName()
+    std::string getName() const
     {
       std::map<std::string, unsigned int> key_occurences;
       for (const object_recognition_msgs::RecognizedObject& obj: objects)
@@ -531,6 +551,16 @@ private:
           commonest_key = it->first;
       }
       return commonest_key;
+    }
+
+    object_recognition_msgs::ObjectType getType() const
+    {
+      std::string commonest_key = getName();
+      for (const object_recognition_msgs::RecognizedObject& obj: objects)
+        if (obj.type.key == commonest_key)
+          return obj.type;
+
+      return object_recognition_msgs::ObjectType();
     }
 
   private:
