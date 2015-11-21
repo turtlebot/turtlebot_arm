@@ -89,6 +89,12 @@ private:
   
   // Parameters from node
   std::vector<double> table_pose_;
+
+  // Constants
+  static const double TABLE_SIZE_X = 0.5;
+  static const double TABLE_SIZE_Y = 1.0;
+  static const double TABLE_SIZE_Z = 0.05;
+
   
 public:
   BlockDetectionServer(const std::string name) : 
@@ -288,6 +294,21 @@ public:
           yside > block_size_ - tol && yside < block_size_*sqrt(2) + tol &&
           zside > tol && zside < block_size_ + tol)
       {
+        float x = xmin + xside/2.0;
+        float y = ymin + yside/2.0;
+        float z = zmax - block_size_/2.0;
+
+        // Discard blocks outside the table limits (normally something detected on the robot)
+        // Note that table pose x marks the table border closest to arm_link_ frame, not its center
+        if ((x < table_pose_[0]) || (x > table_pose_[0] + TABLE_SIZE_X) ||
+            (y < table_pose_[1] - TABLE_SIZE_Y/2.0) || (y > table_pose_[1] + TABLE_SIZE_Y/2.0))
+        {
+          ROS_DEBUG_STREAM("Block at [" << x << ", " << y << "] outside table limits ["
+                         << table_pose_[0] - TABLE_SIZE_X/2.0 << ", " << table_pose_[0] + TABLE_SIZE_X/2.0 << ", "
+                         << table_pose_[1] - TABLE_SIZE_Y/2.0 << ", " << table_pose_[1] + TABLE_SIZE_Y/2.0);
+          continue;
+        }
+
         // If so, then figure out the position and the orientation of the block
         float angle = atan(block_size_/((xside + yside)/2));
         
@@ -296,8 +317,8 @@ public:
         
         ROS_INFO_STREAM("xside: " << xside << " yside: " << yside << " zside " << zside << " angle: " << angle);
         // Then add it to our set
-        ROS_INFO("Adding a new block!");
-        addBlock(xmin + xside/2.0, ymin + yside/2.0, zmax - block_size_/2.0, angle);
+        ROS_INFO_STREAM("Adding a new block at [" << x << ", " << y << ", " << z << ", " << angle << "]");
+        addBlock(x, y, z, angle);
       }
     }
     
@@ -337,10 +358,6 @@ private:
     // Add the table as a collision object into the world, so it gets excluded from the collision map
     // As the blocks are small, they should also be excluded (assuming that padding_offset parameter on
     // octomap sensor configuration is equal or bigger than block size)
-    double table_size_x = 0.5;
-    double table_size_y = 1.0;
-    double table_size_z = 0.05;
-
     moveit_msgs::CollisionObject co;
     co.header.stamp = ros::Time::now();
     co.header.frame_id = arm_link_;
@@ -352,13 +369,13 @@ private:
     co.primitives.resize(1);
     co.primitives[0].type = shape_msgs::SolidPrimitive::BOX;
     co.primitives[0].dimensions.resize(shape_tools::SolidPrimitiveDimCount<shape_msgs::SolidPrimitive::BOX>::value);
-    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_X] = table_size_x;
-    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = table_size_y;
-    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = table_size_z;
+    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_X] = TABLE_SIZE_X;
+    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = TABLE_SIZE_Y;
+    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = TABLE_SIZE_Z;
     co.primitive_poses.resize(1);
-    co.primitive_poses[0].position.x = table_pose_[0] + table_size_x/2.0;
+    co.primitive_poses[0].position.x = table_pose_[0] + TABLE_SIZE_X/2.0;
     co.primitive_poses[0].position.y = table_pose_[1];
-    co.primitive_poses[0].position.z = table_pose_[2] - table_size_z/2.0;
+    co.primitive_poses[0].position.z = table_pose_[2] - TABLE_SIZE_Z/2.0;
 
     ROS_INFO("Add the table as a collision object into the world");
     std::vector<moveit_msgs::CollisionObject> collision_objects(1, co);
