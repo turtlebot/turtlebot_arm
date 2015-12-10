@@ -341,7 +341,8 @@ private:
 
       geometry_msgs::Pose out_pose;
       transformPose(bin.getCentroid().header.frame_id, arm_link_, bin.getCentroid().pose, out_pose);
-      ROS_INFO("[object detection] Adding \"%s\" object at %s", obj_name.c_str(), mtk::point2str(out_pose.position));
+      ROS_INFO("[object detection] Adding \"%s\" object at %s",
+               obj_name.c_str(), mtk::point2str3D(out_pose.position).c_str());
       result_.obj_poses.poses.push_back(out_pose);
       result_.obj_names.push_back(obj_name);
 
@@ -385,7 +386,7 @@ private:
     // TODO: estimate table size (and maybe shape, later...)
     double table_size_x = 0.55;
     double table_size_y = 0.55;
-    double table_size_z = 0.005;
+    double table_size_z = 0.01;
 
     moveit_msgs::CollisionObject co;
     co.header.stamp = ros::Time::now();
@@ -423,11 +424,14 @@ private:
                                                                                 pitch_acc/(double)table_poses.size(),
                                                                                 yaw_acc/(double)table_poses.size());
     // Displace the table center according to its harcoded size; TODO: remove once we estimate the table's size
-    co.primitive_poses[0].position.x += table_size_x/3.0;
+    co.primitive_poses[0].position.x += table_size_x/2.8;
+//    co.primitive_poses[0].position.y += table_size_y/9.0; // to center the table in front of the arm, not the camera
     co.primitive_poses[0].position.z -= table_size_z/2.0;
+    co.primitive_poses[0].position.z -= 0.0125;  // Cheat for on-board camera
+//    co.primitive_poses[0].position.z += 0.02;  // Cheat for external camera
 
     ROS_INFO("[object detection] Adding a table at %s as a collision object into the world",
-             mtk::point2str(co.primitive_poses[0].position));
+             mtk::point2str3D(co.primitive_poses[0].position).c_str());
     std::vector<moveit_msgs::CollisionObject> collision_objects(1, co);
     planning_scene_interface_.addCollisionObjects(collision_objects);
   }
