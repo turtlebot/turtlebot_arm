@@ -168,7 +168,7 @@ public:
       {
         // Ensure we don't retain any object attached to the gripper
         arm_.detachObject(obj_name);
-        setGripper(gripper_open);
+        setGripper(gripper_open, false);
       }
     }
 
@@ -358,9 +358,10 @@ private:
   /**
    * Set gripper opening.
    * @param opening Physical opening of the gripper, in meters
+   * @param wait_for_complete Wait or not for the execution of the trajectory to complete
    * @return True of success, false otherwise
    */
-  bool setGripper(float opening)
+  bool setGripper(float opening, bool wait_for_complete = true)
   {
     ROS_DEBUG("[pick and place] Set gripper opening to %f", opening);
     if (gripper_.setJointValueTarget("gripper_joint", opening) == false)
@@ -369,8 +370,9 @@ private:
       return false;
     }
 
-    moveit::planning_interface::MoveItErrorCode result = gripper_.move();
-    if (bool(result) == true)
+    moveit::planning_interface::MoveItErrorCode result =
+        wait_for_complete ? gripper_.move() : gripper_.asyncMove();
+    if (result == true)
     {
       return true;
     }
@@ -476,7 +478,7 @@ private:
   bool moveArmTo(const std::string& target)
   {
     if (target == "resting")  // XXX temporal cheat... blocks less fov to the camera
-      setGripper(0.002);
+      setGripper(0.002, false);
 
     ROS_DEBUG("[move to target] Move arm to '%s' position", target.c_str());
     if (arm_.setNamedTarget(target) == false)
@@ -573,25 +575,27 @@ private:
   /**
    * Set gripper opening.
    * @param opening Physical opening of the gripper, in meters
+   * @param wait_for_complete Wait or not for the execution of the trajectory to complete
    * @return True of success, false otherwise
    */
-  bool setGripper(float opening)
+  bool setGripper(float opening, bool wait_for_complete = true)
   {
-    ROS_DEBUG("[move to target] Set gripper opening to %f", opening);
+    ROS_DEBUG("[pick and place] Set gripper opening to %f", opening);
     if (gripper_.setJointValueTarget("gripper_joint", opening) == false)
     {
-      ROS_ERROR("[move to target] Set gripper opening to %f failed", opening);
+      ROS_ERROR("[pick and place] Set gripper opening to %f failed", opening);
       return false;
     }
 
-    moveit::planning_interface::MoveItErrorCode result = gripper_.move();
-    if (bool(result) == true)
+    moveit::planning_interface::MoveItErrorCode result =
+        wait_for_complete ? gripper_.move() : gripper_.asyncMove();
+    if (result == true)
     {
       return true;
     }
     else
     {
-      ROS_ERROR("[move to target] Set gripper opening failed (error %d)", result.val);
+      ROS_ERROR("[pick and place] Set gripper opening failed (error %d)", result.val);
       return false;
     }
   }
