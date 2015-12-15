@@ -69,7 +69,7 @@ class MoveItDemo:
         self.tf_listener = tf.TransformListener()
         
         # Use the planning scene object to add or remove objects
-        scene = PlanningSceneInterface()
+        self.scene = PlanningSceneInterface()
 
         # Create a scene publisher to push changes to the scene
         self.scene_pub = rospy.Publisher('planning_scene', PlanningScene, queue_size=10)
@@ -93,7 +93,7 @@ class MoveItDemo:
         # USELESS; do not work on pick and place! Explained on this issue:
         # https://github.com/ros-planning/moveit_ros/issues/577
         arm.set_goal_position_tolerance(0.04)
-        arm.set_goal_orientation_tolerance(0.1)
+        arm.set_goal_orientation_tolerance(0.01)
 
         # Allow replanning to increase the odds of a solution
         arm.allow_replanning(True)
@@ -122,14 +122,14 @@ class MoveItDemo:
         tool_id = 'tool'
 
         # Remove leftover objects from a previous run
-        scene.remove_world_object(table_id)
-        scene.remove_world_object(box1_id)
-        scene.remove_world_object(box2_id)
-        scene.remove_world_object(target_id)
-        scene.remove_world_object(tool_id)
+        self.scene.remove_world_object(table_id)
+        self.scene.remove_world_object(box1_id)
+        self.scene.remove_world_object(box2_id)
+        self.scene.remove_world_object(target_id)
+        self.scene.remove_world_object(tool_id)
 
         # Remove any attached objects from a previous session
-        scene.remove_attached_object(GRIPPER_FRAME, target_id)
+        self.scene.remove_attached_object(GRIPPER_FRAME, target_id)
 
         # Give the scene a chance to catch up
         rospy.sleep(1)
@@ -180,7 +180,7 @@ class MoveItDemo:
         table_pose.pose.position.y = 0.0
         table_pose.pose.position.z = table_ground + table_size[2] / 2.0
         table_pose.pose.orientation.w = 1.0
-        scene.add_box(table_id, table_pose, table_size)
+        self.scene.add_box(table_id, table_pose, table_size)
 
         box1_pose = PoseStamped()
         box1_pose.header.frame_id = REFERENCE_FRAME
@@ -188,7 +188,7 @@ class MoveItDemo:
         box1_pose.pose.position.y = 0.0
         box1_pose.pose.position.z = table_ground + table_size[2] + box1_size[2] / 2.0
         box1_pose.pose.orientation.w = 1.0
-        scene.add_box(box1_id, box1_pose, box1_size)
+        self.scene.add_box(box1_id, box1_pose, box1_size)
 
         box2_pose = PoseStamped()
         box2_pose.header.frame_id = REFERENCE_FRAME
@@ -196,7 +196,7 @@ class MoveItDemo:
         box2_pose.pose.position.y = 0.2
         box2_pose.pose.position.z = table_ground + table_size[2] + box2_size[2] / 2.0
         box2_pose.pose.orientation.w = 1.0
-        scene.add_box(box2_id, box2_pose, box2_size)
+        self.scene.add_box(box2_id, box2_pose, box2_size)
 
         # Set the target pose in between the boxes and on the table
         target_pose = PoseStamped()
@@ -207,7 +207,7 @@ class MoveItDemo:
         target_pose.pose.orientation.w = 1.0
 
         # Add the target object to the scene
-        scene.add_box(target_id, target_pose, target_size)
+        self.scene.add_box(target_id, target_pose, target_size)
 
         # Make the table red and the boxes orange
         self.setColor(table_id, 0.8, 0, 0, 1.0)
