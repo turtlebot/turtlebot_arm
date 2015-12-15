@@ -1,11 +1,17 @@
-#goal definition
+# goal definition
+
 string frame
 float32 gripper_open
 float32 gripper_closed
 string obj_name
+std_msgs/Header header
 geometry_msgs/Pose pick_pose
 geometry_msgs/Pose place_pose
+
 ---
-#result definition
+
+# result definition
+
 ---
-#feedback
+
+# feedback

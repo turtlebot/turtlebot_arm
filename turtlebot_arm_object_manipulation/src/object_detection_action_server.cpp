@@ -35,8 +35,10 @@
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 
+// auxiliary libraries
 #include <yocs_math_toolkit/common.hpp>
 #include <yocs_math_toolkit/geometry.hpp>
+#include <shape_tools/solid_primitive_dims.h>
 
 // action client: ORK's tabletop object recognition
 #include <actionlib/client/simple_action_client.h>
@@ -54,7 +56,6 @@
 #include <moveit_msgs/ObjectColor.h>
 #include <moveit_msgs/PlanningScene.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
-#include <shape_tools/solid_primitive_dims.h>
 
 
 namespace turtlebot_arm_object_manipulation
@@ -82,8 +83,9 @@ private:
   turtlebot_arm_object_manipulation::ObjectDetectionGoalConstPtr goal_;
   std::string action_name_;
 
-  // Get object information from database service
+  // Get object information from database service and keep in a map
   ros::ServiceClient obj_info_srv_;
+  std::map<std::string, object_recognition_msgs::ObjectInformation> objs_info_;
 
   // Publishers and subscribers
   ros::Subscriber table_sub_;
@@ -94,7 +96,17 @@ private:
   ros::Publisher clear_objs_pub_;
   ros::Publisher clear_table_pub_;
 
+  typedef struct
+  {
+    double size_x;
+    double size_y;
+    double center_x;
+    double center_y;
+    double yaw;
+  } TableDescriptor;
+
   std::vector<geometry_msgs::Pose> table_poses_;
+  std::vector<TableDescriptor>     table_params_;
 
   // We use the planning_scene_interface::PlanningSceneInterface to manipulate the world
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
@@ -103,7 +115,6 @@ private:
 
   // Parameters from goal
   std::string arm_link_;
-  double obj_size_;
   
   // Object detection and classification constants
   const double   CONFIDENCE_THRESHOLD  = 0.9;    // minimum confidence required to accept an object
@@ -119,14 +130,23 @@ public:
 
     // Wait for the tabletop/recognize_objects action server to start before we provide our own service
     ROS_INFO("[object detection] Waiting for tabletop/recognize_objects action server to start...");
-    ork_ac_.waitForServer();
+    if (! ork_ac_.waitForServer(ros::Duration(60.0)))
+    {
+      ROS_ERROR("[object detection] tabletop/recognize_objects action server not available after 1 minute");
+      ROS_ERROR("[object detection] Shutting down node...");
+      throw;
+    }
 
     ROS_INFO("[object detection] tabletop/recognize_objects action server started; ready for sending goals.");
 
-    // Wait for the get object information service (optional)
+    // Wait for the get object information service (mandatory, as we need to know objects' mesh)
     obj_info_srv_ = nh_.serviceClient<object_recognition_msgs::GetObjectInformation>("get_object_info");
-    if (! obj_info_srv_.waitForExistence(ros::Duration(10.0)))
-      ROS_WARN("Get object information service not available; we cannot provide objects readable name");
+    if (! obj_info_srv_.waitForExistence(ros::Duration(60.0)))
+    {
+      ROS_ERROR("[object detection] Get object information service not available after 1 minute");
+      ROS_ERROR("[object detection] Shutting down node...");
+      throw;
+    }
 
     // Register the goal and feedback callbacks.
     od_as_.registerGoalCallback(boost::bind(&ObjectDetectionServer::goalCB, this));
@@ -157,10 +177,10 @@ public:
     goal_ = od_as_.acceptNewGoal();
     
     arm_link_ = goal_->frame;
-    obj_size_ = goal_->obj_size;
 
     // Clear results from previous goals
     table_poses_.clear();
+    table_params_.clear();
     result_.obj_poses.poses.clear();
     result_.obj_names.clear();
     result_.obj_poses.header.frame_id = arm_link_;
@@ -237,7 +257,7 @@ public:
 
       // Add also the table as a collision object, so it gets filtered out from MoveIt! octomap
       if (table_poses_.size() > 0)
-        addTable(table_poses_);
+        addTable(table_poses_, table_params_);
       else
         ROS_WARN("[object detection] No near-horizontal table detected!");
 
@@ -276,35 +296,40 @@ public:
     }
 
     // Accumulate table poses while detecting objects so the resulting pose (centroid) is more accurate
-    for (const object_recognition_msgs::Table& table: msg.tables)
+    // We only take the first table in the message, assuming it is always the best match and so the same
+    // table... very risky, to say the least. TODO: assure we always accumulate data over the same table
+    object_recognition_msgs::Table table = msg.tables[0];
+    geometry_msgs::Pose table_pose = table.pose;
+    // Tables often have orientations with all-nan values, but assertQuaternionValid lets them go!
+    if (isnan(table.pose.orientation.x) ||
+        isnan(table.pose.orientation.y) ||
+        isnan(table.pose.orientation.z) ||
+        isnan(table.pose.orientation.w))
     {
-      geometry_msgs::Pose table_pose = table.pose;
-      // Tables often have orientations with all-nan values, but assertQuaternionValid lets them go!
-      if (isnan(table.pose.orientation.x) ||
-          isnan(table.pose.orientation.y) ||
-          isnan(table.pose.orientation.z) ||
-          isnan(table.pose.orientation.w))
-      {
-        ROS_WARN("[object detection] Table discarded as its orientation has nan values");
-        continue;
-      }
+      ROS_WARN("[object detection] Table discarded as its orientation has nan values");
+      return;
+    }
 
-      if (! transformPose(msg.header.frame_id, arm_link_, table.pose, table_pose))
-      {
-        continue;
-      }
+    if (! transformPose(msg.header.frame_id, arm_link_, table.pose, table_pose))
+    {
+      return;
+    }
 
-      if ((std::abs(mtk::roll(table_pose)) < M_PI/10.0) && (std::abs(mtk::pitch(table_pose)) < M_PI/10.0))
-      {
-        // Only consider tables within +/-18 degrees away from the horizontal plane
-        table_poses_.push_back(table_pose);
-      }
-      else
-      {
-        ROS_WARN("Table with pose [%s] discarded as it is %.2f radians away from the horizontal plane",
-                 mtk::pose2str3D(table_pose).c_str(),
-                 std::max(std::abs(mtk::roll(table_pose)), std::abs(mtk::pitch(table_pose))));
-      }
+    if ((std::abs(mtk::roll(table_pose)) < M_PI/10.0) && (std::abs(mtk::pitch(table_pose)) < M_PI/10.0))
+    {
+      // Only consider tables within +/-18 degrees away from the horizontal plane
+//table_poses_.clear();table_params_.clear();
+      table_poses_.push_back(table_pose);
+      table_params_.push_back(getTableParams(table.convex_hull));
+
+//addTable(table_poses_, table_params_);
+//ros::Duration(1.0).sleep();
+    }
+    else
+    {
+      ROS_WARN("[object detection] Table with pose [%s] discarded: %.2f radians away from the horizontal",
+               mtk::pose2str3D(table_pose).c_str(),
+               std::max(std::abs(mtk::roll(table_pose)), std::abs(mtk::pitch(table_pose))));
     }
   }
 
@@ -330,63 +355,93 @@ private:
       }
 
       // Compose object name with the name provided by the database plus an index, starting with [1]
-      std::string obj_name = getObjName(bin.getType());
-      obj_name_occurences[obj_name]++;
-      std::stringstream sstream;
-      sstream << obj_name << " [" << obj_name_occurences[obj_name] << "]";
-      obj_name = sstream.str();
+      try
+      {
+        object_recognition_msgs::ObjectInformation obj_info = getObjInfo(bin.getType());
+        obj_name_occurences[obj_info.name]++;
+        std::stringstream sstream;
+        sstream << obj_info.name << " [" << obj_name_occurences[obj_info.name] << "]";
+        std::string obj_name = sstream.str();
 
-      ROS_DEBUG("Bin %d with centroid [%s] and %d objects added as object %s",
-                 bin.id, mtk::pose2str3D(bin.getCentroid()).c_str(), bin.countObjects(), obj_name.c_str());
+        ROS_DEBUG("Bin %d with centroid [%s] and %d objects added as object '%s'",
+                   bin.id, mtk::pose2str3D(bin.getCentroid()).c_str(), bin.countObjects(), obj_name.c_str());
 
-      geometry_msgs::Pose out_pose;
-      transformPose(bin.getCentroid().header.frame_id, arm_link_, bin.getCentroid().pose, out_pose);
-      ROS_INFO("[object detection] Adding \"%s\" object at %s",
-               obj_name.c_str(), mtk::point2str3D(out_pose.position).c_str());
-      result_.obj_poses.poses.push_back(out_pose);
-      result_.obj_names.push_back(obj_name);
+        geometry_msgs::Pose out_pose;
+        transformPose(bin.getCentroid().header.frame_id, arm_link_, bin.getCentroid().pose, out_pose);
+        ROS_INFO("[object detection] Adding '%s' object at %s",
+                 obj_name.c_str(), mtk::point2str3D(out_pose.position).c_str());
 
-      moveit_msgs::CollisionObject co;
-      co.header = result_.obj_poses.header;
-      co.id = obj_name;
+        result_.obj_poses.poses.push_back(out_pose);
+        result_.obj_names.push_back(obj_name);
 
-      co.operation = moveit_msgs::CollisionObject::ADD;
-      co.primitives.resize(1);
-      co.primitives[0].type = shape_msgs::SolidPrimitive::BOX;
-      co.primitives[0].dimensions.resize(shape_tools::SolidPrimitiveDimCount<shape_msgs::SolidPrimitive::BOX>::value);
-      co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_X] = obj_size_;
-      co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = obj_size_;
-      co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = obj_size_;
-      co.primitive_poses.resize(1);
-      co.primitive_poses[0] = out_pose;
+        moveit_msgs::CollisionObject co;
+        co.header = result_.obj_poses.header;
+        co.id = obj_name;
+        ROS_DEBUG_STREAM( "creo q puedo pasar de frames!!!  convierte todo a /map!!! (xq moveit planea en map, creo)               \n"<<co.header.frame_id << "               \n"<<bin.getCentroid().header.frame_id << "               \n"<<arm_link_);
 
-      collision_objects.push_back(co);
+        co.operation = moveit_msgs::CollisionObject::ADD;
 
-      // Provide a random color to the collision object
-      moveit_msgs::ObjectColor oc;
-      oc.id = co.id;
-      oc.color = getRandColor(1.0);
-      ps.object_colors.push_back(oc);
+        if (obj_name.find("cube 2.5") != std::string::npos)
+        {
+          // XXX, TODO :  temporal hack because bloody cube meshes don't clean the octomap!  (anyway, as I support both mechanism, it's also useful for debug)
+          co.primitives.resize(1);
+          co.primitives[0].type = shape_msgs::SolidPrimitive::BOX;
+          co.primitives[0].dimensions.resize(shape_tools::SolidPrimitiveDimCount<shape_msgs::SolidPrimitive::BOX>::value);
+          co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_X] = 0.025;
+          co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = 0.025;
+          co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = 0.025;
+          out_pose.position.z += 0.0125;
+          co.primitive_poses.push_back(out_pose);
+        }
+        else
+        {
+          co.meshes.resize(1, obj_info.ground_truth_mesh);
+          co.mesh_poses.push_back(out_pose);
+        }
+
+        collision_objects.push_back(co);
+
+        // Provide a random color to the collision object
+        moveit_msgs::ObjectColor oc;
+        oc.id = co.id;
+        oc.color = getRandColor(1.0);
+        ps.object_colors.push_back(oc);
+      }
+      catch (...)
+      {
+        continue;
+      }
     }
 
     if (collision_objects.size() > 0)
     {
-      planning_scene_interface_.addCollisionObjects(collision_objects);
-      scene_pub_.publish(ps);
+      planning_scene_interface_.addCollisionObjects(collision_objects, ps.object_colors);
+      //scene_pub_.publish(ps);
     }
 
     return collision_objects.size();
   }
 
-  void addTable(const std::vector<geometry_msgs::Pose>& table_poses)
+  void addTable(const std::vector<geometry_msgs::Pose>& table_poses,
+                const std::vector<TableDescriptor>& table_params)
   {
     // Add the table as a collision object into the world, so it gets excluded from the collision map
-    // As the blocks are small, they should also be excluded (assuming that padding_offset parameter on
-    // octomap sensor configuration is equal or bigger than object size)
-    // TODO: estimate table size (and maybe shape, later...)
-    double table_size_x = 0.55;
-    double table_size_y = 0.55;
-    double table_size_z = 0.01;
+
+    // We calculate table size, centroid and orientation as the median of the accumulated convex hulls
+    std::vector<double> table_center_x;
+    std::vector<double> table_center_y;
+    std::vector<double> table_size_x;
+    std::vector<double> table_size_y;
+    std::vector<double> table_yaw;
+
+    for (const TableDescriptor& table: table_params)
+    {
+      table_center_x.push_back(table.center_x);
+      table_center_y.push_back(table.center_y);
+      table_size_x.push_back(table.size_x);
+      table_size_y.push_back(table.size_y);
+      table_yaw.push_back(table.yaw);
+    }
 
     moveit_msgs::CollisionObject co;
     co.header.stamp = ros::Time::now();
@@ -397,43 +452,106 @@ private:
     co.primitives.resize(1);
     co.primitives[0].type = shape_msgs::SolidPrimitive::BOX;
     co.primitives[0].dimensions.resize(shape_tools::SolidPrimitiveDimCount<shape_msgs::SolidPrimitive::BOX>::value);
-    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_X] = table_size_x;
-    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = table_size_y;
-    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = table_size_z;
+    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_X] = median(table_size_x);
+    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = median(table_size_y);
+    co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = 0.01;  // arbitrarily set to 1 cm
     co.primitive_poses.resize(1);
 
-    // Calculate table_pose as the centroid of all accumulated poses
-    double roll_acc = 0.0, pitch_acc = 0.0, yaw_acc = 0.0;
+    // Calculate table's pose as the centroid of all accumulated poses;
+    // as yaw we use the one estimated for the convex hull
+    double roll_acc = 0.0, pitch_acc = 0.0;//, yaw_acc = 0.0;
     for (const geometry_msgs::Pose& pose: table_poses)
     {
-      ROS_DEBUG("[object detection] Adding a table at %s based on %d observations",
-                mtk::pose2str3D(pose).c_str(), table_poses.size());
-
       co.primitive_poses[0].position.x += pose.position.x;
       co.primitive_poses[0].position.y += pose.position.y;
       co.primitive_poses[0].position.z += pose.position.z;
       roll_acc                         += mtk::roll(pose);
       pitch_acc                        += mtk::pitch (pose);
-      yaw_acc                          += mtk::yaw(pose);
+      // yaw_acc                          += mtk::yaw(pose);
     }
 
-    co.primitive_poses[0].position.x /= (double)table_poses.size();
-    co.primitive_poses[0].position.y /= (double)table_poses.size();
-    co.primitive_poses[0].position.z /= (double)table_poses.size();
+    co.primitive_poses[0].position.x = co.primitive_poses[0].position.x / (double)table_poses.size();
+    co.primitive_poses[0].position.y = co.primitive_poses[0].position.y / (double)table_poses.size();
+    co.primitive_poses[0].position.z = co.primitive_poses[0].position.z / (double)table_poses.size();
     co.primitive_poses[0].orientation = tf::createQuaternionMsgFromRollPitchYaw(roll_acc/(double)table_poses.size(),
                                                                                 pitch_acc/(double)table_poses.size(),
-                                                                                yaw_acc/(double)table_poses.size());
-    // Displace the table center according to its harcoded size; TODO: remove once we estimate the table's size
-    co.primitive_poses[0].position.x += table_size_x/2.8;
-//    co.primitive_poses[0].position.y += table_size_y/9.0; // to center the table in front of the arm, not the camera
-    co.primitive_poses[0].position.z -= table_size_z/2.0;
-    co.primitive_poses[0].position.z -= 0.0125;  // Cheat for on-board camera
-//    co.primitive_poses[0].position.z += 0.02;  // Cheat for external camera
+                                                                                median(table_yaw));
+    // Displace the table center according to the centroid of its convex hull
+    co.primitive_poses[0].position.x += median(table_center_x);
+    co.primitive_poses[0].position.y += median(table_center_y);
+    co.primitive_poses[0].position.z -= co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z]/2.0;
 
-    ROS_INFO("[object detection] Adding a table at %s as a collision object into the world",
-             mtk::point2str3D(co.primitive_poses[0].position).c_str());
+    ROS_INFO("[object detection] Adding a table at %s as a collision object, based on %d observations",
+             mtk::point2str3D(co.primitive_poses[0].position).c_str(), table_poses.size());
     std::vector<moveit_msgs::CollisionObject> collision_objects(1, co);
     planning_scene_interface_.addCollisionObjects(collision_objects);
+  }
+
+  TableDescriptor getTableParams(std::vector<geometry_msgs::Point> convex_hull)
+  {
+    // Calculate centroid, size and orientation for the given 2D convex hull
+    // Algorithm adapted from here: http://www.geometrictools.com/Documentation/MinimumAreaRectangle.pdf
+    TableDescriptor table;
+    double min_area = std::numeric_limits<double>::max()                          ,table___yaw;
+
+    for (size_t i0 = convex_hull.size() - 1, i1 = 0; i1 < convex_hull.size(); i0 = i1++)
+    {
+      convex_hull[i0].z = convex_hull[i1].z = 0; // z-coordinate is ignored
+
+      tf::Point origin, U0, U1, D;
+      tf::pointMsgToTF(convex_hull[i0], origin);
+      tf::pointMsgToTF(convex_hull[i1], U0); U0 -= origin;
+      U0.normalize(); // length of U0 is 1
+      U1 = tf::Point(-U0.y(), U0.x(), 0.0); // - perpendicular vector of U0
+      U1.normalize(); // length of U1 is 1
+      double min0 = 0, max0 = 0; // projection onto U0 − axis is [min0, max0]
+      double min1 = 0, max1 = 0; // projection onto U1 − axis is [min1, max1], min1 = 0 is guaranteed  TODO si?????
+      for (size_t j = 0; j < convex_hull.size(); ++j)
+      {
+        convex_hull[j].z = 0; // z-coordinate is ignored
+
+        tf::pointMsgToTF(convex_hull[j], D); D -= origin;
+        double dot = U0.dot(D);
+        if (dot < min0)
+          min0 = dot;
+        else if (dot > max0)
+          max0 = dot;
+        dot = U1.dot(D);
+        if (dot < min1)
+          min1 = dot;
+        else if (dot > max1)
+          max1 = dot;
+      }
+      double area = (max0 - min0) * (max1 - min1);
+
+      if (area < min_area)
+      {
+        tf::Point center(origin + ((min0 + max0)/2.0) * U0 + ((min1 + max1)/2.0) * U1);
+        table.center_x =   center.y();
+        table.center_y = - center.x();
+        table.size_x = max0 - min0;
+        table.size_y = max1 - min1;
+        table.yaw = std::atan2(U1.y(), U1.x());
+        if (table.yaw > 0.0)
+          table.yaw -= M_PI;
+        min_area = area;
+
+        table___yaw = std::atan2(-U1.x(), U1.y());
+
+      }
+    }
+    ROS_DEBUG("Table parameters: pose [%f, %f, %f   %f], size [%f, %f]", table.center_x, table.center_y, table.yaw,table___yaw, table.size_x, table.size_y);
+
+    return table;
+  }
+
+  double median(std::vector<double>& values)
+  {
+    std::vector<double>::iterator first = values.begin();
+    std::vector<double>::iterator last = values.end();
+    std::vector<double>::iterator middle = first + (last - first) / 2;
+    std::nth_element(first, middle, last); // short values till middle one
+    return *middle;
   }
 
   bool transformPose(const std::string& in_frame, const std::string& out_frame,
@@ -473,19 +591,27 @@ private:
     }
   }
 
-  std::string getObjName(const object_recognition_msgs::ObjectType& obj_type)
+  const object_recognition_msgs::ObjectInformation& getObjInfo(const object_recognition_msgs::ObjectType& obj_type)
   {
-    // Get a human readable name from db using object's type
-    if (obj_info_srv_.exists())
+    if (objs_info_.find(obj_type.key) == objs_info_.end() )
     {
+      // Get object information from db using object's type
       object_recognition_msgs::GetObjectInformation srv;
       srv.request.type = obj_type;
-      if (obj_info_srv_.call(srv))
-        return srv.response.information.name;
 
-      ROS_ERROR("Call to object information service failed");
+      if (obj_info_srv_.call(srv))
+      {
+        ROS_DEBUG("Database information retrieved for object '%s'", obj_type.key.c_str());
+        objs_info_[obj_type.key] = srv.response.information;
+      }
+      else
+      {
+        ROS_ERROR("Call to object information service with key '%s' failed", obj_type.key.c_str());
+        throw;
+      }
     }
-    return obj_type.key;
+
+    return objs_info_[obj_type.key];
   }
 
   std_msgs::ColorRGBA getRandColor(float alpha = 1.0)
@@ -544,7 +670,6 @@ private:
     {
       std::map<std::string, unsigned int> key_occurences;
       for (const object_recognition_msgs::RecognizedObject& obj: objects)
-        //if (key_occurences.
         key_occurences[obj.type.key]++;
 
       std::string commonest_key;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Willow Garage, Inc.
+ * Copyright (c) 2015, Jorge Santos
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,17 +26,25 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  * 
- * Author: Michael Ferguson, Helen Oleynikova
+ * Author: Jorge Santos
  */
 
 #include <ros/ros.h>
 
+// interactive manipulation markers action server
 #include <actionlib/server/simple_action_server.h>
 #include <interactive_markers/interactive_marker_server.h>
 
 #include <turtlebot_arm_object_manipulation/InteractiveManipAction.h>
-#include <geometry_msgs/PoseArray.h>
-#include <std_msgs/String.h>
+
+// auxiliary libraries
+#include <yocs_math_toolkit/common.hpp>
+#include <geometric_shapes/shape_operations.h>
+
+// MoveIt!
+#include <moveit_msgs/CollisionObject.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
+
 
 using namespace visualization_msgs;
 
@@ -53,37 +61,26 @@ private:
   
   actionlib::SimpleActionServer<turtlebot_arm_object_manipulation::InteractiveManipAction> as_;
   std::string action_name_;
+
+  geometry_msgs::Pose old_pose_;
   
   turtlebot_arm_object_manipulation::InteractiveManipFeedback     feedback_;
   turtlebot_arm_object_manipulation::InteractiveManipResult       result_;
   turtlebot_arm_object_manipulation::InteractiveManipGoalConstPtr goal_;
-  
-  ros::Subscriber block_sub_;
-  ros::Publisher  pick_and_place_pub_;
 
-  geometry_msgs::Pose old_pose_;
-  
-  geometry_msgs::PoseArray obj_poses_;
-  std::vector<std::string> obj_names_;
-  bool initialized_;
-  
-  // Parameters from goal
-  std::string arm_link;
-  double      obj_size;
+  // We use the planning_scene_interface::PlanningSceneInterface to retrieve world objects
+  moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
 
 public:
 
   InteractiveManipulationServer(const std::string name) : 
-     nh_("~"), server_("block_controls"), as_(name, false), action_name_(name), initialized_(false), obj_size(0)
+     nh_("~"), server_("move_objects"), as_(name, false), action_name_(name)
   {
     // Register the goal and feedback callbacks.
     as_.registerGoalCallback(boost::bind(&InteractiveManipulationServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&InteractiveManipulationServer::preemptCB, this));
     
     as_.start();
-  
-    block_sub_ = nh_.subscribe("/turtlebot_blocks", 1, &InteractiveManipulationServer::blocksCB, this);
-    pick_and_place_pub_ = nh_.advertise< geometry_msgs::PoseArray >("/pick_and_place", 1, true);
   }
   
   void goalCB()
@@ -91,71 +88,48 @@ public:
     // accept the new goal
     goal_ = as_.acceptNewGoal();
     
-    ROS_INFO("[interactive manipulation] Received goal! %f, %s", goal_->obj_size, goal_->frame.c_str());
-    
-    obj_size = goal_->obj_size;
-    arm_link = goal_->frame;
-    obj_poses_ = goal_->obj_poses;
-    obj_names_ = goal_->obj_names;
-    
-    addBlocks();
+    ROS_INFO("[interactive manip] Received goal! Adding markers for objects in the word other than the table");
+    addObjects();
   }
 
   void preemptCB()
   {
-    ROS_WARN("[interactive manipulation] %s: Preempted", action_name_.c_str());
+    ROS_WARN("[interactive manip] %s: Preempted", action_name_.c_str());
     // set the action state to preempted
     as_.setPreempted();
   }
   
-  // Move the real block!
-  void feedbackCb( const InteractiveMarkerFeedbackConstPtr &feedback )
+  // Moving an object; keep MOUSE_DOWN pose (origin) and move the object to MOUSE_UP pose
+  void feedbackCb(const InteractiveMarkerFeedbackConstPtr &feedback)
   {
     if (!as_.isActive())
     {
-      ROS_INFO("[interactive manipulation] Got feedback but not active!");
+      ROS_INFO("[interactive manip] Got feedback but not active!");
       return;
     }
-    switch ( feedback->event_type )
+    switch (feedback->event_type)
     {
       case visualization_msgs::InteractiveMarkerFeedback::MOUSE_DOWN:
-        ROS_INFO_STREAM("[interactive manipulation] Staging " << feedback->marker_name << "   " << feedback->pose);
+        ROS_INFO_STREAM("[interactive manip] Staging '" << feedback->marker_name << "' at " << feedback->pose);
         old_pose_ = feedback->pose;
         break;
    
       case visualization_msgs::InteractiveMarkerFeedback::MOUSE_UP:
-        ROS_INFO_STREAM("[interactive manipulation] Now moving " << feedback->marker_name << "   " << feedback->pose);
-        moveBlock(feedback->marker_name, old_pose_, feedback->pose);
+        ROS_INFO_STREAM("[interactive manip] Now moving '" << feedback->marker_name << "' to " << feedback->pose);
+        moveObject(feedback->marker_name, feedback->header, old_pose_, feedback->pose);
         break;
     }
     
     server_.applyChanges(); 
   }
   
-  void moveBlock(const std::string& marker_name, const geometry_msgs::Pose& start_pose,
-                                                 const geometry_msgs::Pose& end_pose)
+  void moveObject(const std::string& marker_name, const std_msgs::Header& poses_header,
+                  const geometry_msgs::Pose& start_pose, const geometry_msgs::Pose& end_pose)
   {
+    result_.header = poses_header;
     result_.obj_name = marker_name;
-
-    // Return pickup and place poses as the result of the action
-    geometry_msgs::Pose start_pose_bumped, end_pose_bumped;
-    start_pose_bumped = start_pose;
-    start_pose_bumped.position.z += obj_size/2.0;
-
-    result_.pick_pose = start_pose_bumped;
-    
-    end_pose_bumped = end_pose;
-    end_pose_bumped.position.z += obj_size/2.0;
-    result_.place_pose = end_pose_bumped;
-    
-    // Publish pickup and place poses for visualizing on RViz
-    geometry_msgs::PoseArray msg;
-    msg.header.frame_id = arm_link;
-    msg.header.stamp = ros::Time::now();
-    msg.poses.push_back(start_pose_bumped);
-    msg.poses.push_back(end_pose_bumped);
-    
-    pick_and_place_pub_.publish(msg);
+    result_.pick_pose = start_pose;
+    result_.place_pose = end_pose;
     
     as_.setSucceeded(result_);
     
@@ -163,75 +137,73 @@ public:
     server_.applyChanges();
   }
 
-  // Make a box
-  Marker makeBox(InteractiveMarker &msg, float r, float g, float b)
-  {
-    Marker m;
-
-    m.type = Marker::CUBE;
-    m.scale.x = msg.scale + (msg.scale * 0.01);
-    m.scale.y = msg.scale + (msg.scale * 0.01);
-    m.scale.z = msg.scale + (msg.scale * 0.01);
-    m.color.r = r;
-    m.color.g = g;
-    m.color.b = b;
-    m.color.a = 0.1;
-
-    return m;
-  }
-  
-  // Make a label to show over the box
-  Marker makeLabel(InteractiveMarker &msg, float r, float g, float b)
-  {
-    Marker m;
-
-    m.type = Marker::TEXT_VIEW_FACING;
-    m.text = msg.name;
-    m.scale.x = msg.scale * 1.5;
-    m.scale.y = msg.scale * 1.5;
-    m.scale.z = msg.scale * 1.5;
-    m.color.r = r;
-    m.color.g = g;
-    m.color.b = b;
-    m.color.a = 0.8;
-
-    m.pose.position.z = msg.scale/2.0 + 0.025;
-
-    return m;
-  }
-
-  void blocksCB(const geometry_msgs::PoseArrayConstPtr& msg)
-  {
- ////   msg_ = msg;
-  }
-
-  void addBlocks()
+  // Add an interactive marker for any object in the word other than the table
+  void addObjects()
   {
     server_.clear();
     server_.applyChanges();
 
-    ROS_INFO("[interactive manipulation] Got block detection callback. Adding blocks.");
-    geometry_msgs::Pose block;
     bool active = as_.isActive();
 
-    for (unsigned int i = 0; i < obj_poses_.poses.size(); i++)
+    std::map<std::string, moveit_msgs::CollisionObject> objects =
+        planning_scene_interface_.getObjects(planning_scene_interface_.getKnownObjectNames());
+    for (const std::pair<std::string, moveit_msgs::CollisionObject>& obj: objects)
     {
-      addBlock(obj_names_[i], obj_poses_.poses[i], i, active, obj_poses_.header.frame_id);
-      ROS_INFO("[interactive manipulation] Added block \"%s\"", obj_names_[i].c_str());
+      if (obj.first != "table")
+      {
+        addMarker(obj.second, active);
+      }
     }
 
     server_.applyChanges();
-    initialized_ = true;
   }
 
-  // Add a new block
-  void addBlock(const std::string& name, const geometry_msgs::Pose pose, int n, bool active, std::string link)
+  // Add an interactive marker for the given object
+  bool addMarker(const moveit_msgs::CollisionObject& obj, bool active)
   {
     InteractiveMarker marker;
-    marker.header.frame_id = link;
-    marker.scale = obj_size;
-    marker.pose = pose;
-    marker.name = name;
+    marker.header = obj.header;
+    marker.name = obj.id;
+
+    // We get object's pose from the mesh/primitive poses; try first with the meshes
+    if (obj.mesh_poses.size() > 0)
+    {
+      marker.pose = obj.mesh_poses[0];
+      if (obj.meshes.size() > 0)
+      {
+        Eigen::Vector3d obj_size = shapes::computeShapeExtents(obj.meshes[0]);
+
+        // We use the biggest dimension of the mesh to scale the marker
+        marker.scale = obj_size.maxCoeff();
+
+        // We assume meshes laying in the floor (well, table), so we bump up marker pose by half z-dimension
+        marker.pose.position.z += obj_size[2]/2.0;
+      }
+      else
+      {
+        ROS_ERROR("[interactive manip] Collision object has no meshes");
+        return false;
+      }
+    }
+    else if (obj.primitive_poses.size() > 0)
+    {
+      marker.pose = obj.primitive_poses[0];
+      if (obj.primitives.size() > 0)
+      {
+        // We use the biggest dimension of the primitive to scale the marker
+        marker.scale = shapes::computeShapeExtents(obj.primitives[0]).maxCoeff();
+      }
+      else
+      {
+        ROS_ERROR("[interactive manip] Collision object has no primitives");
+        return false;
+      }
+    }
+    else
+    {
+      ROS_ERROR("[interactive manip] Collision object has no mesh/primitive poses");
+      return false;
+    }
 
     InteractiveMarkerControl control;
     control.orientation.w = 1;
@@ -249,7 +221,49 @@ public:
     marker.controls.push_back(control);
     
     server_.insert(marker);
-    server_.setCallback(marker.name, boost::bind( &InteractiveManipulationServer::feedbackCb, this, _1));
+    server_.setCallback(marker.name, boost::bind(&InteractiveManipulationServer::feedbackCb, this, _1));
+
+    ROS_INFO("[interactive manip] Added interactive marker for object '%s' at [%s] and scale [%f]",
+             marker.name.c_str(), mtk::pose2str3D(marker.pose).c_str(), marker.scale);
+
+    return true;
+  }
+
+  // Make a box containing the object (5% bigger than the biggest dimension)
+  Marker makeBox(InteractiveMarker &msg, float r, float g, float b)
+  {
+    Marker m;
+
+    m.type = Marker::CUBE;
+    m.scale.x = msg.scale + (msg.scale * 0.05);
+    m.scale.y = msg.scale + (msg.scale * 0.05);
+    m.scale.z = msg.scale + (msg.scale * 0.05);
+    m.color.r = r;
+    m.color.g = g;
+    m.color.b = b;
+    m.color.a = 0.1;
+
+    return m;
+  }
+
+  // Make a label to show over the box
+  Marker makeLabel(InteractiveMarker &msg, float r, float g, float b)
+  {
+    Marker m;
+
+    m.type = Marker::TEXT_VIEW_FACING;
+    m.text = msg.name;
+    m.scale.x = 0.035;
+    m.scale.y = 0.035;
+    m.scale.z = 0.035;
+    m.color.r = r;
+    m.color.g = g;
+    m.color.b = b;
+    m.color.a = 0.8;
+
+    m.pose.position.z = msg.scale/2.0 + 0.025;
+
+    return m;
   }
 
 };

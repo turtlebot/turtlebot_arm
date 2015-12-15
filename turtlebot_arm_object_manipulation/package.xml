@@ -23,10 +23,12 @@
   <build_depend>visualization_msgs</build_depend>
   <build_depend>arbotix_msgs</build_depend>
   <build_depend>object_recognition_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
   <build_depend>moveit_msgs</build_depend>
   <build_depend>moveit_core</build_depend>
   <build_depend>moveit_ros_planning_interface</build_depend>
   <build_depend>yocs_math_toolkit</build_depend>
+  <build_depend>geometric_shapes</build_depend>
 
   <run_depend>roscpp</run_depend>
   <run_depend>actionlib</run_depend>
@@ -35,8 +37,10 @@
   <run_depend>visualization_msgs</run_depend>
   <run_depend>arbotix_msgs</run_depend>
   <run_depend>object_recognition_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
   <run_depend>moveit_msgs</run_depend>
   <run_depend>moveit_core</run_depend>
   <run_depend>moveit_ros_planning_interface</run_depend>
   <run_depend>yocs_math_toolkit</run_depend>
+  <run_depend>geometric_shapes</run_depend>
 </package>

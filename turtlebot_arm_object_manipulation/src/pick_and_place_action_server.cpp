@@ -30,6 +30,10 @@
 
 #include <ros/ros.h>
 #include <tf/tf.h>
+#include <tf/transform_listener.h>
+
+#include <eigen_conversions/eigen_msg.h>
+#include <geometric_shapes/shape_operations.h>
 
 #include <yocs_math_toolkit/common.hpp>
 
@@ -65,13 +69,16 @@ private:
   std_srvs::Empty empty_srv_;
   ros::ServiceClient clear_octomap_srv_;
 
+  tf::TransformListener tf_listener_;
+
   // Move groups to control arm and gripper with MoveIt!
   moveit::planning_interface::MoveGroup arm_;
   moveit::planning_interface::MoveGroup gripper_;
 
   // We use the planning_scene_interface::PlanningSceneInterface to manipulate the world
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
-  std::vector<moveit_msgs::AttachedCollisionObject> attached_collision_objs_;
+  std::vector<moveit_msgs::AttachedCollisionObject>  attached_collision_objs_;
+  std::vector<moveit_msgs::CollisionObject>          tabletop_collision_objs_;
 
   // Pick and place parameters
   std::string arm_link;
@@ -81,7 +88,7 @@ private:
   double detach_time;
   double z_backlash;
 
-  const int PICK_ATTEMPTS = 10;
+  const int PICK_ATTEMPTS = 5;
   const int PLACE_ATTEMPTS = PICK_ATTEMPTS;
 
 public:
@@ -130,12 +137,20 @@ public:
 
     // Allow some leeway in position (meters) and orientation (radians)
     arm_.setGoalPositionTolerance(0.001);
-    arm_.setGoalOrientationTolerance(0.1);
+    arm_.setGoalOrientationTolerance(0.02);
 
     // Allow replanning to increase the odds of a solution
     arm_.allowReplanning(true);
 
-    pickAndPlace(goal_->obj_name, goal_->pick_pose, goal_->place_pose);
+    geometry_msgs::PoseStamped pick_pose, place_pose;
+    pick_pose.header = goal_->header;
+    pick_pose.pose = goal_->pick_pose;
+    place_pose.header = goal_->header;
+    place_pose.pose = goal_->place_pose;
+
+    ROS_INFO_STREAM(goal_->header);
+
+    pickAndPlace(goal_->obj_name, pick_pose, place_pose);
   }
 
   void preemptCB()
@@ -150,16 +165,20 @@ public:
 
   void sceneCB(const moveit_msgs::PlanningScene& scene)
   {
+    // Keep collision objects on the table so we can get their pose and size for picking
+    if (scene.world.collision_objects.size() > 0)
+      tabletop_collision_objs_ = scene.world.collision_objects;
+
     // Keep attached collision objects so we can subtract its pose from the place location poses
     attached_collision_objs_ = scene.robot_state.attached_collision_objects;
   }
 
-  bool pickAndPlace(const std::string& obj_name, const geometry_msgs::Pose& pick_pose,
-                                                 const geometry_msgs::Pose& place_pose)
+  bool pickAndPlace(const std::string& obj_name, geometry_msgs::PoseStamped& pick_pose,
+                                                 geometry_msgs::PoseStamped& place_pose)
   {
     if (pick(obj_name, pick_pose))
     {
-      if (place(obj_name, place_pose))
+      if (place(obj_name, place_pose, pick_pose.pose.position.z))
       {
         as_.setSucceeded(result_);
         return true;
@@ -176,20 +195,85 @@ public:
     return false;
   }
 
-  bool pick(const std::string& obj_name, const geometry_msgs::Pose& pose)
+  bool pick(const std::string& obj_name, geometry_msgs::PoseStamped& pose)
   {
-    ROS_INFO("[pick and place] Picking...");
+    // MoveGroup::place will transform the provided place pose with the attached body pose, so the object retains
+    // the orientation it had when picked. However, with our 4-dofs arm this is infeasible (nor we care about the
+    // objects orientation!), so we cancel this transformation. It is applied here:
+    // https://github.com/ros-planning/moveit_ros/blob/jade-devel/manipulation/pick_place/src/place.cpp#L64
+    // More details on this issue: https://github.com/ros-planning/moveit_ros/issues/577
+    bool                       tco_found = false;
+    geometry_msgs::Vector3     tco_size;
+    geometry_msgs::PoseStamped tco_pose;
 
-    // Try up to PICK_ATTEMPTS grasps with slightly different poses
+    // Look for obj_name in the list of available objects
+    for (moveit_msgs::CollisionObject tco: tabletop_collision_objs_)
+    {
+      if (tco.id == obj_name)
+      {
+        tco_pose.header = tco.header;
+        tco_found = true;
+
+        // We get object's pose from the mesh/primitive poses; try first with the meshes
+        if (tco.mesh_poses.size() > 0)
+        {
+          tco_pose.pose = tco.mesh_poses[0];
+          if (tco.meshes.size() > 0)
+          {
+            tf::vectorEigenToMsg(shapes::computeShapeExtents(tco.meshes[0]), tco_size);
+
+            // We assume meshes laying in the floor, so we bump its pose by half z-dimension to
+            // grasp the object at mid-height. TODO: we could try something more sophisticated...
+            tco_pose.pose.position.z += tco_size.z/2.0;
+          }
+          else
+          {
+            ROS_ERROR("[pick and place] Tabletop collision object has no meshes");
+            return false;
+          }
+        }
+        else if (tco.primitive_poses.size() > 0)
+        {
+          tco_pose.pose = tco.primitive_poses[0];
+          if (tco.primitives.size() > 0)
+          {
+            tf::vectorEigenToMsg(shapes::computeShapeExtents(tco.primitives[0]), tco_size);
+          }
+          else
+          {
+            ROS_ERROR("[pick and place] Tabletop collision object has no meshes");
+            return false;
+          }
+        }
+        else
+        {
+          ROS_ERROR("[pick and place] Tabletop collision object has no mesh/primitive poses");
+          return false;
+        }
+      }
+    }
+
+    if (! tco_found)
+    {
+      // Maybe the object name is wrong, or we are not properly listening for monitored planning scene topic,
+      // or the object was not properly created; we cannot continue without knowing object pose and size
+      ROS_ERROR("[pick and place] Tabletop collision object '%s' not found", obj_name.c_str());
+      return false;
+    }
+
+    ROS_INFO("[pick and place] Picking object '%s' with size [%s] at location [%s]...",
+             obj_name.c_str(), mtk::vector2str3D(tco_size).c_str(), mtk::point2str2D(tco_pose.pose.position).c_str());
+
+    // Try up to PICK_ATTEMPTS grasps with slightly different poses                              ; we assume that object pose is a good place to try,  mid-height. TODO: we could try something more sophisticated...
     for (int attempt = 0; attempt < PICK_ATTEMPTS; ++attempt)
     {
-      geometry_msgs::PoseStamped p;
-      p.pose = pose;
-
-      if (!validateTargetPose(p, attempt))
+      geometry_msgs::PoseStamped p = tco_pose;
+      if (!validateTargetPose(p, true, attempt))
       {
         return false;
       }
+
+      ROS_DEBUG("[pick and place] Pick attempt %d at pose [%s]...", attempt, mtk::pose2str3D(p).c_str());
 
       moveit_msgs::Grasp g;
       g.grasp_pose = p;
@@ -204,27 +288,30 @@ public:
       g.post_grasp_retreat.min_distance = 0.005;
       g.post_grasp_retreat.desired_distance = 0.1;
 
-      g.pre_grasp_posture.joint_names.resize(1, "gripper_joint");
+      g.pre_grasp_posture.joint_names.push_back("gripper_joint");
       g.pre_grasp_posture.points.resize(1);
-      g.pre_grasp_posture.points[0].positions.resize(1);
-      g.pre_grasp_posture.points[0].positions[0] = gripper_open;
+      g.pre_grasp_posture.points[0].positions.push_back(gripper_open);
 
-      g.grasp_posture.joint_names.resize(1, "gripper_joint");
+      g.grasp_posture.joint_names.push_back("gripper_joint");
       g.grasp_posture.points.resize(1);
-      g.grasp_posture.points[0].positions.resize(1);
-      g.grasp_posture.points[0].positions[0] = gripper_closed;
+      g.grasp_posture.points[0].positions.push_back(gripper_closed);
 
+      g.allowed_touch_objects.push_back("obj_name");
       g.allowed_touch_objects.push_back("table");
 
       g.id = attempt;
 
       std::vector<moveit_msgs::Grasp> grasps(1, g);
 
-      if (arm_.pick(obj_name, grasps))
+      moveit::planning_interface::MoveItErrorCode result = arm_.pick(obj_name, grasps);
+      if (result)
       {
         ROS_INFO("[pick and place] Pick successfully completed");
+        pose = p;  // provide the used pose so we use the same z coordinate
         return true;
       }
+
+      ROS_DEBUG("[pick and place] Pick attempt %d failed: %s", attempt, mec2str(result));
       
       if (attempt == 1)
         clear_octomap_srv_.call(empty_srv_);
@@ -234,38 +321,81 @@ public:
     return false;
   }
 
-  bool place(const std::string& obj_name, const geometry_msgs::Pose& pose)
+  bool place(const std::string& obj_name, const geometry_msgs::PoseStamped& pose, double pick_position_z)
   {
-    ROS_INFO("[pick and place] Placing...");
+    // MoveGroup::place will transform the provided place pose with the attached body pose, so the object retains
+    // the orientation it had when picked. However, with our 4-dofs arm this is infeasible (nor we care about the
+    // objects orientation!), so we cancel this transformation. It is applied here:
+    // https://github.com/ros-planning/moveit_ros/blob/jade-devel/manipulation/pick_place/src/place.cpp#L64
+    // More details on this issue: https://github.com/ros-planning/moveit_ros/issues/577
+    bool aco_found = false;
+    geometry_msgs::Pose aco_pose;
+
+    // Look for obj_name in the list of attached objects
+    for (moveit_msgs::AttachedCollisionObject aco: attached_collision_objs_)
+    {
+      if (aco.object.id == obj_name)
+      {
+        if (aco.object.primitive_poses.size() > 0)
+        {
+          aco_pose = aco.object.primitive_poses[0];
+          aco_found = true;
+        }
+        else if (aco.object.plane_poses.size() > 0)
+        {
+          aco_pose = aco.object.plane_poses[0];
+          aco_found = true;
+        }
+        else if (aco.object.mesh_poses.size() > 0)
+        {
+          aco_pose = aco.object.mesh_poses[0];
+          aco_found = true;
+        }
+        else
+        {
+          ROS_ERROR("[pick and place] Attached collision object has no pose!");
+        }
+
+        break;
+      }
+    }
+
+    if (! aco_found)
+    {
+      // Maybe pick failed, or we are not properly listening for monitored planning scene topic, or the object was not
+      // properly created; we will not continue because place will surely fail without knowing the attached object pose
+      ROS_ERROR("[pick and place] Attached collision object '%s' not found or not valid", obj_name.c_str());
+      return false;
+    }
+
+    ROS_INFO("[pick and place] Placing object '%s' at pose [%s]...", obj_name.c_str(), mtk::pose2str3D(pose).c_str());
 
     // Try up to PLACE_ATTEMPTS place locations with slightly different poses
     for (int attempt = 0; attempt < PLACE_ATTEMPTS; ++attempt)
     {
-      geometry_msgs::PoseStamped p;
-      p.pose = pose;
-
-      if (!validateTargetPose(p, attempt))
+      geometry_msgs::PoseStamped p = pose;
+      if (!validateTargetPose(p, false, attempt))
       {
         return false;
       }
 
-      if (attached_collision_objs_.size() > 0)
-      {
-        // MoveGroup::place will transform the provided place pose with the attached body pose, so the object retains
-        // the orientation it had when picked. However, with our 4-dofs arm this is infeasible (and also we don't care
-        // about the objects orientation), so we cancel this transformation. It is applied here:
-        // https://github.com/ros-planning/moveit_ros/blob/jade-devel/manipulation/pick_place/src/place.cpp#L64
-        // More details on this issue: https://github.com/ros-planning/moveit_ros/issues/577
-        geometry_msgs::Pose aco_pose = attached_collision_objs_[0].object.primitive_poses[0];
+      // MoveGroup::place will transform the provided place pose with the attached body pose, so the object retains
+      // the orientation it had when picked. However, with our 4-dofs arm this is infeasible (nor we care about the
+      // objects orientation!), so we cancel this transformation. It is applied here:
+      // https://github.com/ros-planning/moveit_ros/blob/jade-devel/manipulation/pick_place/src/place.cpp#L64
+      // More details on this issue: https://github.com/ros-planning/moveit_ros/issues/577
 
-        tf::Transform place_tf, aco_tf;
-        tf::poseMsgToTF(p.pose, place_tf);
-        tf::poseMsgToTF(aco_pose, aco_tf);
-        tf::poseTFToMsg(place_tf * aco_tf, p.pose);
+      aco_pose.position.x = aco_pose.position.y = aco_pose.position.z = 0.0;
+      tf::Transform place_tf, aco_tf;
+      tf::poseMsgToTF(p.pose, place_tf);
+      tf::poseMsgToTF(aco_pose, aco_tf);
+      tf::poseTFToMsg(place_tf * aco_tf, p.pose);
+      p.pose.position.z = pick_position_z;
 
-        ROS_DEBUG("Compensate place pose with the attached object pose [%s]. Results: [%s]",
-                  mtk::pose2str3D(aco_pose).c_str(), mtk::pose2str3D(p.pose).c_str());
-      }
+      ROS_DEBUG("Compensate place pose with the attached object pose [%s]. Results: [%s]",
+                mtk::pose2str3D(aco_pose).c_str(), mtk::pose2str3D(p.pose).c_str());
+
+      ROS_DEBUG("[pick and place] Place attempt %d at pose [%s]...", attempt, mtk::pose2str3D(p).c_str());
 
       moveit_msgs::PlaceLocation l;
       l.place_pose = p;
@@ -280,22 +410,25 @@ public:
       l.post_place_retreat.min_distance = 0.005;
       l.post_place_retreat.desired_distance = 0.1;
 
-      l.post_place_posture.joint_names.resize(1, "gripper_joint");
+      l.post_place_posture.joint_names.push_back("gripper_joint");
       l.post_place_posture.points.resize(1);
-      l.post_place_posture.points[0].positions.resize(1);
-      l.post_place_posture.points[0].positions[0] = gripper_open;
+      l.post_place_posture.points[0].positions.push_back(gripper_open);
 
+      l.allowed_touch_objects.push_back("obj_name");
       l.allowed_touch_objects.push_back("table");
 
       l.id = attempt;
 
       std::vector<moveit_msgs::PlaceLocation> locs(1, l);
 
-      if (arm_.place(obj_name, locs))
+      moveit::planning_interface::MoveItErrorCode result = arm_.place(obj_name, locs);
+      if (result)
       {
         ROS_INFO("[pick and place] Place successfully completed");
         return true;
       }
+
+      ROS_DEBUG("[pick and place] Place attempt %d failed: %s", attempt, mec2str(result));
 
       if (attempt == 1)
         clear_octomap_srv_.call(empty_srv_);
@@ -309,14 +442,30 @@ private:
   /**
    * Convert a simple 3D point into a valid pick/place pose. The orientation Euler angles
    * are calculated as a function of the x and y coordinates, plus some random variations
-   * Increasing with the number of attempts to improve our chances of successful planning.
+   * increasing with the number of attempts to improve our chances of successful planning.
    * @param target Pose target to validate
+   * @param compensate_backlash Increment z to cope with backlash and low pitch poses
    * @param attempt The actual attempts number
    * @return True of success, false otherwise
    */
-  bool validateTargetPose(geometry_msgs::PoseStamped& target, int attempt = 0)
+  bool validateTargetPose(geometry_msgs::PoseStamped& target, bool compensate_backlash, int attempt = 0)
   {
-    target.header.frame_id = arm_link;
+    // We always work relative to the arm base, so roll/pitch/yaw angles calculation make sense
+    if (target.header.frame_id != arm_link)
+    {
+      ROS_DEBUG_STREAM("tf "<< target.header.frame_id << " to " << arm_link << " to " <<  target);
+      transformPose(target.header.frame_id, arm_link, target, target);
+      ROS_DEBUG_STREAM("tf "<< target.header.frame_id << " to " << arm_link << " to " <<  target);
+//      tf::StampedTransform tmp;
+//      mtk::pose2tf(target, tmp);
+//      ROS_DEBUG_STREAM("tf "<< target.header.frame_id << " to " << arm_link << " to " <<  tmp.getOrigin().y());
+//      tf_listener_.waitForTransform(arm_link, target.header.frame_id, ros::Time(0.0), ros::Duration(0.5));
+//      tf_listener_.lookupTransform(arm_link, target.header.frame_id, ros::Time(0.0), tmp);
+//      ROS_DEBUG_STREAM("tf "<< target.header.frame_id << " to " << arm_link << " to " <<  tmp.getOrigin().y());
+//      mtk::tf2pose(tmp, target);
+//      ROS_DEBUG_STREAM("tf "<< target.header.frame_id << " to " << arm_link << " to " <<  kk);
+//      target = kk;
+    }
 
     double x = target.pose.position.x;
     double y = target.pose.position.y;
@@ -341,15 +490,18 @@ private:
     double rr = 0.0;
     target.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(rr, rp, ry);
 
-    // Slightly increase z proportionally to pitch to avoid hitting the table with the lower gripper corner and
-    // a bit extra to compensate the effect of the arm's backlash in the height of the gripper over the table
-    double z_delta1 = std::abs(std::cos(rp))/50.0;
-    double z_delta2 = z_backlash;
-    ROS_DEBUG("[pick and place] Z increase:  %f  +  %f  +  %f", target.pose.position.z, z_delta1, z_delta2);
-    target.pose.position.z += z_delta1;
-    target.pose.position.z += z_delta2;
+    if (compensate_backlash)
+    {
+      // Slightly increase z proportionally to pitch to avoid hitting the table with the lower gripper corner and
+      // a bit extra to compensate the effect of the arm's backlash in the height of the gripper over the table
+      double z_delta1 = std::abs(std::cos(rp))/50.0;
+      double z_delta2 = z_backlash;
+      ROS_DEBUG("[pick and place] Z increase:  %f  +  %f  +  %f", target.pose.position.z, z_delta1, z_delta2);
+      target.pose.position.z += z_delta1;
+      target.pose.position.z += z_delta2;
+    }
 
-    ROS_DEBUG("[pick and place] Set pose target [%s] [d: %.2f]", mtk::pose2str3D(target.pose).c_str(), d);
+    ROS_DEBUG("[pick and place] Target pose [%s] [d: %.2f]", mtk::pose2str3D(target.pose).c_str(), d);
     target_pose_pub_.publish(target);
 
     return true;
@@ -387,6 +539,92 @@ private:
   {
     return ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
   }
+
+  const char* mec2str(const moveit::planning_interface::MoveItErrorCode& mec)
+  {
+    switch (mec.val)
+    {
+      case moveit::planning_interface::MoveItErrorCode::SUCCESS:
+        return "success";
+      case moveit::planning_interface::MoveItErrorCode::FAILURE:
+        return "failure";
+      case moveit::planning_interface::MoveItErrorCode::PLANNING_FAILED:
+        return "planning failed";
+      case moveit::planning_interface::MoveItErrorCode::INVALID_MOTION_PLAN:
+        return "invalid motion plan";
+      case moveit::planning_interface::MoveItErrorCode::MOTION_PLAN_INVALIDATED_BY_ENVIRONMENT_CHANGE:
+        return "motion plan invalidated by environment change";
+      case moveit::planning_interface::MoveItErrorCode::CONTROL_FAILED:
+        return "control failed";
+      case moveit::planning_interface::MoveItErrorCode::UNABLE_TO_AQUIRE_SENSOR_DATA:
+        return "unable to acquire sensor data";
+      case moveit::planning_interface::MoveItErrorCode::TIMED_OUT:
+        return "timed out";
+      case moveit::planning_interface::MoveItErrorCode::PREEMPTED:
+        return "preempted";
+      case moveit::planning_interface::MoveItErrorCode::START_STATE_IN_COLLISION:
+        return "start state in collision";
+      case moveit::planning_interface::MoveItErrorCode::START_STATE_VIOLATES_PATH_CONSTRAINTS:
+        return "start state violates path constraints";
+      case moveit::planning_interface::MoveItErrorCode::GOAL_IN_COLLISION:
+        return "goal in collision";
+      case moveit::planning_interface::MoveItErrorCode::GOAL_VIOLATES_PATH_CONSTRAINTS:
+        return "goal violates path constraints";
+      case moveit::planning_interface::MoveItErrorCode::GOAL_CONSTRAINTS_VIOLATED:
+        return "goal constraints violated";
+      case moveit::planning_interface::MoveItErrorCode::INVALID_GROUP_NAME:
+        return "invalid group name";
+      case moveit::planning_interface::MoveItErrorCode::INVALID_GOAL_CONSTRAINTS:
+        return "invalid goal constraints";
+      case moveit::planning_interface::MoveItErrorCode::INVALID_ROBOT_STATE:
+        return "invalid robot state";
+      case moveit::planning_interface::MoveItErrorCode::INVALID_LINK_NAME:
+        return "invalid link name";
+      case moveit::planning_interface::MoveItErrorCode::INVALID_OBJECT_NAME:
+        return "invalid object name";
+      case moveit::planning_interface::MoveItErrorCode::FRAME_TRANSFORM_FAILURE:
+        return "frame transform failure";
+      case moveit::planning_interface::MoveItErrorCode::COLLISION_CHECKING_UNAVAILABLE:
+        return "collision checking unavailable";
+      case moveit::planning_interface::MoveItErrorCode::ROBOT_STATE_STALE:
+        return "robot state stale";
+      case moveit::planning_interface::MoveItErrorCode::SENSOR_INFO_STALE:
+        return "sensor info stale";
+      case moveit::planning_interface::MoveItErrorCode::NO_IK_SOLUTION:
+        return "no ik solution";
+      default:
+        return "unrecognized error code";
+    }
+  }
+
+
+  bool transformPose(const std::string& in_frame, const std::string& out_frame,
+                     const geometry_msgs::PoseStamped& in_pose, geometry_msgs::PoseStamped& out_pose)
+  {
+//    geometry_msgs::PoseStamped in_stamped;
+//    geometry_msgs::PoseStamped out_stamped;
+//
+//    in_stamped.header.frame_id = in_frame;
+//    in_stamped.pose = in_pose;
+    try
+    {
+      tf_listener_.waitForTransform(in_frame, out_frame, ros::Time(0.0), ros::Duration(1.0));
+      tf_listener_.transformPose(out_frame, in_pose, out_pose);
+
+      return true;
+    }
+    catch (tf::InvalidArgument& e)
+    {
+      ROS_ERROR("[object detection] Transformed pose has invalid orientation: %s", e.what());
+      return false;
+    }
+    catch (tf::TransformException& e)
+    {
+      ROS_ERROR("[object detection] Could not get sensor to arm transform: %s", e.what());
+      return false;
+    }
+  }
+
 };
 
 
@@ -580,10 +818,10 @@ private:
    */
   bool setGripper(float opening, bool wait_for_complete = true)
   {
-    ROS_DEBUG("[pick and place] Set gripper opening to %f", opening);
+    ROS_DEBUG("[move to target] Set gripper opening to %f", opening);
     if (gripper_.setJointValueTarget("gripper_joint", opening) == false)
     {
-      ROS_ERROR("[pick and place] Set gripper opening to %f failed", opening);
+      ROS_ERROR("[move to target] Set gripper opening to %f failed", opening);
       return false;
     }
 
@@ -595,7 +833,7 @@ private:
     }
     else
     {
-      ROS_ERROR("[pick and place] Set gripper opening failed (error %d)", result.val);
+      ROS_ERROR("[move to target] Set gripper opening failed (error %d)", result.val);
       return false;
     }
   }
