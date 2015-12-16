@@ -40,10 +40,6 @@
 using namespace visualization_msgs;
 
 const std::string arm_link = "/arm_base_link";
-const double gripper_open = 0.042;
-const double gripper_closed = 0.024;
-
-const double obj_size = 0.0025;
 
 
 class ObjectManipulationAction
@@ -73,11 +69,8 @@ public:
     
     // Initialize goals
     object_detection_goal_.frame = arm_link;
-    object_detection_goal_.obj_size = obj_size;
     
     pick_and_place_goal_.frame = arm_link;
-    pick_and_place_goal_.gripper_open = gripper_open;
-    pick_and_place_goal_.gripper_closed = gripper_closed;
     
     ROS_INFO("Finished initializing, waiting for servers...");
     
@@ -100,15 +93,13 @@ public:
   void addObjects(const actionlib::SimpleClientGoalState& state, const turtlebot_arm_object_manipulation::ObjectDetectionResultConstPtr& result)
   {
     ROS_INFO("Got object detection callback. Adding objects.");
-    geometry_msgs::Pose object;
     
-    for (unsigned int i=0; i < result->obj_poses.poses.size(); i++)
+    for (unsigned int i=0; i < result->obj_names.size(); i++)
     {
-      object = result->obj_poses.poses[i];
-      addObject(object.position.x, object.position.y, object.position.z, i);
-      ROS_INFO("Added %d objects", i);
+      // addObject(object.position.x, object.position.y, object.position.z, i);  TODO
+      ROS_INFO("Added %d objects: '%s'", i, result->obj_names[i].c_str());
     }
-    
+
     server_.applyChanges(); 
   }
   
@@ -138,8 +129,6 @@ public:
     pick_and_place_goal_.pick_pose = start_pose;
     pick_and_place_goal_.place_pose = end_pose;
     pick_and_place_action_.sendGoalAndWait(pick_and_place_goal_, ros::Duration(30.0), ros::Duration(30.0));
-    //pick_and_place_action_.sendGoal(pick_and_place_goal_);
-    //pick_and_place_action_.waitForResult(ros::Duration(30.0));
     
     if ( object_detection_action_.getState()  == actionlib::SimpleClientGoalState::SUCCEEDED)
     {

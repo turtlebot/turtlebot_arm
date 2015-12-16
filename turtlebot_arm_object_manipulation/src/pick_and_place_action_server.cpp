@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Vanadium Labs LLC
+ * Copyright (c) 2015, Jorge Santos
  * All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Michael Ferguson, Helen Oleynikova
+ * Author: Jorge Santos
  */
 
 #include <ros/ros.h>
@@ -83,7 +83,6 @@ private:
   // Pick and place parameters
   std::string arm_link;
   double gripper_open;
-  double gripper_closed;
   double attach_time;
   double detach_time;
   double z_backlash;
@@ -101,6 +100,7 @@ public:
     nh.param("grasp_attach_time", attach_time, 0.8);
     nh.param("grasp_detach_time", detach_time, 0.6);
     nh.param("vertical_backlash", z_backlash, 0.01);
+    nh.param("/gripper_controller/max_opening", gripper_open, 0.045);
 
     // Register the goal and feedback callbacks
     as_.registerGoalCallback(boost::bind(&PickAndPlaceServer::goalCB, this));
@@ -129,8 +129,8 @@ public:
 
     goal_ = as_.acceptNewGoal();
     arm_link = goal_->frame;
-    gripper_open = goal_->gripper_open;
-    gripper_closed = goal_->gripper_closed;
+//    gripper_open = goal_->gripper_open;
+//    gripper_closed = goal_->gripper_closed;
 
     arm_.setPoseReferenceFrame(arm_link);
     arm_.setSupportSurfaceName("table");
@@ -147,8 +147,6 @@ public:
     pick_pose.pose = goal_->pick_pose;
     place_pose.header = goal_->header;
     place_pose.pose = goal_->place_pose;
-
-    ROS_INFO_STREAM(goal_->header);
 
     pickAndPlace(goal_->obj_name, pick_pose, place_pose);
   }
@@ -202,8 +200,8 @@ public:
     // objects orientation!), so we cancel this transformation. It is applied here:
     // https://github.com/ros-planning/moveit_ros/blob/jade-devel/manipulation/pick_place/src/place.cpp#L64
     // More details on this issue: https://github.com/ros-planning/moveit_ros/issues/577
-    bool                       tco_found = false;
-    geometry_msgs::Vector3     tco_size;
+    bool tco_found = false;
+    Eigen::Vector3d tco_size;
     geometry_msgs::PoseStamped tco_pose;
 
     // Look for obj_name in the list of available objects
@@ -220,11 +218,11 @@ public:
           tco_pose.pose = tco.mesh_poses[0];
           if (tco.meshes.size() > 0)
           {
-            tf::vectorEigenToMsg(shapes::computeShapeExtents(tco.meshes[0]), tco_size);
+            tco_size = shapes::computeShapeExtents(tco.meshes[0]);
 
             // We assume meshes laying in the floor, so we bump its pose by half z-dimension to
             // grasp the object at mid-height. TODO: we could try something more sophisticated...
-            tco_pose.pose.position.z += tco_size.z/2.0;
+            tco_pose.pose.position.z += tco_size[2]/2.0;
           }
           else
           {
@@ -237,7 +235,7 @@ public:
           tco_pose.pose = tco.primitive_poses[0];
           if (tco.primitives.size() > 0)
           {
-            tf::vectorEigenToMsg(shapes::computeShapeExtents(tco.primitives[0]), tco_size);
+            tco_size = shapes::computeShapeExtents(tco.primitives[0]);
           }
           else
           {
@@ -261,10 +259,10 @@ public:
       return false;
     }
 
-    ROS_INFO("[pick and place] Picking object '%s' with size [%s] at location [%s]...",
-             obj_name.c_str(), mtk::vector2str3D(tco_size).c_str(), mtk::point2str2D(tco_pose.pose.position).c_str());
+    ROS_INFO("[pick and place] Picking object '%s' with size [%.3f, %.3f, %.3f] at location [%s]...",
+             obj_name.c_str(), tco_size[0], tco_size[1], tco_size[2], mtk::point2str2D(tco_pose.pose.position).c_str());
 
-    // Try up to PICK_ATTEMPTS grasps with slightly different poses                              ; we assume that object pose is a good place to try,  mid-height. TODO: we could try something more sophisticated...
+    // Try up to PICK_ATTEMPTS grasps with slightly different poses
     for (int attempt = 0; attempt < PICK_ATTEMPTS; ++attempt)
     {
       geometry_msgs::PoseStamped p = tco_pose;
@@ -292,9 +290,11 @@ public:
       g.pre_grasp_posture.points.resize(1);
       g.pre_grasp_posture.points[0].positions.push_back(gripper_open);
 
+      // As we grasp the object "blindly", just in the center, we use the maximum possible value as the opened
+      // gripper position and the smallest dimension minus a small "tightening" epsilon as the closed position
       g.grasp_posture.joint_names.push_back("gripper_joint");
       g.grasp_posture.points.resize(1);
-      g.grasp_posture.points[0].positions.push_back(gripper_closed);
+      g.grasp_posture.points[0].positions.push_back(tco_size.minCoeff() - 0.002);
 
       g.allowed_touch_objects.push_back("obj_name");
       g.allowed_touch_objects.push_back("table");

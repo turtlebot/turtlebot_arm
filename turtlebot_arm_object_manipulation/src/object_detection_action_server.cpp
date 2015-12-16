@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Willow Garage, Inc.
+ * Copyright (c) 2015, Jorge Santos
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  * 
- * Author: Michael Ferguson, Helen Oleynikova
+ * Author: Jorge Santos
  */
 
 #include <cmath>
@@ -90,8 +90,6 @@ private:
   // Publishers and subscribers
   ros::Subscriber table_sub_;
 
-  ros::Publisher block_pub_;
-  ros::Publisher c_obj_pub_;
   ros::Publisher scene_pub_;
   ros::Publisher clear_objs_pub_;
   ros::Publisher clear_table_pub_;
@@ -157,9 +155,6 @@ public:
     // Subscribe to detected tables array
     table_sub_ = nh_.subscribe("tabletop/table_array", 1, &ObjectDetectionServer::tableCb, this);
 
-    // Publish detected blocks poses
-    block_pub_ = nh_.advertise<geometry_msgs::PoseArray>("turtlebot_blocks", 1, true);
-
     // Publish planning scene changes
     scene_pub_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1, true);
 
@@ -181,9 +176,7 @@ public:
     // Clear results from previous goals
     table_poses_.clear();
     table_params_.clear();
-    result_.obj_poses.poses.clear();
     result_.obj_names.clear();
-    result_.obj_poses.header.frame_id = arm_link_;
 
     planning_scene_interface_.removeCollisionObjects(planning_scene_interface_.getKnownObjectNames());
 
@@ -252,7 +245,6 @@ public:
     int added_objects = addObjects(detection_bins);
     if (added_objects > 0)
     {
-      block_pub_.publish(result_.obj_poses);
       ROS_INFO("[object detection] Succeeded! %d objects detected", added_objects);
 
       // Add also the table as a collision object, so it gets filtered out from MoveIt! octomap
@@ -274,7 +266,7 @@ public:
     }
     else
     {
-      ROS_INFO("[object detection] Succeeded, but couldn't find any blocks this iteration");
+      ROS_INFO("[object detection] Succeeded, but couldn't find any object");
     }
 
     od_as_.setSucceeded(result_);
@@ -354,9 +346,9 @@ private:
         continue;
       }
 
-      // Compose object name with the name provided by the database plus an index, starting with [1]
       try
       {
+        // Compose object name with the name provided by the database plus an index, starting with [1]
         object_recognition_msgs::ObjectInformation obj_info = getObjInfo(bin.getType());
         obj_name_occurences[obj_info.name]++;
         std::stringstream sstream;
@@ -371,12 +363,11 @@ private:
         ROS_INFO("[object detection] Adding '%s' object at %s",
                  obj_name.c_str(), mtk::point2str3D(out_pose.position).c_str());
 
-        result_.obj_poses.poses.push_back(out_pose);
         result_.obj_names.push_back(obj_name);
 
         moveit_msgs::CollisionObject co;
-        co.header = result_.obj_poses.header;
         co.id = obj_name;
+        co.header.frame_id = arm_link_;
         ROS_DEBUG_STREAM( "creo q puedo pasar de frames!!!  convierte todo a /map!!! (xq moveit planea en map, creo)               \n"<<co.header.frame_id << "               \n"<<bin.getCentroid().header.frame_id << "               \n"<<arm_link_);
 
         co.operation = moveit_msgs::CollisionObject::ADD;

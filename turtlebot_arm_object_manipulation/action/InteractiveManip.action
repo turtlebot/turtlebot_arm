@@ -1,9 +1,6 @@
 # goal definition
 
 string frame
-float32 obj_size
-geometry_msgs/PoseArray obj_poses
-string[] obj_names
 
 ---
 
