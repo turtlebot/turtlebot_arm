@@ -32,20 +32,20 @@
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 
-#include <eigen_conversions/eigen_msg.h>
+#include <std_srvs/Empty.h>
+
+// auxiliary libraries
+#include <yocs_math_toolkit/common.hpp>
 #include <geometric_shapes/shape_operations.h>
 
-#include <yocs_math_toolkit/common.hpp>
-
-#include <std_srvs/Empty.h>
-#include <geometry_msgs/PoseArray.h>
-
+// action servers
 #include <actionlib/server/simple_action_server.h>
 #include <turtlebot_arm_object_manipulation/PickAndPlaceAction.h>
 #include <turtlebot_arm_object_manipulation/MoveToTargetAction.h>
 
+// MoveIt!
 #include <moveit_msgs/Grasp.h>
-#include <moveit_msgs/PlanningScene.h>
+#include <moveit_msgs/PlaceLocation.h>
 #include <moveit/move_group_interface/move_group.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
@@ -75,10 +75,8 @@ private:
   moveit::planning_interface::MoveGroup arm_;
   moveit::planning_interface::MoveGroup gripper_;
 
-  // We use the planning_scene_interface::PlanningSceneInterface to manipulate the world
+  // We use the planning scene to gather information of tabletop/attached objects
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
-  std::vector<moveit_msgs::AttachedCollisionObject>  attached_collision_objs_;
-  std::vector<moveit_msgs::CollisionObject>          tabletop_collision_objs_;
 
   // Pick and place parameters
   std::string arm_link;
@@ -111,9 +109,6 @@ public:
     // We will clear the octomap and retry whenever a pick/place fails
     clear_octomap_srv_ = nh.serviceClient<std_srvs::Empty>("/clear_octomap");
 
-    // We subscribe to planning scene to keep track of attached/detached objects
-    planning_scene_sub_ = nh.subscribe("/move_group/monitored_planning_scene", 1, &PickAndPlaceServer::sceneCB, this);
-
     // We publish the pick and place poses for debugging purposes
     target_pose_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/target_pose", 1, true);
   }
@@ -129,8 +124,6 @@ public:
 
     goal_ = as_.acceptNewGoal();
     arm_link = goal_->frame;
-//    gripper_open = goal_->gripper_open;
-//    gripper_closed = goal_->gripper_closed;
 
     arm_.setPoseReferenceFrame(arm_link);
     arm_.setSupportSurfaceName("table");
@@ -161,16 +154,6 @@ public:
     as_.setPreempted();
   }
 
-  void sceneCB(const moveit_msgs::PlanningScene& scene)
-  {
-    // Keep collision objects on the table so we can get their pose and size for picking
-    if (scene.world.collision_objects.size() > 0)
-      tabletop_collision_objs_ = scene.world.collision_objects;
-
-    // Keep attached collision objects so we can subtract its pose from the place location poses
-    attached_collision_objs_ = scene.robot_state.attached_collision_objects;
-  }
-
   bool pickAndPlace(const std::string& obj_name, geometry_msgs::PoseStamped& pick_pose,
                                                  geometry_msgs::PoseStamped& place_pose)
   {
@@ -195,67 +178,64 @@ public:
 
   bool pick(const std::string& obj_name, geometry_msgs::PoseStamped& pose)
   {
-    // MoveGroup::place will transform the provided place pose with the attached body pose, so the object retains
-    // the orientation it had when picked. However, with our 4-dofs arm this is infeasible (nor we care about the
-    // objects orientation!), so we cancel this transformation. It is applied here:
-    // https://github.com/ros-planning/moveit_ros/blob/jade-devel/manipulation/pick_place/src/place.cpp#L64
-    // More details on this issue: https://github.com/ros-planning/moveit_ros/issues/577
-    bool tco_found = false;
-    Eigen::Vector3d tco_size;
-    geometry_msgs::PoseStamped tco_pose;
-
     // Look for obj_name in the list of available objects
-    for (moveit_msgs::CollisionObject tco: tabletop_collision_objs_)
+    std::map<std::string, moveit_msgs::CollisionObject> objects =
+        planning_scene_interface_.getObjects(std::vector<std::string>(1, obj_name));
+    if (objects.size() == 0)
     {
-      if (tco.id == obj_name)
-      {
-        tco_pose.header = tco.header;
-        tco_found = true;
-
-        // We get object's pose from the mesh/primitive poses; try first with the meshes
-        if (tco.mesh_poses.size() > 0)
-        {
-          tco_pose.pose = tco.mesh_poses[0];
-          if (tco.meshes.size() > 0)
-          {
-            tco_size = shapes::computeShapeExtents(tco.meshes[0]);
-
-            // We assume meshes laying in the floor, so we bump its pose by half z-dimension to
-            // grasp the object at mid-height. TODO: we could try something more sophisticated...
-            tco_pose.pose.position.z += tco_size[2]/2.0;
-          }
-          else
-          {
-            ROS_ERROR("[pick and place] Tabletop collision object has no meshes");
-            return false;
-          }
-        }
-        else if (tco.primitive_poses.size() > 0)
-        {
-          tco_pose.pose = tco.primitive_poses[0];
-          if (tco.primitives.size() > 0)
-          {
-            tco_size = shapes::computeShapeExtents(tco.primitives[0]);
-          }
-          else
-          {
-            ROS_ERROR("[pick and place] Tabletop collision object has no meshes");
-            return false;
-          }
-        }
-        else
-        {
-          ROS_ERROR("[pick and place] Tabletop collision object has no mesh/primitive poses");
-          return false;
-        }
-      }
+      // Maybe the object's interactive marker name is wrong?
+      ROS_ERROR("[pick and place] Tabletop collision object '%s' not found", obj_name.c_str());
+      return false;
     }
 
-    if (! tco_found)
+    if (objects.size() > 1)
     {
-      // Maybe the object name is wrong, or we are not properly listening for monitored planning scene topic,
-      // or the object was not properly created; we cannot continue without knowing object pose and size
-      ROS_ERROR("[pick and place] Tabletop collision object '%s' not found", obj_name.c_str());
+      // This should not happen, as object detection tries to provide unique names to all objects...
+      ROS_WARN("[pick and place] More than one (%d) tabletop collision objects with name '%s' found!",
+               objects.size(), obj_name.c_str());
+    }
+
+    // We need object's pose and size for picking
+    Eigen::Vector3d tco_size;
+    geometry_msgs::PoseStamped tco_pose;
+    const moveit_msgs::CollisionObject& tco = objects[obj_name];
+
+    tco_pose.header = tco.header;
+
+    // We get object's pose from the mesh/primitive poses; try first with the meshes
+    if (tco.mesh_poses.size() > 0)
+    {
+      tco_pose.pose = tco.mesh_poses[0];
+      if (tco.meshes.size() > 0)
+      {
+        tco_size = shapes::computeShapeExtents(tco.meshes[0]);
+
+        // We assume meshes laying in the floor, so we bump its pose by half z-dimension to
+        // grasp the object at mid-height. TODO: we could try something more sophisticated...
+        tco_pose.pose.position.z += tco_size[2]/2.0;
+      }
+      else
+      {
+        ROS_ERROR("[pick and place] Tabletop collision object '%s' has no meshes", obj_name.c_str());
+        return false;
+      }
+    }
+    else if (tco.primitive_poses.size() > 0)
+    {
+      tco_pose.pose = tco.primitive_poses[0];
+      if (tco.primitives.size() > 0)
+      {
+        tco_size = shapes::computeShapeExtents(tco.primitives[0]);
+      }
+      else
+      {
+        ROS_ERROR("[pick and place] Tabletop collision object '%s' has no primitives", obj_name.c_str());
+        return false;
+      }
+    }
+    else
+    {
+      ROS_ERROR("[pick and place] Tabletop collision object '%s' has no mesh/primitive poses", obj_name.c_str());
       return false;
     }
 
@@ -323,48 +303,39 @@ public:
 
   bool place(const std::string& obj_name, const geometry_msgs::PoseStamped& pose, double pick_position_z)
   {
-    // MoveGroup::place will transform the provided place pose with the attached body pose, so the object retains
-    // the orientation it had when picked. However, with our 4-dofs arm this is infeasible (nor we care about the
-    // objects orientation!), so we cancel this transformation. It is applied here:
-    // https://github.com/ros-planning/moveit_ros/blob/jade-devel/manipulation/pick_place/src/place.cpp#L64
-    // More details on this issue: https://github.com/ros-planning/moveit_ros/issues/577
-    bool aco_found = false;
-    geometry_msgs::Pose aco_pose;
-
     // Look for obj_name in the list of attached objects
-    for (moveit_msgs::AttachedCollisionObject aco: attached_collision_objs_)
-    {
-      if (aco.object.id == obj_name)
-      {
-        if (aco.object.primitive_poses.size() > 0)
-        {
-          aco_pose = aco.object.primitive_poses[0];
-          aco_found = true;
-        }
-        else if (aco.object.plane_poses.size() > 0)
-        {
-          aco_pose = aco.object.plane_poses[0];
-          aco_found = true;
-        }
-        else if (aco.object.mesh_poses.size() > 0)
-        {
-          aco_pose = aco.object.mesh_poses[0];
-          aco_found = true;
-        }
-        else
-        {
-          ROS_ERROR("[pick and place] Attached collision object has no pose!");
-        }
+    std::map<std::string, moveit_msgs::AttachedCollisionObject> objects =
+        planning_scene_interface_.getAttachedObjects(std::vector<std::string>(1, obj_name));
 
-        break;
-      }
+    if (objects.size() == 0)
+    {
+      // Maybe pick failed; we will not continue because place will surely fail without knowing the attaching pose
+      ROS_ERROR("[pick and place] Attached collision object '%s' not found", obj_name.c_str());
+      return false;
     }
 
-    if (! aco_found)
+    if (objects.size() > 1)
     {
-      // Maybe pick failed, or we are not properly listening for monitored planning scene topic, or the object was not
-      // properly created; we will not continue because place will surely fail without knowing the attached object pose
-      ROS_ERROR("[pick and place] Attached collision object '%s' not found or not valid", obj_name.c_str());
+      // This should not happen... we grasped two objects with the same name???
+      ROS_WARN("[pick and place] More than one (%d) attached collision objects with name '%s' found!",
+               objects.size(), obj_name.c_str());
+    }
+
+    // We just need object's pose so we can subtract its pose from the place location poses
+    geometry_msgs::Pose aco_pose;  // No stamped; it's relative to attaching frame (gripper_link)
+    const moveit_msgs::AttachedCollisionObject& aco = objects[obj_name];
+
+    if (aco.object.primitive_poses.size() > 0)
+    {
+      aco_pose = aco.object.primitive_poses[0];
+    }
+    else if (aco.object.mesh_poses.size() > 0)
+    {
+      aco_pose = aco.object.mesh_poses[0];
+    }
+    else
+    {
+      ROS_ERROR("[pick and place] Attached collision object '%s' has no pose!", obj_name.c_str());
       return false;
     }
 
@@ -384,8 +355,6 @@ public:
       // objects orientation!), so we cancel this transformation. It is applied here:
       // https://github.com/ros-planning/moveit_ros/blob/jade-devel/manipulation/pick_place/src/place.cpp#L64
       // More details on this issue: https://github.com/ros-planning/moveit_ros/issues/577
-
-      aco_pose.position.x = aco_pose.position.y = aco_pose.position.z = 0.0;
       tf::Transform place_tf, aco_tf;
       tf::poseMsgToTF(p.pose, place_tf);
       tf::poseMsgToTF(aco_pose, aco_tf);
@@ -453,18 +422,7 @@ private:
     // We always work relative to the arm base, so roll/pitch/yaw angles calculation make sense
     if (target.header.frame_id != arm_link)
     {
-      ROS_DEBUG_STREAM("tf "<< target.header.frame_id << " to " << arm_link << " to " <<  target);
       transformPose(target.header.frame_id, arm_link, target, target);
-      ROS_DEBUG_STREAM("tf "<< target.header.frame_id << " to " << arm_link << " to " <<  target);
-//      tf::StampedTransform tmp;
-//      mtk::pose2tf(target, tmp);
-//      ROS_DEBUG_STREAM("tf "<< target.header.frame_id << " to " << arm_link << " to " <<  tmp.getOrigin().y());
-//      tf_listener_.waitForTransform(arm_link, target.header.frame_id, ros::Time(0.0), ros::Duration(0.5));
-//      tf_listener_.lookupTransform(arm_link, target.header.frame_id, ros::Time(0.0), tmp);
-//      ROS_DEBUG_STREAM("tf "<< target.header.frame_id << " to " << arm_link << " to " <<  tmp.getOrigin().y());
-//      mtk::tf2pose(tmp, target);
-//      ROS_DEBUG_STREAM("tf "<< target.header.frame_id << " to " << arm_link << " to " <<  kk);
-//      target = kk;
     }
 
     double x = target.pose.position.x;
@@ -601,11 +559,6 @@ private:
   bool transformPose(const std::string& in_frame, const std::string& out_frame,
                      const geometry_msgs::PoseStamped& in_pose, geometry_msgs::PoseStamped& out_pose)
   {
-//    geometry_msgs::PoseStamped in_stamped;
-//    geometry_msgs::PoseStamped out_stamped;
-//
-//    in_stamped.header.frame_id = in_frame;
-//    in_stamped.pose = in_pose;
     try
     {
       tf_listener_.waitForTransform(in_frame, out_frame, ros::Time(0.0), ros::Duration(1.0));
@@ -615,12 +568,12 @@ private:
     }
     catch (tf::InvalidArgument& e)
     {
-      ROS_ERROR("[object detection] Transformed pose has invalid orientation: %s", e.what());
+      ROS_ERROR("[pick and place] Transformed pose has invalid orientation: %s", e.what());
       return false;
     }
     catch (tf::TransformException& e)
     {
-      ROS_ERROR("[object detection] Could not get sensor to arm transform: %s", e.what());
+      ROS_ERROR("[pick and place] Could not get sensor to arm transform: %s", e.what());
       return false;
     }
   }

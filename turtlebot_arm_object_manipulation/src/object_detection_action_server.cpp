@@ -90,7 +90,6 @@ private:
   // Publishers and subscribers
   ros::Subscriber table_sub_;
 
-  ros::Publisher scene_pub_;
   ros::Publisher clear_objs_pub_;
   ros::Publisher clear_table_pub_;
 
@@ -115,7 +114,7 @@ private:
   std::string arm_link_;
   
   // Object detection and classification constants
-  const double   CONFIDENCE_THRESHOLD  = 0.9;    // minimum confidence required to accept an object
+  const double   CONFIDENCE_THRESHOLD  = 0.85;   // minimum confidence required to accept an object
   const double   CLUSTERING_THRESHOLD  = 0.05;   // maximum acceptable distance to assign an object to a bin
   const unsigned CALLS_TO_ORK_TABLETOP = 10;
 
@@ -155,9 +154,7 @@ public:
     // Subscribe to detected tables array
     table_sub_ = nh_.subscribe("tabletop/table_array", 1, &ObjectDetectionServer::tableCb, this);
 
-    // Publish planning scene changes
-    scene_pub_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1, true);
-
+    // Publish empty objects and table to clear ORK RViz visualizations
     clear_objs_pub_ =
         nh_.advertise<object_recognition_msgs::RecognizedObjectArray>("/tabletop/recognized_object_array", 1, true);
     clear_table_pub_ =
@@ -407,7 +404,6 @@ private:
     if (collision_objects.size() > 0)
     {
       planning_scene_interface_.addCollisionObjects(collision_objects, ps.object_colors);
-      //scene_pub_.publish(ps);
     }
 
     return collision_objects.size();
@@ -474,8 +470,7 @@ private:
 
     ROS_INFO("[object detection] Adding a table at %s as a collision object, based on %d observations",
              mtk::point2str3D(co.primitive_poses[0].position).c_str(), table_poses.size());
-    std::vector<moveit_msgs::CollisionObject> collision_objects(1, co);
-    planning_scene_interface_.addCollisionObjects(collision_objects);
+    planning_scene_interface_.addCollisionObjects(std::vector<moveit_msgs::CollisionObject>(1, co));
   }
 
   TableDescriptor getTableParams(std::vector<geometry_msgs::Point> convex_hull)
