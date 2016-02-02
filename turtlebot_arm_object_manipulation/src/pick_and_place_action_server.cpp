@@ -802,7 +802,7 @@ private:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "pick_and_place_action_server");
+  ros::init(argc, argv, "object_pick_and_place_action_server");
 
   // Create pick_and_place and move_to_target action servers
   turtlebot_arm_object_manipulation::PickAndPlaceServer pnp_server("pick_and_place");

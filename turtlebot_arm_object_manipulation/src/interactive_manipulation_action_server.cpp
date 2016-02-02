@@ -273,7 +273,7 @@ public:
 int main(int argc, char** argv)
 {
   // initialize node
-  ros::init(argc, argv, "interactive_manipulation_action_server");
+  ros::init(argc, argv, "object_interactive_manip_action_server");
 
   turtlebot_arm_object_manipulation::InteractiveManipulationServer manip("interactive_manipulation");
 
