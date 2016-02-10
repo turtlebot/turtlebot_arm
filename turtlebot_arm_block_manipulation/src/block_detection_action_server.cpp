@@ -139,7 +139,7 @@ public:
 
     // Add the table as a collision object, so it gets filtered out from MoveIt! octomap
     // I let it optional, as I don't know if this will work in most cases, honesty speaking
-    if (table_pose_.size() > 0)
+    if (table_pose_.size() == 3)
     {
       if (std::abs(table_height_ - table_pose_[2]) > 0.05)
         ROS_WARN("The table height (%f) passed with goal and table_pose[2] parameter (%f) " \
@@ -300,8 +300,9 @@ public:
 
         // Discard blocks outside the table limits (normally something detected on the robot)
         // Note that table pose x marks the table border closest to arm_link_ frame, not its center
-        if ((x < table_pose_[0]) || (x > table_pose_[0] + TABLE_SIZE_X) ||
-            (y < table_pose_[1] - TABLE_SIZE_Y/2.0) || (y > table_pose_[1] + TABLE_SIZE_Y/2.0))
+        if ((table_pose_.size() == 3) &&
+            ((x < table_pose_[0]) || (x > table_pose_[0] + TABLE_SIZE_X) ||
+             (y < table_pose_[1] - TABLE_SIZE_Y/2.0) || (y > table_pose_[1] + TABLE_SIZE_Y/2.0)))
         {
           ROS_DEBUG_STREAM("Block at [" << x << ", " << y << "] outside table limits ["
                          << table_pose_[0] - TABLE_SIZE_X/2.0 << ", " << table_pose_[0] + TABLE_SIZE_X/2.0 << ", "
