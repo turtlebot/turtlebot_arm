@@ -91,9 +91,9 @@ private:
   std::vector<double> table_pose_;
 
   // Constants
-  static const double TABLE_SIZE_X = 0.5;
-  static const double TABLE_SIZE_Y = 1.0;
-  static const double TABLE_SIZE_Z = 0.05;
+  const double TABLE_SIZE_X = 0.5;
+  const double TABLE_SIZE_Y = 1.0;
+  const double TABLE_SIZE_Z = 0.05;
 
   
 public:
