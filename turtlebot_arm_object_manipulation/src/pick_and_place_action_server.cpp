@@ -63,10 +63,8 @@ private:
   turtlebot_arm_object_manipulation::PickAndPlaceResult       result_;
   turtlebot_arm_object_manipulation::PickAndPlaceGoalConstPtr goal_;
 
-  ros::Publisher target_pose_pub_;
-  ros::Subscriber planning_scene_sub_;
-
   std_srvs::Empty empty_srv_;
+  ros::Publisher target_pose_pub_;
   ros::ServiceClient clear_octomap_srv_;
 
   tf::TransformListener tf_listener_;
@@ -668,9 +666,6 @@ private:
    */
   bool moveArmTo(const std::string& target)
   {
-    if (target == "resting")  // XXX temporal cheat... blocks less fov to the camera
-      setGripper(0.002, false);
-
     ROS_DEBUG("[move to target] Move arm to '%s' position", target.c_str());
     if (arm_.setNamedTarget(target) == false)
     {
