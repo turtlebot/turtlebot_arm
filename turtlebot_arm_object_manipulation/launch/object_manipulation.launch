@@ -1,0 +1,15 @@
+<launch>
+  <!-- Launch object manipulation action servers -->
+  <node name="object_detection_action_server" pkg="turtlebot_arm_object_manipulation"
+        type="object_detection_action_server" output="screen">
+  </node>
+
+  <node name="object_pick_and_place_action_server" pkg="turtlebot_arm_object_manipulation"
+        type="object_pick_and_place_action_server" output="screen">
+    <param name="vertical_backlash" value="0.01"/>
+  </node>
+  
+  <node name="object_interactive_manip_action_server" pkg="turtlebot_arm_object_manipulation"
+        type="object_interactive_manip_action_server" output="screen">
+  </node>
+</launch>

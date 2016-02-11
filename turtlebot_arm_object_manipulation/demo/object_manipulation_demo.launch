@@ -1,18 +1,59 @@
 <launch>
-  <include file="$(find openni_launch)/launch/openni.launch">
-  	<arg name="depth_registration" value="true" />
+  <arg name="publish_camera_tf" default="true"/>
+
+  <!-- Launch all the action servers for the block manipulation demo -->
+  <include file="$(find turtlebot_arm_object_manipulation)/launch/object_manipulation.launch"/>
+
+
+  <!--  ********** 3D sensors (on/off-board) **********  -->
+
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+    <arg name="camera"                          value="camera"/>
+    <arg name="3d_sensor"                       value="$(env TURTLEBOT_3D_SENSOR)"/>   <!-- kinect, asus_xtion_pro -->
+    <arg name="publish_tf"                      value="$(arg publish_camera_tf)"/>
+    <!-- We only need pointclouds to detect the blocks -->
+    <arg name="depth_registration"              value="true"/>
+    <arg name="rgb_processing"                  value="true"/>
+    <arg name="ir_processing"                   value="false"/>
+    <arg name="depth_processing"                value="true"/>
+    <arg name="depth_registered_processing"     value="true"/>
+    <arg name="disparity_processing"            value="false"/>
+    <arg name="disparity_registered_processing" value="false"/>
+    <arg name="scan_processing"                 value="false"/>
   </include>
 
-  <include file="$(find turtlebot_arm_object_manipulation)/launch/object_manipulation.launch" />
+  <!-- If we are not running the full robot, provide an arbitrary link between arm and 3D camera
+       Normally this is obtained throw camera calibration -->
+  <node if="$(arg publish_camera_tf)" pkg="tf" type="static_transform_publisher" name="link_arm_and_camera"
+                                     args="-0.211 -0.051 0.432 -0.000 0.712 0.020 /arm_base_link /camera_link 100"/>
 
-  <node name="object_manipulation_demo" pkg="turtlebot_arm_object_manipulation" type="object_manipulation_demo" output="screen" >
-    <param name="arm_link" value="/arm_base_link" />
-    <param name="gripper_open" value="0.05" />
-    <param name="gripper_closed" value="0.022" />
-    <param name="z_up" value="0.05" />
-    <param name="table_height" value="-0.03" />
-    <param name="block_size" value="0.025" />
+
+  <!--  ****** Executive smach and visualization ******  -->
+
+  <node name="object_manipulation_demo" pkg="turtlebot_arm_object_manipulation" type="object_manipulation_demo.py" output="screen" required="true">
+    <param name="arm_link" value="arm_base_link"/>
   </node>
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_arm_object_manipulation)/demo/block_manipulation_demo.rviz" />
+  <node name="object_manip_smach_viewer" pkg="smach_viewer" type="smach_viewer.py" output="screen"/>
+
+  <!--  ******* Keyboard interaction with smach *******  -->
+  <node name="keyboard_user_commands" pkg="turtlebot_arm_object_manipulation" type="keyboard_user_commands.py" output="screen">
+    <param name="window_geometry" value="360x240"/>
+    <param name="window_caption" value="Object manipulation user commands"/>
+    <param name="shown_text" value="Available commands: &#10;  s:  start &#10;  r:  reset &#10;  f:  fold &#10;  q:  quit"/>
+    <param name="text_font" value="Comic Sans MS"/>
+    <param name="font_size" value="12"/>
+  </node>
+  
+  
+  <!--  **************** ORK tabletop *****************  -->
+
+  <include file="$(find turtlebot_arm_object_manipulation)/launch/tabletop_object_detection.launch" ns="tabletop"/>
+
+  <node name="object_information_server" pkg="object_recognition_ros" type="object_information_server" output="screen"/>
+
+
+  <!--  ************* RViz visualization **************  -->
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_arm_object_manipulation)/demo/object_manipulation_demo.rviz"/>
 </launch>

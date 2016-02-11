@@ -1,0 +1,53 @@
+#
+# Parameters for the object recognition pipeline using an 3D camera
+#  
+
+source1:
+  type: RosKinect
+  module: 'object_recognition_ros.io'
+  parameters:
+    rgb_frame_id:      /camera_rgb_optical_frame
+    rgb_image_topic:   /camera/rgb/image_raw
+    rgb_camera_info:   /camera/rgb/camera_info
+    depth_image_topic: /camera/depth_registered/image_raw
+    depth_camera_info: /camera/depth_registered/camera_info
+
+sink1:
+  type: TablePublisher
+  module: 'object_recognition_tabletop'
+  inputs: [source1]
+
+sink2:
+  type: Publisher
+  module: 'object_recognition_ros.io'
+  inputs: [source1]
+
+
+pipeline1:
+  type: TabletopTableDetector
+  module: 'object_recognition_tabletop'
+  inputs: [source1]
+  outputs: [sink1]
+  parameters:
+    # table detector
+    min_table_size: 5000          # The minimum number of points deemed necessary to find a table (def. 10000)
+    plane_threshold: 0.01         # The distance used as a threshold when finding a plane (def. 0.02)
+    table_cluster_tolerance: 0.01 # The distance used when clustering a plane (def. 0.2)
+    vertical_frame_id: '/base_link' # The vertical frame id (def. '/map')
+    # clusterer
+    z_crop: 0.2    # The amount to keep in the z direction relative to the coordinate frame defined by the pose (def. 0.5)
+    z_min:  0.005  # The amount to crop above the plane, in meters (def. 0.0075)
+    cluster_distance: 0.01  # The maximum distance between a point and the cluster it belongs to (def. 0.02)
+    min_cluster_size: 300   # Min number of points for a cluster (def. 300)
+
+pipeline2:
+  type: TabletopObjectDetector
+  module: 'object_recognition_tabletop'
+  inputs: [source1, pipeline1]
+  outputs: [sink2]
+  parameters:
+    tabletop_object_ids: 'REDUCED_MODEL_SET'
+    db:
+      type: CouchDB
+      root: http://localhost:5984
+      collection: object_recognition

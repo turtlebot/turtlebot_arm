@@ -2,8 +2,8 @@
   <name>turtlebot_arm_object_manipulation</name>
   <version>0.3.3</version>
   <description>
-    turtlebot_arm_object_manipulation contains a demo allowing the TurtleBot arm
-    to manipulate small blocks on a level surface using interactive markers.
+    turtlebot_arm_object_manipulation contains a demo allowing the TurtleBot arm to
+    recognize, pick and place objects on a level surface using interactive markers.
   </description>
 
   <author>Jorge Santos</author>
@@ -16,6 +16,7 @@
   
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>tf</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>actionlib</build_depend>
   <build_depend>actionlib_msgs</build_depend>
@@ -29,7 +30,9 @@
   <build_depend>moveit_ros_planning_interface</build_depend>
   <build_depend>yocs_math_toolkit</build_depend>
   <build_depend>geometric_shapes</build_depend>
+  <build_depend>shape_msgs</build_depend>
 
+  <run_depend>tf</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>actionlib</run_depend>
   <run_depend>actionlib_msgs</run_depend>
@@ -43,4 +46,15 @@
   <run_depend>moveit_ros_planning_interface</run_depend>
   <run_depend>yocs_math_toolkit</run_depend>
   <run_depend>geometric_shapes</run_depend>
+  <run_depend>shape_msgs</run_depend>
+
+  <!-- Dependencies only required for running -->
+  <run_depend>rospy</run_depend>
+  <run_depend>smach</run_depend>
+  <run_depend>smach_ros</run_depend>
+  <run_depend>smach_viewer</run_depend>
+  <run_depend>object_recognition_ros</run_depend>
+  <run_depend>object_recognition_msgs</run_depend>
+  <run_depend>object_recognition_tabletop</run_depend>
+  
 </package>

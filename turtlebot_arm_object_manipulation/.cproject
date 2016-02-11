@@ -22,7 +22,6 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.432255193" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1984677268" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.560132392" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/home/jorge/workspaces/thorp/devel/include"/>
 									<listOptionValue builtIn="false" value="/home/jorge/workspaces/turtlebot/devel/include"/>
 									<listOptionValue builtIn="false" value="/home/jorge/workspaces/ork/devel/include"/>
 									<listOptionValue builtIn="false" value="/home/jorge/workspaces/moveit/devel/include"/>
@@ -32,6 +31,7 @@
 									<listOptionValue builtIn="false" value="/home/jorge/workspaces/moveit/src/moveit_ros/planning_interface/move_group_interface/include"/>
 									<listOptionValue builtIn="false" value="/home/jorge/workspaces/moveit/src/moveit_ros/planning_interface/planning_scene_interface/include"/>
 									<listOptionValue builtIn="false" value="/home/jorge/workspaces/ork/src/ork_core/include"/>
+									<listOptionValue builtIn="false" value="/home/jorge/workspaces/turtlebot/src/yujin_ocs/yocs_math_toolkit/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1941882620" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -75,4 +75,3 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
-

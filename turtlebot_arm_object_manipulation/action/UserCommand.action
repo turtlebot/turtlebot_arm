@@ -1,0 +1,8 @@
+#goal
+string command
+---
+#result
+string outcome
+---
+#feedback
+string status

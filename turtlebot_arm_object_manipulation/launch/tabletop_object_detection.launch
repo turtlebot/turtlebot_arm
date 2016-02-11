@@ -1,0 +1,28 @@
+<launch>
+  <arg name="debug" default="false"/>
+  <arg unless="$(arg debug)" name="launch_prefix" value=""/>
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args"/>
+  
+  <arg name="as_server"    default="true"/>
+  <arg name="config_file"  default="$(find turtlebot_arm_object_manipulation)/config/tabletop.detection.object.ros.ork"/>
+  <arg name="robot_frame"  default="base_link"/>
+  <arg name="sensor_frame" default="camera_depth_optical_frame"/>
+
+  <node if="$(arg as_server)" name="tabletop_object_recognition_server" pkg="object_recognition_ros" type="server" 
+        args="--node_name tabletop_object_recognition -c $(arg config_file)" launch-prefix="$(arg launch_prefix)">
+  </node>
+
+  <node unless="$(arg as_server)" name="tabletop_object_recognition" pkg="object_recognition_core" type="detection" 
+        args="-c $(arg config_file)" launch-prefix="$(arg launch_prefix)">
+  </node>
+
+  <param name="tabletop_object_recognition/robot_frame"       value="$(arg robot_frame)"/>
+  <param name="tabletop_object_recognition/sensor_frame"      value="$(arg sensor_frame)"/>
+  <param name="tabletop_object_recognition/filter_planes"     value="true"/>
+  <param name="tabletop_object_recognition/min_table_height"  value="0.25"/>
+  <param name="tabletop_object_recognition/max_table_height"  value="0.55"/>
+  <param name="tabletop_object_recognition/max_angle_diff"    value="0.15"/>
+  <param name="tabletop_object_recognition/table_normal_x"    value="0"/>
+  <param name="tabletop_object_recognition/table_normal_y"    value="0"/>
+  <param name="tabletop_object_recognition/table_normal_z"    value="1"/>
+</launch>
