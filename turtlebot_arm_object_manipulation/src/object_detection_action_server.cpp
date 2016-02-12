@@ -307,12 +307,8 @@ public:
     if ((std::abs(mtk::roll(table_pose)) < M_PI/10.0) && (std::abs(mtk::pitch(table_pose)) < M_PI/10.0))
     {
       // Only consider tables within +/-18 degrees away from the horizontal plane
-//table_poses_.clear();table_params_.clear();
       table_poses_.push_back(table_pose);
       table_params_.push_back(getTableParams(table.convex_hull));
-
-//addTable(table_poses_, table_params_);
-//ros::Duration(1.0).sleep();
     }
     else
     {
@@ -365,13 +361,12 @@ private:
         moveit_msgs::CollisionObject co;
         co.id = obj_name;
         co.header.frame_id = arm_link_;
-        ROS_DEBUG_STREAM( "creo q puedo pasar de frames!!!  convierte todo a /map!!! (xq moveit planea en map, creo)               \n"<<co.header.frame_id << "               \n"<<bin.getCentroid().header.frame_id << "               \n"<<arm_link_);
-
         co.operation = moveit_msgs::CollisionObject::ADD;
 
         if (obj_name.find("cube 2.5") != std::string::npos)
         {
-          // XXX, TODO :  temporal hack because bloody cube meshes don't clean the octomap!  (anyway, as I support both mechanism, it's also useful for debug)
+          // XXX, TODO :  temporal hack because bloody meshes don't clean the octomap!  (anyway, as I support both mechanism, it's also useful for debug)
+          // Problem discussed in this moveit-users group thread: https://groups.google.com/forum/?fromgroups#!topic/moveit-users/-GuBSnvCYbM
           co.primitives.resize(1);
           co.primitives[0].type = shape_msgs::SolidPrimitive::BOX;
           co.primitives[0].dimensions.resize(shape_tools::SolidPrimitiveDimCount<shape_msgs::SolidPrimitive::BOX>::value);
@@ -468,7 +463,7 @@ private:
     co.primitive_poses[0].position.y += median(table_center_y);
     co.primitive_poses[0].position.z -= co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z]/2.0;
 
-    ROS_INFO("[object detection] Adding a table at %s as a collision object, based on %d observations",
+    ROS_INFO("[object detection] Adding a table at %s as a collision object, based on %u observations",
              mtk::point2str3D(co.primitive_poses[0].position).c_str(), table_poses.size());
     planning_scene_interface_.addCollisionObjects(std::vector<moveit_msgs::CollisionObject>(1, co));
   }
@@ -478,7 +473,7 @@ private:
     // Calculate centroid, size and orientation for the given 2D convex hull
     // Algorithm adapted from here: http://www.geometrictools.com/Documentation/MinimumAreaRectangle.pdf
     TableDescriptor table;
-    double min_area = std::numeric_limits<double>::max()                          ,table___yaw;
+    double min_area = std::numeric_limits<double>::max();
 
     for (size_t i0 = convex_hull.size() - 1, i1 = 0; i1 < convex_hull.size(); i0 = i1++)
     {
@@ -521,12 +516,9 @@ private:
         if (table.yaw > 0.0)
           table.yaw -= M_PI;
         min_area = area;
-
-        table___yaw = std::atan2(-U1.x(), U1.y());
-
       }
     }
-    ROS_DEBUG("Table parameters: pose [%f, %f, %f   %f], size [%f, %f]", table.center_x, table.center_y, table.yaw,table___yaw, table.size_x, table.size_y);
+    ROS_DEBUG("Table parameters: pose [%f, %f, %f   %f], size [%f, %f]", table.center_x, table.center_y, table.yaw, table.size_x, table.size_y);
 
     return table;
   }

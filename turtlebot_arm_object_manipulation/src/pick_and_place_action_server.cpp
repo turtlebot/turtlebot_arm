@@ -274,7 +274,7 @@ public:
       g.grasp_posture.points.resize(1);
       g.grasp_posture.points[0].positions.push_back(tco_size.minCoeff() - 0.002);
 
-      g.allowed_touch_objects.push_back("obj_name");
+      g.allowed_touch_objects.push_back(obj_name);
       g.allowed_touch_objects.push_back("table");
 
       g.id = attempt;
@@ -381,7 +381,7 @@ public:
       l.post_place_posture.points.resize(1);
       l.post_place_posture.points[0].positions.push_back(gripper_open);
 
-      l.allowed_touch_objects.push_back("obj_name");
+      l.allowed_touch_objects.push_back(obj_name);
       l.allowed_touch_objects.push_back("table");
 
       l.id = attempt;
