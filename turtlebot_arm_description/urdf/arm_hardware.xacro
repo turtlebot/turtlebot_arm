@@ -13,7 +13,7 @@
 
   <xacro:macro name="arm_mount" params="parent name color *origin">
     <joint name="${name}_joint" type="fixed">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <parent link="${parent}"/>
       <child link="${name}_link"/>
     </joint>
@@ -52,7 +52,7 @@
 
   <xacro:macro name="finger_fixed" params="parent name color *origin">
     <joint name="${name}_joint" type="fixed">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <parent link="${parent}"/>
       <child link="${name}_link"/>
     </joint>
@@ -91,7 +91,7 @@
 
   <xacro:macro name="dynamixel_AX12_fixed" params="parent name *origin">
     <joint name="${name}_joint" type="fixed">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <parent link="${parent}"/>
       <child link="${name}_link"/>
     </joint>
@@ -130,7 +130,7 @@
 
   <xacro:macro name="bioloid_F10_fixed" params="parent name color *origin">
     <joint name="${name}_joint" type="fixed">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <parent link="${parent}"/>
       <child link="${name}_link"/>
     </joint>
@@ -169,7 +169,7 @@
 
   <xacro:macro name="bioloid_F3_fixed" params="parent name color *origin">
     <joint name="${name}_joint" type="fixed">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <parent link="${parent}"/>
       <child link="${name}_link"/>
     </joint>
@@ -208,7 +208,7 @@
 
   <xacro:macro name="bioloid_F3_revolute" params="parent name color llimit ulimit vlimit *origin">
     <joint name="${name}_joint" type="revolute">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <axis xyz="0 0 -1"/>
       <limit effort="30" velocity="${vlimit}" lower="${llimit}" upper="${ulimit}"/>
       <dynamics friction="0.13"/>
@@ -250,7 +250,7 @@
 
   <xacro:macro name="bioloid_F2_revolute" params="parent name color llimit ulimit vlimit *origin">
     <joint name="${name}_joint" type="revolute">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <axis xyz="0 1 0"/>
       <limit effort="30" velocity="${vlimit}" lower="${llimit}" upper="${ulimit}"/>
       <dynamics friction="0.13"/>
@@ -292,7 +292,7 @@
 
   <xacro:macro name="bioloid_F4_revolute" params="parent name color llimit ulimit vlimit *origin">
     <joint name="${name}_joint" type="revolute">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <axis xyz="0 1 0"/>
       <limit effort="30" velocity="${vlimit}" lower="${llimit}" upper="${ulimit}"/>
       <dynamics friction="0.13"/>
@@ -334,7 +334,7 @@
   
   <xacro:macro name="gripper_finger_base" params="parent name color *origin">
     <joint name="${name}_joint" type="fixed">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <parent link="${parent}"/>
       <child link="${name}_link"/>
     </joint>
@@ -380,14 +380,14 @@
           izz="1.0"/>
       </inertial>
       <visual>
-        <insert_block name="origin"/>
+        <xacro:insert_block name="origin"/>
         <geometry>
           <mesh filename="package://turtlebot_arm_description/meshes/pincher_finger.stl" scale=".01 .01 .01"/>
         </geometry>
         <material name="${color}"/>
       </visual>
       <collision>
-        <insert_block name="origin"/>
+        <xacro:insert_block name="origin"/>
         <geometry>
           <box size="0.036 0.028 0.004"/>
         </geometry>

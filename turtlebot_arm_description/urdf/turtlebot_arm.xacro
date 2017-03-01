@@ -19,7 +19,7 @@
   <xacro:macro name="turtlebot_arm" params="parent color pincher_gripper turtlebot_gripper gripper_color *origin">
     <link name="arm_base_link"/>
     <joint name="arm_base_joint" type="fixed">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <parent link="${parent}"/>
       <child link="arm_base_link"/>
     </joint>

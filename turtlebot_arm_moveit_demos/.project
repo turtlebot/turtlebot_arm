@@ -3,6 +3,8 @@
 	<name>turtlebot_arm_moveit_demos</name>
 	<comment></comment>
 	<projects>
+		<project>moveit_commander</project>
+		<project>moveit_msgs</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -29,11 +29,14 @@
 """
 
 import rospy, sys, tf
+import tf.transformations
+import numpy as np
 import moveit_commander
 from math import *
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Pose, PoseStamped
 from moveit_commander import MoveGroupCommander, PlanningSceneInterface
 from moveit_msgs.msg import PlanningScene, ObjectColor
+from moveit_msgs.msg import CollisionObject, AttachedCollisionObject
 from moveit_msgs.msg import Grasp, GripperTranslation
 from moveit_msgs.msg import MoveItErrorCodes
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
@@ -90,8 +93,6 @@ class MoveItDemo:
         end_effector_link = arm.get_end_effector_link()
 
         # Allow some leeway in position (meters) and orientation (radians)
-        # USELESS; do not work on pick and place! Explained on this issue:
-        # https://github.com/ros-planning/moveit_ros/issues/577
         arm.set_goal_position_tolerance(0.04)
         arm.set_goal_orientation_tolerance(0.01)
 
@@ -110,9 +111,6 @@ class MoveItDemo:
         # Set a limit on the number of place attempts
         max_place_attempts = 3
         rospy.loginfo("Scaling for MoveIt timeout=" + str(rospy.get_param('/move_group/trajectory_execution/allowed_execution_duration_scaling')))
-
-        # Give the scene a chance to catch up
-        rospy.sleep(2)
 
         # Give each of the scene objects a unique name
         table_id = 'table'
@@ -139,28 +137,12 @@ class MoveItDemo:
         arm.set_named_target('right_up')
         if arm.go() != True:
             rospy.logwarn("  Go failed")
-        rospy.sleep(2)
-
-        # Move the gripper to the closed position
-        rospy.loginfo("Set Gripper: Close " + str(self.gripper_closed ) )
-        gripper.set_joint_value_target(self.gripper_closed)   
-        if gripper.go() != True:
-            rospy.logwarn("  Go failed")
-        rospy.sleep(2)
-         
-        # Move the gripper to the neutral position
-        rospy.loginfo("Set Gripper: Neutral " + str(self.gripper_neutral) )
-        gripper.set_joint_value_target(self.gripper_neutral)
-        if gripper.go() != True:
-            rospy.logwarn("  Go failed")
-        rospy.sleep(2)
 
         # Move the gripper to the open position
         rospy.loginfo("Set Gripper: Open " +  str(self.gripper_opened))
         gripper.set_joint_value_target(self.gripper_opened)
         if gripper.go() != True:
             rospy.logwarn("  Go failed")
-        rospy.sleep(2)
             
         # Set the height of the table off the ground
         table_ground = 0.4
@@ -263,7 +245,7 @@ class MoveItDemo:
         if result == MoveItErrorCodes.SUCCESS:
             rospy.loginfo("  Pick: Done!")
             # Generate valid place poses
-            places = self.make_places(place_pose)
+            places = self.make_places(target_id, place_pose)
 
             success = False
             n_attempts = 0
@@ -379,9 +361,7 @@ class MoveItDemo:
         target_pose_arm_ref = self.tf_listener.transformPose(ARM_BASE_FRAME, initial_pose_stamped)
         x = target_pose_arm_ref.pose.position.x
         y = target_pose_arm_ref.pose.position.y
-
-        self.pick_yaw = atan2(y, x)   # check in make_places method why we store the calculated yaw
-        yaw_vals = [0, 0.1,-0.1, self.pick_yaw]
+        yaw_vals = [atan2(y, x) + inc for inc in [0, 0.1,-0.1]]
 
         # A list to hold the grasps
         grasps = []
@@ -417,7 +397,7 @@ class MoveItDemo:
         return grasps
 
     # Generate a list of possible place poses
-    def make_places(self, init_pose):
+    def make_places(self, target_id, init_pose):
         # Initialize the place location as a PoseStamped message
         place = PoseStamped()
 
@@ -448,12 +428,7 @@ class MoveItDemo:
                     target_pose_arm_ref = self.tf_listener.transformPose(ARM_BASE_FRAME, place)
                     x = target_pose_arm_ref.pose.position.x
                     y = target_pose_arm_ref.pose.position.y
-                    yaw = atan2(y, x) - self.pick_yaw;
-                    # Note that we subtract the yaw we calculated for pick, as the picked object "carries"
-                    # with him the orientation of the arm at pickup time. More details in this moveit-users
-                    # group thread:  https://groups.google.com/forum/#!topic/moveit-users/-Eie-wLDbu0 
-                    # EDIT: I hacked moveit_core/kinematic_constraints/src/utils.cpp line 178 to remove this limitation
-                    # but is horrible trick!
+                    yaw = atan2(y, x)
     
                     # Create a quaternion from the Euler angles
                     q = quaternion_from_euler(0, pitch, yaw)
@@ -463,7 +438,24 @@ class MoveItDemo:
                     place.pose.orientation.y = q[1]
                     place.pose.orientation.z = q[2]
                     place.pose.orientation.w = q[3]
-    
+
+                    # MoveGroup::place will transform the provided place pose with the attached body pose, so the object retains
+                    # the orientation it had when picked. However, with our 4-dofs arm this is infeasible (nor we care about the
+                    # objects orientation!), so we cancel this transformation. It is applied here:
+                    # https://github.com/ros-planning/moveit_ros/blob/jade-devel/manipulation/pick_place/src/place.cpp#L64
+                    # More details on this issue: https://github.com/ros-planning/moveit_ros/issues/577
+                    acobjs = self.scene.get_attached_objects([target_id])
+                    aco_pose = self.get_pose(acobjs[target_id])
+                    if aco_pose is None:
+                        rospy.logerr("Attached collision object '%s' not found" % target_id)
+                        return None
+
+                    aco_tf = self.pose_to_mat(aco_pose)
+                    place_tf = self.pose_to_mat(place.pose)
+                    place.pose = self.mat_to_pose(place_tf, aco_tf)
+                    rospy.logdebug("Compensate place pose with the attached object pose [%s]. Results: [%s]" \
+                                   % (aco_pose, place.pose))
+
                     # Append this place pose to the list
                     places.append(deepcopy(place))
 
@@ -501,6 +493,66 @@ class MoveItDemo:
 
         # Publish the scene diff
         self.scene_pub.publish(p)
+
+    def get_pose(self, co):
+        # We get object's pose from the mesh/primitive poses; try first with the meshes
+        if isinstance(co, CollisionObject):
+            if co.mesh_poses:
+                return co.mesh_poses[0]
+            elif co.primitive_poses:
+                return co.primitive_poses[0]
+            else:
+                rospy.logerr("Collision object '%s' has no mesh/primitive poses" % co.id)
+                return None
+        elif isinstance(co, AttachedCollisionObject):
+            if co.object.mesh_poses:
+                return co.object.mesh_poses[0]
+            elif co.object.primitive_poses:
+                return co.object.primitive_poses[0]
+            else:
+                rospy.logerr("Attached collision object '%s' has no mesh/primitive poses" % co.id)
+                return None
+        else:
+            rospy.logerr("Input parameter is not a collision object")
+            return None
+
+    def pose_to_mat(self, pose):
+        '''Convert a pose message to a 4x4 numpy matrix.
+
+        Args:
+            pose (geometry_msgs.msg.Pose): Pose rospy message class.
+
+        Returns:
+            mat (numpy.matrix): 4x4 numpy matrix
+        '''
+        quat = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
+        pos = np.matrix([pose.position.x, pose.position.y, pose.position.z]).T
+        mat = np.matrix(tf.transformations.quaternion_matrix(quat))
+        mat[0:3, 3] = pos
+        return mat
+
+    def mat_to_pose(self, mat, transform = None):
+        '''Convert a homogeneous matrix to a Pose message, optionally premultiply by a transform.
+
+        Args:
+            mat (numpy.ndarray): 4x4 array (or matrix) representing a homogenous transform.
+            transform (numpy.ndarray): Optional 4x4 array representing additional transform
+
+        Returns:
+            pose (geometry_msgs.msg.Pose): Pose message representing transform.
+        '''
+        if transform != None:
+            mat = np.dot(mat, transform)
+        pose = Pose()
+        pose.position.x = mat[0,3]
+        pose.position.y = mat[1,3]
+        pose.position.z = mat[2,3]
+        quat = tf.transformations.quaternion_from_matrix(mat)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        return pose
 
 if __name__ == "__main__":
     MoveItDemo()

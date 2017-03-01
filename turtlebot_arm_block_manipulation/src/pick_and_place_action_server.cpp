@@ -34,7 +34,7 @@
 #include <actionlib/server/simple_action_server.h>
 #include <turtlebot_arm_block_manipulation/PickAndPlaceAction.h>
 
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 
 #include <geometry_msgs/PoseArray.h>
 
@@ -57,8 +57,8 @@ private:
   ros::Subscriber pick_and_place_sub_;
 
   // Move groups to control arm and gripper with MoveIt!
-  moveit::planning_interface::MoveGroup arm_;
-  moveit::planning_interface::MoveGroup gripper_;
+  moveit::planning_interface::MoveGroupInterface arm_;
+  moveit::planning_interface::MoveGroupInterface gripper_;
 
   // Pick and place parameters
   std::string arm_link;

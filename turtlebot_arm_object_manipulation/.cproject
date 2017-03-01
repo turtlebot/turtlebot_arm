@@ -3,14 +3,16 @@
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.toolchain.gnu.base.1352411691">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.base.1352411691" moduleId="org.eclipse.cdt.core.settings" name="Default">
-				<externalSettings/>
+				<externalSettings>
+					<externalSetting/>
+				</externalSettings>
 				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
@@ -22,16 +24,16 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.432255193" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1984677268" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.560132392" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/home/jorge/workspaces/turtlebot/devel/include"/>
-									<listOptionValue builtIn="false" value="/home/jorge/workspaces/ork/devel/include"/>
-									<listOptionValue builtIn="false" value="/home/jorge/workspaces/moveit/devel/include"/>
-									<listOptionValue builtIn="false" value="/home/jorge/workspaces/navigation/devel/include"/>
-									<listOptionValue builtIn="false" value="/home/jorge/workspaces/rviz/devel/include"/>
-									<listOptionValue builtIn="false" value="/opt/ros/indigo/include"/>
-									<listOptionValue builtIn="false" value="/home/jorge/workspaces/moveit/src/moveit_ros/planning_interface/move_group_interface/include"/>
-									<listOptionValue builtIn="false" value="/home/jorge/workspaces/moveit/src/moveit_ros/planning_interface/planning_scene_interface/include"/>
-									<listOptionValue builtIn="false" value="/home/jorge/workspaces/ork/src/ork_core/include"/>
-									<listOptionValue builtIn="false" value="/home/jorge/workspaces/turtlebot/src/yujin_ocs/yocs_math_toolkit/include"/>
+									<listOptionValue builtIn="false" value="/opt/ros/kinetic/include"/>
+									<listOptionValue builtIn="false" value="/home/jorge/catkin_ws/turtlebot/devel/include"/>
+									<listOptionValue builtIn="false" value="/home/jorge/catkin_ws/ork/devel/include"/>
+									<listOptionValue builtIn="false" value="/home/jorge/catkin_ws/moveit/devel/include"/>
+									<listOptionValue builtIn="false" value="/home/jorge/catkin_ws/navigation/devel/include"/>
+									<listOptionValue builtIn="false" value="/home/jorge/catkin_ws/ork/src/ork_core/include"/>
+									<listOptionValue builtIn="false" value="/home/jorge/catkin_ws/turtlebot/src/yujin_ocs/yocs_math_toolkit/include"/>
+									<listOptionValue builtIn="false" value="/home/jorge/catkin_ws/thorp/devel/include"/>
+									<listOptionValue builtIn="false" value="/home/jorge/catkin_ws/moveit/src/moveit/moveit_ros/planning_interface/move_group_interface/include"/>
+									<listOptionValue builtIn="false" value="/home/jorge/catkin_ws/moveit/src/moveit/moveit_ros/planning_interface/planning_scene_interface/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1941882620" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>

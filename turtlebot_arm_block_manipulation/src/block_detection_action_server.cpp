@@ -53,7 +53,6 @@
 
 // MoveIt!
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
-#include <shape_tools/solid_primitive_dims.h>
 
 #include <cmath>
 #include <algorithm>
@@ -369,7 +368,7 @@ private:
     co.operation = moveit_msgs::CollisionObject::ADD;
     co.primitives.resize(1);
     co.primitives[0].type = shape_msgs::SolidPrimitive::BOX;
-    co.primitives[0].dimensions.resize(shape_tools::SolidPrimitiveDimCount<shape_msgs::SolidPrimitive::BOX>::value);
+    co.primitives[0].dimensions.resize(3);
     co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_X] = TABLE_SIZE_X;
     co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Y] = TABLE_SIZE_Y;
     co.primitives[0].dimensions[shape_msgs::SolidPrimitive::BOX_Z] = TABLE_SIZE_Z;

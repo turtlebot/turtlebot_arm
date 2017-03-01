@@ -46,7 +46,7 @@
 // MoveIt!
 #include <moveit_msgs/Grasp.h>
 #include <moveit_msgs/PlaceLocation.h>
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
 
@@ -70,8 +70,8 @@ private:
   tf::TransformListener tf_listener_;
 
   // Move groups to control arm and gripper with MoveIt!
-  moveit::planning_interface::MoveGroup arm_;
-  moveit::planning_interface::MoveGroup gripper_;
+  moveit::planning_interface::MoveGroupInterface arm_;
+  moveit::planning_interface::MoveGroupInterface gripper_;
 
   // We use the planning scene to gather information of tabletop/attached objects
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
@@ -598,8 +598,8 @@ private:
   ros::Publisher target_pose_pub_;
 
   // Move groups to control arm and gripper with MoveIt!
-  moveit::planning_interface::MoveGroup arm_;
-  moveit::planning_interface::MoveGroup gripper_;
+  moveit::planning_interface::MoveGroupInterface arm_;
+  moveit::planning_interface::MoveGroupInterface gripper_;
 
 public:
   MoveToTargetServer(const std::string name) :
