@@ -5,14 +5,11 @@
   <!-- The name of the parameter under which the URDF is loaded -->
   <arg name="robot_description" default="robot_description"/>
 
-  <arg name="arm_type" default="$(optenv TURTLEBOT_ARM1 turtlebot)"/>
-
   <!-- Load universal robot description format (URDF) -->
-  <param if="$(arg load_robot_description)" name="$(arg robot_description)"
-    command="$(find xacro)/xacro --inorder '$(find turtlebot_arm_description)/urdf/$(arg arm_type)_arm.urdf.xacro'"/>
+  <param if="$(arg load_robot_description)" name="$(arg robot_description)" textfile="$(find turtlebot_arm_description)/urdf/turtlebot_arm.urdf"/>
 
   <!-- The semantic description that corresponds to the URDF -->
-  <param name="$(arg robot_description)_semantic" textfile="$(find turtlebot_arm_moveit_config)/config/$(arg arm_type)_arm.srdf" />
+  <param name="$(arg robot_description)_semantic" textfile="$(find turtlebot_arm_moveit_config)/config/turtlebot_arm.srdf" />
 
   <!-- Load updated joint limits (override information from URDF) -->
   <group ns="$(arg robot_description)_planning">
