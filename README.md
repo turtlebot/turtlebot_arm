@@ -1,7 +1,9 @@
 TurtleBot Arm
 =============
 
-Indigo version of turtlebot arm code. It should easily work on Hydro, too. Package turtlebot_arm_moveit_demos provides use examples to start playing with the arm on MoveIt!, while the recovered on indigo turtlebot_arm_block_manipulation provides a more complete and interesting demo.
+## Updated for Kinetic!
+
+Kinetic version of turtlebot arm code. I didn't try on Jade, but it should easily work with minor changes. It's mostly the same code as on Indigo, with some improvements on turtlebot_arm_block_manipulation (see updated wiki <span style="background-color: #00FFFF">TODO</span>) and specially [turtlebot_arm_object_manipulation](https://github.com/turtlebot/turtlebot_arm/tree/kinetic-devel/turtlebot_arm_object_manipulation): a fully revised version of that demo using OKR, SMACH and MoveIt! pick and place.
 
 ## Selecting Arm Type
 By default this will work with the original white/green TurtleBot arm.  To use the PhantomX Pincher, set environment variable "TURTLEBOT_ARM1" to pincher. You will need arbotix_ros version 0.11.0 or higher for PhantomX Pincher.
@@ -13,7 +15,7 @@ Open your xacro-macro-magic URDF, and add something like:
        <turtlebot_arm parent="base_link" color="white" gripper_color="green"
                  joints_vlimit="1.571" pan_llimit="-2.617" pan_ulimit="2.617">
           <origin xyz="0 0 1"/>
-        </turtlebot_arm>
+       </turtlebot_arm>
 
 This will attach a turtlebot arm to your robot. Replace base_link with whatever link you want to attach to, and change the origin as needed. Apart from color, we can configure joints velocity limit and lower/upper limits for the first joint (arm_shoulder_pan) to allow accessing to different operational areas, e.g. left handed vs. right handed robot
 
