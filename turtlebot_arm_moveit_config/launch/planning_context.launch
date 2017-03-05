@@ -1,4 +1,6 @@
 <launch>
+  <arg name="arm_type" default="$(optenv TURTLEBOT_ARM1 turtlebot)"/>
+
   <!-- By default we do not overwrite the URDF. Change the following to true to change the default behavior -->
   <arg name="load_robot_description" default="false"/>
 
@@ -6,10 +8,11 @@
   <arg name="robot_description" default="robot_description"/>
 
   <!-- Load universal robot description format (URDF) -->
-  <param if="$(arg load_robot_description)" name="$(arg robot_description)" textfile="$(find turtlebot_arm_description)/urdf/turtlebot_arm.urdf"/>
+  <param if="$(arg load_robot_description)" name="$(arg robot_description)"
+    command="$(find xacro)/xacro --inorder '$(find turtlebot_arm_description)/urdf/$(arg arm_type)_arm.urdf.xacro'"/>
 
   <!-- The semantic description that corresponds to the URDF -->
-  <param name="$(arg robot_description)_semantic" textfile="$(find turtlebot_arm_moveit_config)/config/turtlebot_arm.srdf" />
+  <param name="$(arg robot_description)_semantic" textfile="$(find turtlebot_arm_moveit_config)/config/$(arg arm_type)_arm.srdf" />
 
   <!-- Load updated joint limits (override information from URDF) -->
   <group ns="$(arg robot_description)_planning">

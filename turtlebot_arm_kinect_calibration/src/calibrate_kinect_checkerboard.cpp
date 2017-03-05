@@ -182,7 +182,7 @@ public:
     pattern_detector_.setCameraMatrices(cam_model_.intrinsicMatrix(), cam_model_.distortionCoeffs());
 
     calibrated = true;
-    image_sub_ = nh_.subscribe("/camera/rgb/image_mono", 1, &CalibrateKinectCheckerboard::imageCallback, this);
+    image_sub_ = nh_.subscribe("/camera/rgb/image_raw", 1, &CalibrateKinectCheckerboard::imageCallback, this);
 
     ROS_INFO("[calibrate] Got image info!");
   }

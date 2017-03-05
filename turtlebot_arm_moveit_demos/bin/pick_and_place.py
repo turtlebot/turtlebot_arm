@@ -28,20 +28,23 @@
     http://www.gnu.org/licenses/gpl.html
 """
 
-import rospy, sys, tf
-import tf.transformations
+import sys
+import rospy
 import numpy as np
+import tf2_ros
+import tf2_geometry_msgs
 import moveit_commander
-from math import *
+
+from math import atan2
+from copy import deepcopy
 from geometry_msgs.msg import Pose, PoseStamped
-from moveit_commander import MoveGroupCommander, PlanningSceneInterface
 from moveit_msgs.msg import PlanningScene, ObjectColor
 from moveit_msgs.msg import CollisionObject, AttachedCollisionObject
 from moveit_msgs.msg import Grasp, GripperTranslation
 from moveit_msgs.msg import MoveItErrorCodes
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from tf.transformations import quaternion_from_euler
-from copy import deepcopy
+from moveit_commander import MoveGroupCommander, PlanningSceneInterface
+from tf.transformations import quaternion_from_euler, quaternion_matrix, quaternion_from_matrix
 
 GROUP_NAME_ARM = 'arm'
 GROUP_NAME_GRIPPER = 'gripper'
@@ -51,8 +54,8 @@ GRIPPER_JOINT_NAMES = ['gripper_joint']
 GRIPPER_EFFORT = [1.0]
 GRIPPER_PARAM = '/gripper_controller'
 
-REFERENCE_FRAME = '/base_link'
-ARM_BASE_FRAME = '/arm_base_link'
+REFERENCE_FRAME = 'base_link'
+ARM_BASE_FRAME = 'arm_base_link'
 
 class MoveItDemo:
     def __init__(self):
@@ -61,16 +64,21 @@ class MoveItDemo:
 
         rospy.init_node('moveit_demo')
 
-        self.gripper_opened = [rospy.get_param(GRIPPER_PARAM + "/max_opening") - 0.001]
-        self.gripper_closed = [rospy.get_param(GRIPPER_PARAM + "/min_opening") + 0.001]
+        # We need a tf2 listener to convert poses into arm reference base
+        try:
+            self._tf2_buff = tf2_ros.Buffer()
+            self._tf2_list = tf2_ros.TransformListener(self._tf2_buff)
+        except rospy.ROSException as err:
+            rospy.logerr("MoveItDemo: could not start tf buffer client: " + str(err))
+            raise err
+
+        self.gripper_opened = [rospy.get_param(GRIPPER_PARAM + "/max_opening") - 0.01]
+        self.gripper_closed = [rospy.get_param(GRIPPER_PARAM + "/min_opening") + 0.01]
         self.gripper_neutral = [rospy.get_param(GRIPPER_PARAM + "/neutral",
                                                 (self.gripper_opened[0] + self.gripper_closed[0])/2.0) ]
         
         self.gripper_tighten = rospy.get_param(GRIPPER_PARAM + "/tighten", 0.0) 
 
-        # We need a tf listener to convert poses into arm reference base
-        self.tf_listener = tf.TransformListener()
-        
         # Use the planning scene object to add or remove objects
         self.scene = PlanningSceneInterface()
 
@@ -358,7 +366,7 @@ class MoveItDemo:
 
         # Yaw angles to try; given the limited dofs of turtlebot_arm, we must calculate the heading
         # from arm base to the object to pick (first we must transform its pose to arm base frame)
-        target_pose_arm_ref = self.tf_listener.transformPose(ARM_BASE_FRAME, initial_pose_stamped)
+        target_pose_arm_ref = self._tf2_buff.transform(initial_pose_stamped, ARM_BASE_FRAME)
         x = target_pose_arm_ref.pose.position.x
         y = target_pose_arm_ref.pose.position.y
         yaw_vals = [atan2(y, x) + inc for inc in [0, 0.1,-0.1]]
@@ -425,7 +433,7 @@ class MoveItDemo:
     
                     # Yaw angle: given the limited dofs of turtlebot_arm, we must calculate the heading from
                     # arm base to the place location (first we must transform its pose to arm base frame)
-                    target_pose_arm_ref = self.tf_listener.transformPose(ARM_BASE_FRAME, place)
+                    target_pose_arm_ref = self._tf2_buff.transform(place, ARM_BASE_FRAME)
                     x = target_pose_arm_ref.pose.position.x
                     y = target_pose_arm_ref.pose.position.y
                     yaw = atan2(y, x)
@@ -527,11 +535,11 @@ class MoveItDemo:
         '''
         quat = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
         pos = np.matrix([pose.position.x, pose.position.y, pose.position.z]).T
-        mat = np.matrix(tf.transformations.quaternion_matrix(quat))
+        mat = np.matrix(quaternion_matrix(quat))
         mat[0:3, 3] = pos
         return mat
 
-    def mat_to_pose(self, mat, transform = None):
+    def mat_to_pose(self, mat, transform=None):
         '''Convert a homogeneous matrix to a Pose message, optionally premultiply by a transform.
 
         Args:
@@ -547,7 +555,7 @@ class MoveItDemo:
         pose.position.x = mat[0,3]
         pose.position.y = mat[1,3]
         pose.position.z = mat[2,3]
-        quat = tf.transformations.quaternion_from_matrix(mat)
+        quat = quaternion_from_matrix(mat)
         pose.orientation.x = quat[0]
         pose.orientation.y = quat[1]
         pose.orientation.z = quat[2]

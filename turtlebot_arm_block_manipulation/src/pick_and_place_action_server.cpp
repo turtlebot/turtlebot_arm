@@ -319,13 +319,8 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "pick_and_place_action_server");
 
-  // Setup an asynchronous spinner as the move groups operations need continuous spinning
-  ros::AsyncSpinner spinner(2);
-  spinner.start();
-
   turtlebot_arm_block_manipulation::PickAndPlaceServer server("pick_and_place");
   ros::spin();
 
-  spinner.stop();
   return 0;
 }

@@ -170,8 +170,8 @@ int main(int argc, char** argv)
 
   turtlebot_arm_block_manipulation::BlockManipulationAction manip;
 
-  // everything is done in cloud callback, just spin
-  ros::AsyncSpinner spinner(2);
+  // Setup an asynchronous spinner as the move groups operations need continuous spinning
+  ros::AsyncSpinner spinner(4);
   spinner.start();
 
   while (ros::ok())
