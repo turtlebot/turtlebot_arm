@@ -33,7 +33,6 @@
 #include <turtlebot_arm_block_manipulation/BlockDetectionAction.h>
 #include <turtlebot_arm_block_manipulation/PickAndPlaceAction.h>
 #include <turtlebot_arm_block_manipulation/InteractiveBlockManipulationAction.h>
-#include <arbotix_msgs/Relax.h>
 
 #include <string>
 #include <sstream>
@@ -48,12 +47,12 @@ class BlockManipulationAction
 {
 private:
   ros::NodeHandle nh_;
-  
+
   // Actions and services
   actionlib::SimpleActionClient<BlockDetectionAction> block_detection_action_;
   actionlib::SimpleActionClient<InteractiveBlockManipulationAction> interactive_manipulation_action_;
   actionlib::SimpleActionClient<PickAndPlaceAction> pick_and_place_action_;
-  
+
   BlockDetectionGoal block_detection_goal_;
   InteractiveBlockManipulationGoal interactive_manipulation_goal_;
   PickAndPlaceGoal pick_and_place_goal_;
@@ -66,7 +65,7 @@ private:
   double z_down;
   double block_size;
   bool once;
-  
+
 public:
 
   BlockManipulationAction() : nh_("~"),
@@ -81,47 +80,47 @@ public:
     nh_.param<double>("z_up", z_up, 0.12);
     nh_.param<double>("table_height", z_down, 0.01);
     nh_.param<double>("block_size", block_size, 0.03);
-    
+
     nh_.param<bool>("once", once, false);
 
     // Initialize goals
     block_detection_goal_.frame = arm_link;
     block_detection_goal_.table_height = z_down;
     block_detection_goal_.block_size = block_size;
-    
+
     pick_and_place_goal_.frame = arm_link;
     pick_and_place_goal_.z_up = z_up;
     pick_and_place_goal_.gripper_open = gripper_open;
     pick_and_place_goal_.gripper_closed = gripper_closed;
     pick_and_place_goal_.topic = pick_and_place_topic;
-    
+
     interactive_manipulation_goal_.block_size = block_size;
     interactive_manipulation_goal_.frame = arm_link;
-    
+
     ROS_INFO("Finished initializing, waiting for servers...");
-    
+
     block_detection_action_.waitForServer();
     ROS_INFO("Found block detection server.");
-    
+
     interactive_manipulation_action_.waitForServer();
     ROS_INFO("Found interactive manipulation.");
-    
+
     pick_and_place_action_.waitForServer();
     ROS_INFO("Found pick and place server.");
-    
+
     ROS_INFO("Found servers.");
   }
-  
+
   void detectBlocks()
   {
     block_detection_action_.sendGoal(block_detection_goal_, boost::bind( &BlockManipulationAction::addBlocks, this, _1, _2));
   }
-  
+
   void addBlocks(const actionlib::SimpleClientGoalState& state, const BlockDetectionResultConstPtr& result)
   {
     ROS_INFO("Got block detection callback. Adding blocks.");
     geometry_msgs::Pose block;
-    
+
     if (state == actionlib::SimpleClientGoalState::SUCCEEDED)
       ROS_INFO("Succeeded!");
     else
@@ -131,11 +130,11 @@ public:
     }
     interactive_manipulation_action_.sendGoal(interactive_manipulation_goal_, boost::bind( &BlockManipulationAction::pickAndPlace, this, _1, _2));
   }
-  
+
   void pickAndPlace(const actionlib::SimpleClientGoalState& state, const InteractiveBlockManipulationResultConstPtr& result)
   {
     ROS_INFO("Got interactive marker callback. Picking and placing.");
-    
+
     if (state == actionlib::SimpleClientGoalState::SUCCEEDED)
       ROS_INFO("Succeeded!");
     else
@@ -145,7 +144,7 @@ public:
     }
     pick_and_place_action_.sendGoal(pick_and_place_goal_, boost::bind( &BlockManipulationAction::finish, this, _1, _2));
   }
-  
+
   void finish(const actionlib::SimpleClientGoalState& state, const PickAndPlaceResultConstPtr& result)
   {
     ROS_INFO("Got pick and place callback. Finished!");
