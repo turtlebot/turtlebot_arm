@@ -35,7 +35,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <simple_arm_server/MoveArmAction.h>
 
-#include <pcl/ros/conversions.h>
+#include <pcl/conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/passthrough.h>
