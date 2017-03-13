@@ -17,6 +17,7 @@
   <run_depend>turtlebot_arm_description</run_depend>
   <run_depend>turtlebot_arm_ikfast_plugin</run_depend>
   <run_depend>turtlebot_arm_block_manipulation</run_depend>
+  <run_depend>turtlebot_arm_object_manipulation</run_depend>
   <run_depend>turtlebot_arm_kinect_calibration</run_depend>
   <run_depend>turtlebot_arm_moveit_config</run_depend>
   <run_depend>turtlebot_arm_moveit_demos</run_depend>
