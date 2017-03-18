@@ -320,7 +320,10 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "pick_and_place_action_server");
 
   turtlebot_arm_block_manipulation::PickAndPlaceServer server("pick_and_place");
-  ros::spin();
+
+  // Setup an multi-threaded spinner as the move groups operations need continuous spinning
+  ros::MultiThreadedSpinner spinner(2);
+  spinner.spin();
 
   return 0;
 }
