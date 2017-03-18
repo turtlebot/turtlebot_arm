@@ -33,7 +33,6 @@
 #include <turtlebot_arm_block_manipulation/BlockDetectionAction.h>
 #include <turtlebot_arm_block_manipulation/PickAndPlaceAction.h>
 #include <turtlebot_arm_block_manipulation/InteractiveBlockManipulationAction.h>
-#include <arbotix_msgs/Relax.h>
 
 #include <string>
 #include <sstream>

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(turtlebot_arm_block_manipulation)
 
 # setup
-find_package(catkin REQUIRED actionlib actionlib_msgs interactive_markers pcl_ros roscpp visualization_msgs arbotix_msgs moveit_core moveit_ros_planning_interface)
+find_package(catkin REQUIRED actionlib actionlib_msgs interactive_markers pcl_ros roscpp visualization_msgs moveit_core moveit_ros_planning_interface)
 find_package(Boost REQUIRED system filesystem)
 find_package(PCL REQUIRED)
 link_directories(${catkin_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS} ${PCL_LIBRARY_DIRS})
@@ -20,7 +20,7 @@ add_action_files(FILES
                  )
 
 generate_messages(DEPENDENCIES actionlib_msgs geometry_msgs)
-catkin_package(DEPENDS actionlib actionlib_msgs interactive_markers pcl_ros roscpp visualization_msgs arbotix_msgs moveit_core moveit_ros_planning_interface)
+catkin_package(DEPENDS actionlib actionlib_msgs interactive_markers pcl_ros roscpp visualization_msgs moveit_core moveit_ros_planning_interface)
 
 
 # nodes
