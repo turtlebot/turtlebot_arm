@@ -5,9 +5,6 @@
 <!-- =================================================================================== -->
 <!-- Describe URDF for Turtlebot Arm -->
 <robot name="turtlebot_arm" xmlns:xacro="http://ros.org/wiki/xacro">
-  <!-- We can configure joints velocity limit and lower/upper limits
-          to allow access to different operational areas, e.g. left handed vs. right handed robot -->
-  <!-- Included URDF Files -->
   <material name="White">
     <color rgba="0.87 0.90 0.87 1.0"/>
   </material>
@@ -22,13 +19,15 @@
   </material>
   <!-- As we don't have here a turtlebot base, add a base_link link as its location reference -->
   <link name="base_link"/>
-  <!-- Turtlebot arm macro -->
   <link name="arm_base_link"/>
   <joint name="arm_base_joint" type="fixed">
     <origin xyz="0.1 0.03 0.435"/>
     <parent link="base_link"/>
     <child link="arm_base_link"/>
   </joint>
+  <!-- fake gripper_link joint gives us a free servo!
+         this makes us 5DOF and saves you $44.90
+         that's a lot of coin! -->
   <link name="gripper_link"/>
   <joint name="gripper_link_joint" type="revolute">
     <origin rpy="0 -1.57 0" xyz="0 0 0.112"/>
@@ -53,7 +52,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/ax12_box.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Black"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.01241"/>
@@ -79,7 +78,7 @@
     <inertial>
       <mass value="0.008"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="4.70666666667e-07" ixy="0" ixz="0" iyy="1.37933333333e-06" iyz="0" izz="1.01666666667e-06"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -116,7 +115,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/ax12_box.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Black"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.01241"/>
@@ -142,7 +141,7 @@
     <inertial>
       <mass value="0.016"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="6.67866666667e-06" ixy="0" ixz="0" iyy="4.18166666667e-06" iyz="0" izz="8.76966666667e-06"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -172,7 +171,7 @@
     <inertial>
       <mass value="0.004"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="2.13666666667e-07" ixy="0" ixz="0" iyy="6.89666666667e-07" iyz="0" izz="4.86666666667e-07"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -202,7 +201,7 @@
     <inertial>
       <mass value="0.004"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="2.13666666667e-07" ixy="0" ixz="0" iyy="6.89666666667e-07" iyz="0" izz="4.86666666667e-07"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -232,7 +231,7 @@
     <inertial>
       <mass value="0.004"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="2.13666666667e-07" ixy="0" ixz="0" iyy="6.89666666667e-07" iyz="0" izz="4.86666666667e-07"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -262,7 +261,7 @@
     <inertial>
       <mass value="0.005"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="2.94166666667e-07" ixy="0" ixz="0" iyy="8.62083333333e-07" iyz="0" izz="6.35416666667e-07"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -299,7 +298,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/ax12_box.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Black"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.01241"/>
@@ -325,7 +324,7 @@
     <inertial>
       <mass value="0.016"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="6.67866666667e-06" ixy="0" ixz="0" iyy="4.18166666667e-06" iyz="0" izz="8.76966666667e-06"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -355,7 +354,7 @@
     <inertial>
       <mass value="0.004"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="2.13666666667e-07" ixy="0" ixz="0" iyy="6.89666666667e-07" iyz="0" izz="4.86666666667e-07"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -385,7 +384,7 @@
     <inertial>
       <mass value="0.004"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="2.13666666667e-07" ixy="0" ixz="0" iyy="6.89666666667e-07" iyz="0" izz="4.86666666667e-07"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -415,7 +414,7 @@
     <inertial>
       <mass value="0.004"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="2.13666666667e-07" ixy="0" ixz="0" iyy="6.89666666667e-07" iyz="0" izz="4.86666666667e-07"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -445,7 +444,7 @@
     <inertial>
       <mass value="0.005"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="2.94166666667e-07" ixy="0" ixz="0" iyy="8.62083333333e-07" iyz="0" izz="6.35416666667e-07"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -482,7 +481,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/ax12_box.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Black"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.01241"/>
@@ -506,9 +505,9 @@
   </joint>
   <link name="arm_wrist_flex_link">
     <inertial>
-      <mass value="0.010"/>
+      <mass value="0.01"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="1.69270833333e-06" ixy="0" ixz="0" iyy="2.48104166667e-06" iyz="0" izz="3.13208333333e-06"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -538,7 +537,7 @@
     <inertial>
       <mass value="0.005"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="2.94166666667e-07" ixy="0" ixz="0" iyy="8.62083333333e-07" iyz="0" izz="6.35416666667e-07"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -575,7 +574,7 @@
       <geometry>
         <mesh filename="package://turtlebot_arm_description/meshes/ax12_box.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="White"/>
+      <material name="Black"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0.0 -0.01241"/>
@@ -589,6 +588,7 @@
     <selfCollide>true</selfCollide>
     <gravity>true</gravity>
   </gazebo>
+  <!-- finger 1 -->
   <joint name="gripper_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <axis xyz="0 1 0"/>
@@ -625,7 +625,7 @@
     <inertial>
       <mass value="0.015"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="8.129225e-06" ixy="0" ixz="0" iyy="9.469562625e-06" iyz="0" izz="2.271562625e-06"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -655,7 +655,7 @@
     <inertial>
       <mass value="0.005"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="2.94166666667e-07" ixy="0" ixz="0" iyy="8.62083333333e-07" iyz="0" izz="6.35416666667e-07"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -685,7 +685,7 @@
     <inertial>
       <mass value="0.015"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      <inertia ixx="8.129225e-06" ixy="0" ixz="0" iyy="9.469562625e-06" iyz="0" izz="2.271562625e-06"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz=" 0 0 0 "/>
@@ -707,4 +707,3 @@
     <gravity>true</gravity>
   </gazebo>
 </robot>
-

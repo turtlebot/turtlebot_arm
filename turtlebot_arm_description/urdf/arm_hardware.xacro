@@ -11,6 +11,18 @@
   <xacro:property name="AX12_LENGTH" value="0.050"/>
   <xacro:property name="F2_HEIGHT" value="0.0265"/>
 
+  <!-- Calculates the inertial properties of a bounding box. From
+       https://en.wikipedia.org/wiki/List_of_moments_of_inertia#List_of_3D_inertia_tensors-->
+  <xacro:macro name="box_inertia" params="length width height mass">
+    <inertial>
+      <mass value="${mass}"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="${mass/12*(height**2+length**2)}" ixy="0" ixz = "0"
+               iyy="${mass/12*(width**2+length**2)}" iyz="0"
+               izz="${mass/12*(width**2+height**2)}"/>
+    </inertial>
+  </xacro:macro>
+
   <xacro:macro name="arm_mount" params="parent name color *origin">
     <joint name="${name}_joint" type="fixed">
       <xacro:insert_block name="origin"/>
@@ -19,13 +31,7 @@
     </joint>
 
     <link name="${name}_link">
-      <inertial>
-        <mass value="0.018"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
-                 iyy="0.000001" iyz="0.0"
-                 izz="0.000001"/>
-      </inertial>
+      <xacro:box_inertia length="0.074" width="0.074" height="0.004" mass="0.018"/>
 
       <visual>
         <origin xyz="-0.028 -0.0493 0.014" rpy="0.0 0.0 -${M_PI/2}"/>
@@ -58,13 +64,7 @@
     </joint>
 
     <link name="${name}_link">
-      <inertial>
-        <mass value="0.015"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
-                 iyy="0.000001" iyz="0.0"
-                 izz="0.000001"/>
-      </inertial>
+      <xacro:box_inertia length="0.0783" width="0.03801" height="0.0193" mass="0.015"/>
 
       <visual>
         <origin xyz=" 0 0 0 " rpy="0 0 0"/>
@@ -136,13 +136,7 @@
     </joint>
 
     <link name="${name}_link">
-      <inertial>
-        <mass value="0.004"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
-                 iyy="0.000001" iyz="0.0"
-                 izz="0.000001"/>
-      </inertial>
+      <xacro:box_inertia length="0.025" width="0.038" height="0.004" mass="0.004"/>
 
       <visual>
         <origin xyz=" 0 0 0 " rpy="0 0 0"/>
@@ -175,13 +169,7 @@
     </joint>
 
     <link name="${name}_link">
-      <inertial>
-        <mass value="0.005"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
-                 iyy="0.000001" iyz="0.0"
-                 izz="0.000001"/>
-      </inertial>
+      <xacro:box_inertia length="0.025" width="0.038" height="0.009" mass="0.005"/>
 
       <visual>
         <origin xyz=" 0 0 0 " rpy="0 0 0"/>
@@ -217,13 +205,7 @@
     </joint>
 
     <link name="${name}_link">
-      <inertial>
-        <mass value="0.008"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
-                 iyy="0.000001" iyz="0.0"
-                 izz="0.000001"/>
-      </inertial>
+      <xacro:box_inertia length="0.025" width="0.038" height="0.009" mass="0.008"/>
 
       <visual>
         <origin xyz=" 0 0 0 " rpy="0 0 0"/>
@@ -259,13 +241,7 @@
     </joint>
 
     <link name="${name}_link">
-      <inertial>
-        <mass value="0.010"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
-                 iyy="0.000001" iyz="0.0"
-                 izz="0.000001"/>
-      </inertial>
+      <xacro:box_inertia length="0.025" width="0.0485" height="0.0375" mass="0.010"/>
 
       <visual>
         <origin xyz=" 0 0 0 " rpy="0 0 0"/>
@@ -301,13 +277,7 @@
     </joint>
 
     <link name="${name}_link">
-      <inertial>
-        <mass value="0.016"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
-                 iyy="0.000001" iyz="0.0"
-                 izz="0.000001"/>
-      </inertial>
+      <xacro:box_inertia length="0.028" width="0.0485" height="0.065" mass="0.016"/>
 
       <visual>
         <origin xyz=" 0 0 0 " rpy="0 0 0"/>
@@ -340,13 +310,7 @@
     </joint>
     
     <link name="${name}_link">
-      <inertial>
-        <mass value="0.00001"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-          iyy="1.0" iyz="0.0"
-          izz="1.0"/>
-      </inertial>
+      <xacro:box_inertia length="0.002" width="0.040" height="0.075" mass="0.00001"/>
       <visual>
         <origin xyz="0.016 0 -.015 " rpy="${M_PI} ${-M_PI/2} ${M_PI/2}"/>
         <geometry>
@@ -372,13 +336,7 @@
   
     <xacro:macro name="pincher_gripper" params="name color *origin">
       <link name="${name}_link">
-      <inertial>
-        <mass value="0.00001"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-          iyy="1.0" iyz="0.0"
-          izz="1.0"/>
-      </inertial>
+      <xacro:box_inertia length="0.036" width="0.028" height="0.004" mass="0.00001"/>
       <visual>
         <xacro:insert_block name="origin"/>
         <geometry>
