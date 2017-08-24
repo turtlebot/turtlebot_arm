@@ -24,7 +24,7 @@
     </joint> 
     
     <pincher_gripper name="gripper_active" color="${color}" >
-      <origin xyz="-0.02 0.023 0" rpy="${-M_PI/2} 0 0"/>
+      <origin xyz="-0.0086 0.0414 0" rpy="${-M_PI/2} 0 0"/>
     </pincher_gripper>
      
     <!-- Finger 2 --> 
@@ -35,7 +35,7 @@
     </joint>  
     
     <pincher_gripper name="gripper_active2" color="${color}" >
-      <origin xyz="-0.02 0.023 0" rpy="${-M_PI/2} ${M_PI} 0"/>
+      <origin xyz="-0.0314 0.0414 0" rpy="${-M_PI/2} ${M_PI} 0"/>
     </pincher_gripper>
       
     <!-- Using Mimic -->

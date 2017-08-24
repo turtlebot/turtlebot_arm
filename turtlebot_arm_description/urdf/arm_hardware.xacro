@@ -320,7 +320,7 @@
       </visual>
       
       <collision>
-        <origin xyz="0.015 0 -0.0135" rpy="0 0 0"/>
+        <origin xyz="0.016 0.0 -0.015" rpy="0 0 0"/>
         <geometry>
           <box size="0.002 0.040 0.075"/>
         </geometry>
@@ -347,12 +347,12 @@
       <collision>
         <xacro:insert_block name="origin"/>
         <geometry>
-          <box size="0.036 0.028 0.004"/>
+          <box size="0.023 0.028 0.038"/>
         </geometry>
       </collision>
     </link>
   
-      <gazebo reference="${name}_link">
+    <gazebo reference="${name}_link">
       <material>Gazebo/${color}</material>
       <selfCollide>true</selfCollide>
       <gravity>true</gravity>
