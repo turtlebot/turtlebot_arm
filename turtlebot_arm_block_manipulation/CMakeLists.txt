@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(turtlebot_arm_block_manipulation)
 
+add_definitions(-std=c++11)
+
 # setup
 find_package(catkin REQUIRED actionlib actionlib_msgs interactive_markers pcl_ros roscpp visualization_msgs moveit_core moveit_ros_planning_interface)
 find_package(Boost REQUIRED system filesystem)
