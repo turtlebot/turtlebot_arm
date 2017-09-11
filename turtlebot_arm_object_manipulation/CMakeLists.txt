@@ -4,7 +4,7 @@ project(turtlebot_arm_object_manipulation)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # setup
-find_package(catkin REQUIRED roscpp actionlib actionlib_msgs interactive_markers object_recognition_msgs visualization_msgs arbotix_msgs
+find_package(catkin REQUIRED roscpp actionlib actionlib_msgs interactive_markers object_recognition_msgs visualization_msgs
                              geometry_msgs moveit_msgs moveit_core moveit_ros_planning_interface yocs_math_toolkit geometric_shapes shape_msgs)
 find_package(Boost REQUIRED system filesystem)
 link_directories(${catkin_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS})
