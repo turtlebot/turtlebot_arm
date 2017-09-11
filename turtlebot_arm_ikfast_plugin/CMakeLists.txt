@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(turtlebot_arm_ikfast_plugin)
 
+add_definitions(-std=c++11)
+
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   moveit_core
