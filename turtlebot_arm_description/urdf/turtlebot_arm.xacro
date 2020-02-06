@@ -29,7 +29,12 @@
          that's a lot of coin! -->
     <link name="gripper_link"/>
     <joint name="gripper_link_joint" type="revolute">
-      <origin xyz="0 0 0.112" rpy="0 -1.57 0"/>
+      <xacro:if value="${turtlebot_gripper}">
+        <origin xyz="0 0 0.112" rpy="0 -1.57 0"/>
+      </xacro:if>
+      <xacro:if value="${pincher_gripper}">
+        <origin xyz="0 0 0.085" rpy="0 -1.57 0"/>
+      </xacro:if>
       <parent link="arm_wrist_flex_link"/>
       <child link="gripper_link"/>
       <limit effort="30" velocity="1" lower="-3.14" upper="3.14"/>
