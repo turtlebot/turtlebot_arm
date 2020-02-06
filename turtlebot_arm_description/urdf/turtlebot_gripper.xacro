@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <!-- Turtlebot Arm gripper URDF-->
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-    <bioloid_F3_fixed parent="arm_wrist_flex_link" name="arm_wrist_F3_0" color="${color}">
+    <xacro:bioloid_F3_fixed parent="arm_wrist_flex_link" name="arm_wrist_F3_0" color="${color}">
       <origin xyz="0 0.016 ${F2_HEIGHT}" rpy="0 ${M_PI} ${-M_PI/2}"/>
-    </bioloid_F3_fixed>
+    </xacro:bioloid_F3_fixed>
     <!-- gripper joint -->
-    <dynamixel_AX12_fixed parent="arm_wrist_F3_0_link" name="gripper_servo">
+    <xacro:dynamixel_AX12_fixed parent="arm_wrist_F3_0_link" name="gripper_servo">
       <origin xyz="-0.02275 0 ${-AX12_WIDTH/2}" rpy="${M_PI} ${M_PI/2} 0"/>
-    </dynamixel_AX12_fixed>
+    </xacro:dynamixel_AX12_fixed>
 
     <!-- finger 1 -->
     <joint name="gripper_joint" type="revolute">
@@ -39,15 +39,15 @@
         </geometry>
       </collision>
     </link>
-    <finger_fixed parent="gripper_active_link" name="gripper_active_finger" color="${gripper_color}">
+    <xacro:finger_fixed parent="gripper_active_link" name="gripper_active_finger" color="${gripper_color}">
       <origin xyz="0 0 ${F2_HEIGHT}" rpy="0 0 0"/>
-    </finger_fixed>
+    </xacro:finger_fixed>
 
     <!-- finger 2 -->
-    <bioloid_F3_fixed parent="gripper_servo_link" name="gripper_static" color="${color}">
+    <xacro:bioloid_F3_fixed parent="gripper_servo_link" name="gripper_static" color="${color}">
       <origin xyz="0 0 ${-AX12_HEIGHT-F10_HEIGHT+0.001}" rpy="0 ${M_PI} 0"/>
-    </bioloid_F3_fixed>
-    <finger_fixed parent="gripper_static_link" name="gripper_static_finger" color="${gripper_color}">
+    </xacro:bioloid_F3_fixed>
+    <xacro:finger_fixed parent="gripper_static_link" name="gripper_static_finger" color="${gripper_color}">
       <origin xyz="0 0 0" rpy="0 0 ${M_PI}"/>
-    </finger_fixed>
+    </xacro:finger_fixed>
 </robot>

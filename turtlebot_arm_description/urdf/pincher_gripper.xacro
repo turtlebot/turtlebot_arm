@@ -1,18 +1,18 @@
 <?xml version="1.0"?>
 <!-- PhantomX Pincher Arm gripper URDF-->
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-    <bioloid_F3_fixed parent="arm_wrist_flex_link" name="arm_wrist_F3_0" color="${color}">
+    <xacro:bioloid_F3_fixed parent="arm_wrist_flex_link" name="arm_wrist_F3_0" color="${color}">
       <origin xyz="0 0 ${F2_HEIGHT}" rpy="0 ${M_PI} ${-M_PI}"/>
-    </bioloid_F3_fixed>
+    </xacro:bioloid_F3_fixed>
     
     <!-- gripper joint -->
-    <dynamixel_AX12_fixed parent="arm_wrist_F3_0_link" name="gripper_servo" >
+    <xacro:dynamixel_AX12_fixed parent="arm_wrist_F3_0_link" name="gripper_servo" >
       <origin xyz="0 0 ${-AX12_WIDTH/2}" rpy="${M_PI/2} ${M_PI} ${M_PI/2}"/>
-    </dynamixel_AX12_fixed>
+    </xacro:dynamixel_AX12_fixed>
     
-     <gripper_finger_base parent="gripper_servo_link" name="gripper_finger_base" color="${color}">
+    <xacro:gripper_finger_base parent="gripper_servo_link" name="gripper_finger_base" color="${color}">
       <origin xyz="0.01  ${AX12_WIDTH} 0" rpy="${M_PI/2} ${-M_PI} ${M_PI/2}"/>
-    </gripper_finger_base>
+    </xacro:gripper_finger_base>
   
      <!-- Finger 1 --> 
     <joint name="gripper_joint" type="prismatic">
@@ -23,9 +23,9 @@
       <child link="gripper_active_link"/>
     </joint> 
     
-    <pincher_gripper name="gripper_active" color="${color}" >
+    <xacro:pincher_gripper name="gripper_active" color="${color}" >
       <origin xyz="-0.0086 0.0414 0" rpy="${-M_PI/2} 0 0"/>
-    </pincher_gripper>
+    </xacro:pincher_gripper>
      
     <!-- Finger 2 --> 
     <!-- Note: currently static but should be a Mimic of Finger 1 -->
@@ -34,9 +34,9 @@
       <child link="gripper_active2_link"/>
     </joint>  
     
-    <pincher_gripper name="gripper_active2" color="${color}" >
+    <xacro:pincher_gripper name="gripper_active2" color="${color}" >
       <origin xyz="-0.0314 0.0414 0" rpy="${-M_PI/2} ${M_PI} 0"/>
-    </pincher_gripper>
+    </xacro:pincher_gripper>
       
     <!-- Using Mimic -->
     <!-- gripper 2 joint -->
