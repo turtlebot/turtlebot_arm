@@ -23,7 +23,7 @@ add_action_files(FILES
                  )
 
 generate_messages(DEPENDENCIES actionlib_msgs geometry_msgs)
-catkin_package(DEPENDS roscpp actionlib actionlib_msgs interactive_markers object_recognition_msgs visualization_msgs arbotix_msgs
+catkin_package(DEPENDS roscpp actionlib actionlib_msgs interactive_markers object_recognition_msgs visualization_msgs
                        geometry_msgs moveit_msgs moveit_core moveit_ros_planning_interface yocs_math_toolkit geometric_shapes shape_msgs)
 
 
