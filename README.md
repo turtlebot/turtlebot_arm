@@ -1,9 +1,9 @@
 TurtleBot Arm
 =============
 
-## Updated for Kinetic!
+## Updated for Melodic!
 
-Kinetic version of turtlebot arm code. I didn't try on Jade, but it should easily work with minor changes. It's mostly the same code as on Indigo, with some improvements on turtlebot_arm_block_manipulation (see updated wiki <span style="background-color: #00FFFF">TODO</span>) and specially [turtlebot_arm_object_manipulation](https://github.com/turtlebot/turtlebot_arm/tree/kinetic-devel/turtlebot_arm_object_manipulation): a fully revised version of that demo using OKR, SMACH and MoveIt! pick and place.
+Melodic version of turtlebot arm code. I didn't try on Jade, but it should easily work with minor changes. It's mostly the same code as on Indigo, with some improvements on turtlebot_arm_block_manipulation (see updated wiki <span style="background-color: #00FFFF">TODO</span>) and specially [turtlebot_arm_object_manipulation](https://github.com/turtlebot/turtlebot_arm/tree/melodic-devel/turtlebot_arm_object_manipulation): a fully revised version of that demo using OKR, SMACH and MoveIt! pick and place.
 
 ## Selecting Arm Type
 By default this will work with the original white/green TurtleBot arm.  To use the PhantomX Pincher, set environment variable "TURTLEBOT_ARM1" to pincher. You will need arbotix_ros version 0.11.0 or higher for PhantomX Pincher.
